@@ -24,39 +24,49 @@
             overflow-x: hidden;
             position: relative;
         }
-        /* Улучшенный фон с мерцанием */
-        .particles {
+        /* Бесконечный волнистый фон */
+        .waves {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: -1;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 50%, #0a0a0a 100%);
             overflow: hidden;
-            background: radial-gradient(circle at 20% 30%, rgba(255, 20, 147, 0.15) 0%, transparent 30%),
-                        radial-gradient(circle at 80% 70%, rgba(255, 20, 147, 0.15) 0%, transparent 30%),
-                        repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 20px);
-            animation: glowPulse 8s infinite alternate;
         }
-        @keyframes glowPulse {
-            0% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        .particles::after {
+        .waves::before {
             content: '';
             position: absolute;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml;utf8,<svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><circle cx="15" cy="15" r="1.5" fill="%23ff1493" opacity="0.4"/></svg>');
-            pointer-events: none;
-            animation: drift 30s infinite linear;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: radial-gradient(circle at 30% 40%, rgba(255, 20, 147, 0.1) 0%, transparent 30%),
+                        radial-gradient(circle at 70% 60%, rgba(255, 20, 147, 0.1) 0%, transparent 30%),
+                        repeating-linear-gradient(45deg, rgba(255,255,255,0.01) 0px, rgba(255,255,255,0.01) 1px, transparent 1px, transparent 30px);
+            animation: wave 20s infinite alternate ease-in-out;
         }
-        @keyframes drift {
-            from { transform: translateY(0) translateX(0); }
-            to { transform: translateY(-20%) translateX(10%); }
+        .waves::after {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: radial-gradient(circle at 80% 20%, rgba(255, 20, 147, 0.1) 0%, transparent 40%);
+            animation: wave2 25s infinite alternate ease-in-out;
+        }
+        @keyframes wave {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-5%, -5%) rotate(2deg); }
+        }
+        @keyframes wave2 {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(5%, 5%) rotate(-2deg); }
         }
 
-        /* ===== ЛОГОТИП С РОЗОВОЙ ТОЧКОЙ НАД i ===== */
+        /* ===== ЛОГОТИП ===== */
         .logo {
             font-family: 'Oswald', sans-serif;
             font-weight: 700;
@@ -613,7 +623,7 @@
         .modal input, .modal select, .modal textarea {
             background: #222;
             border: 1px solid #444;
-            color: white;
+            color: white !important; /* белый текст */
             font-weight: 400;
             font-family: 'Oswald', sans-serif;
             padding: 12px 20px;
@@ -630,6 +640,14 @@
         .modal input::placeholder, .modal select::placeholder, .modal textarea::placeholder {
             color: #aaa;
             font-weight: 300;
+        }
+        .modal select {
+            color: white;
+            background: #222;
+        }
+        .modal select option {
+            background: #222;
+            color: white;
         }
         .modal-dialog {
             display: flex;
@@ -780,7 +798,7 @@
     </style>
 </head>
 <body>
-    <div class="particles"></div>
+    <div class="waves"></div>
     <div id="toast" class="toast-notification hidden">
         <i class="fas fa-info-circle" id="toastIcon"></i>
         <span id="toastMessage"></span>
@@ -870,7 +888,6 @@
         </div>
     </div>
 
-    <!-- Модальное окно добавления участника -->
     <div class="modal fade" id="addMemberModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -880,15 +897,96 @@
                 </div>
                 <div class="modal-body">
                     <input type="text" id="newMemberNick" class="form-control" placeholder="Ник">
-                    <select id="newMemberRank" class="form-control">
-                        <!-- будут подгружены ранги -->
-                    </select>
+                    <select id="newMemberRank" class="form-control"></select>
                     <input type="password" id="newMemberPassword" class="form-control" placeholder="Пароль (оставьте пустым)">
                     <input type="text" id="newMemberAvatar" class="form-control" placeholder="Ссылка на аватар">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
                     <button type="button" class="btn btn-majestic" id="confirmAddMember">Добавить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальные окна для действий (баллы, предупреждения) -->
+    <div class="modal fade" id="pointsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Начисление баллов</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="pointsNick" class="form-control" placeholder="Ник игрока" readonly>
+                    <select id="pointsActivity" class="form-control">
+                        <option value="Контракты">Контракты</option>
+                        <option value="Угонки">Угонки</option>
+                        <option value="Закладки">Закладки</option>
+                        <option value="Капт">Капт</option>
+                        <option value="МП">МП</option>
+                    </select>
+                    <input type="number" id="pointsAmount" class="form-control" placeholder="Количество баллов" min="0.5" step="0.5">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-majestic" id="confirmAddPoints">Начислить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="removePointsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Снятие баллов</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="removePointsNick" class="form-control" placeholder="Ник игрока" readonly>
+                    <input type="number" id="removePointsAmount" class="form-control" placeholder="Количество баллов" min="0.5" step="0.5">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-majestic" id="confirmRemovePoints">Снять</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Выдача предупреждения</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="warningNick" class="form-control" placeholder="Ник игрока" readonly>
+                    <input type="text" id="warningReason" class="form-control" placeholder="Причина">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-majestic" id="confirmAddWarning">Выдать</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="removeWarningModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Снятие предупреждения</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="removeWarningNick" class="form-control" placeholder="Ник игрока" readonly>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-majestic" id="confirmRemoveWarning">Снять</button>
                 </div>
             </div>
         </div>
@@ -1255,7 +1353,7 @@
                 loadLogs();
                 loadRanksManagement();
                 loadPlayerManagement();
-                checkNewApplications(); // проверка новых заявок
+                checkNewApplications();
             } else {
                 removeAdminTabs();
             }
@@ -1345,6 +1443,7 @@
                     <small>Начислил: ${d['Начислил']}</small>
                 </div>
             `).join('');
+            // Пока оставим alert, но потом можно заменить на модалку
             alert(html || 'Нет записей');
         };
 
@@ -1807,19 +1906,19 @@
                             <i class="fas fa-arrow-down"></i>
                             <span>Понизить</span>
                         </div>
-                        <div class="admin-action-btn points" onclick="adminAddPointsFromPanel()" title="Начислить баллы">
+                        <div class="admin-action-btn points" onclick="openAddPointsModalFromPanel()" title="Начислить баллы">
                             <i class="fas fa-plus-circle"></i>
                             <span>+ Баллы</span>
                         </div>
-                        <div class="admin-action-btn minus-points" onclick="adminRemovePointsFromPanel()" title="Снять баллы">
+                        <div class="admin-action-btn minus-points" onclick="openRemovePointsModalFromPanel()" title="Снять баллы">
                             <i class="fas fa-minus-circle"></i>
                             <span>- Баллы</span>
                         </div>
-                        <div class="admin-action-btn warn" onclick="adminAddWarningFromPanel()" title="Выдать предупреждение">
+                        <div class="admin-action-btn warn" onclick="openAddWarningModalFromPanel()" title="Выдать предупреждение">
                             <i class="fas fa-exclamation-triangle"></i>
                             <span>+ Варн</span>
                         </div>
-                        <div class="admin-action-btn unwarn" onclick="adminRemoveWarningFromPanel()" title="Снять предупреждение">
+                        <div class="admin-action-btn unwarn" onclick="openRemoveWarningModalFromPanel()" title="Снять предупреждение">
                             <i class="fas fa-times-circle"></i>
                             <span>- Варн</span>
                         </div>
@@ -1851,34 +1950,87 @@
             if (!nick) { showToast('Введите ник или выберите игрока', 'warning'); return; }
             adminDemote(nick);
         };
-        window.adminAddPointsFromPanel = function() {
+        function openAddPointsModalFromPanel() {
             const nick = getTargetNickFromPanel();
             if (!nick) { showToast('Введите ник или выберите игрока', 'warning'); return; }
-            const activity = prompt('Активность (Контракты, Угонки, Закладки, Капт, МП):');
-            if (!activity) return;
-            const points = parseFloat(prompt('Баллы:'));
-            if (isNaN(points) || points <= 0) return;
-            adminAddPoints(nick, activity, points);
-        };
-        window.adminRemovePointsFromPanel = function() {
+            openAddPointsModal(nick);
+        }
+        function openRemovePointsModalFromPanel() {
             const nick = getTargetNickFromPanel();
             if (!nick) { showToast('Введите ник или выберите игрока', 'warning'); return; }
-            const points = parseFloat(prompt('Баллы для снятия:'));
-            if (isNaN(points) || points <= 0) return;
-            adminRemovePoints(nick, points);
-        };
-        window.adminAddWarningFromPanel = function() {
+            openRemovePointsModal(nick);
+        }
+        function openAddWarningModalFromPanel() {
             const nick = getTargetNickFromPanel();
             if (!nick) { showToast('Введите ник или выберите игрока', 'warning'); return; }
-            const reason = prompt('Причина предупреждения:');
-            if (!reason) return;
-            adminAddWarning(nick, reason);
-        };
-        window.adminRemoveWarningFromPanel = function() {
+            openAddWarningModal(nick);
+        }
+        function openRemoveWarningModalFromPanel() {
             const nick = getTargetNickFromPanel();
             if (!nick) { showToast('Введите ник или выберите игрока', 'warning'); return; }
-            adminRemoveWarning(nick);
+            openRemoveWarningModal(nick);
+        }
+
+        // ===== ФУНКЦИИ ДЛЯ ОТКРЫТИЯ МОДАЛОК =====
+        window.openAddPointsModal = function(nick) {
+            currentActionNick = nick;
+            document.getElementById('pointsNick').value = nick;
+            new bootstrap.Modal(document.getElementById('pointsModal')).show();
         };
+        window.openRemovePointsModal = function(nick) {
+            currentActionNick = nick;
+            document.getElementById('removePointsNick').value = nick;
+            new bootstrap.Modal(document.getElementById('removePointsModal')).show();
+        };
+        window.openAddWarningModal = function(nick) {
+            currentActionNick = nick;
+            document.getElementById('warningNick').value = nick;
+            new bootstrap.Modal(document.getElementById('warningModal')).show();
+        };
+        window.openRemoveWarningModal = function(nick) {
+            currentActionNick = nick;
+            document.getElementById('removeWarningNick').value = nick;
+            new bootstrap.Modal(document.getElementById('removeWarningModal')).show();
+        };
+
+        // Обработчики кнопок в модалках
+        document.getElementById('confirmAddPoints').addEventListener('click', async () => {
+            const activity = document.getElementById('pointsActivity').value;
+            const points = parseFloat(document.getElementById('pointsAmount').value);
+            if (isNaN(points) || points <= 0) {
+                showToast('Введите корректное количество баллов', 'warning');
+                return;
+            }
+            await adminAddPoints(currentActionNick, activity, points);
+            bootstrap.Modal.getInstance(document.getElementById('pointsModal')).hide();
+        });
+
+        document.getElementById('confirmRemovePoints').addEventListener('click', async () => {
+            const points = parseFloat(document.getElementById('removePointsAmount').value);
+            if (isNaN(points) || points <= 0) {
+                showToast('Введите корректное количество баллов', 'warning');
+                return;
+            }
+            await adminRemovePoints(currentActionNick, points);
+            bootstrap.Modal.getInstance(document.getElementById('removePointsModal')).hide();
+        });
+
+        document.getElementById('confirmAddWarning').addEventListener('click', async () => {
+            const reason = document.getElementById('warningReason').value.trim();
+            if (!reason) {
+                showToast('Введите причину', 'warning');
+                return;
+            }
+            await adminAddWarning(currentActionNick, reason);
+            bootstrap.Modal.getInstance(document.getElementById('warningModal')).hide();
+        });
+
+        document.getElementById('confirmRemoveWarning').addEventListener('click', async () => {
+            await adminRemoveWarning(currentActionNick);
+            bootstrap.Modal.getInstance(document.getElementById('removeWarningModal')).hide();
+        });
+
+        let currentActionNick = '';
 
         window.showAddMemberModal = async function() {
             const ranks = await получитьВсеРанги();
