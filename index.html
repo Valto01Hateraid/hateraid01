@@ -24,7 +24,7 @@
             overflow-x: hidden;
             position: relative;
         }
-        /* Усиленный волнистый фон */
+        /* Усиленный волнистый фон с розовым свечением */
         .waves {
             position: fixed;
             top: 0;
@@ -42,10 +42,11 @@
             height: 200%;
             top: -50%;
             left: -50%;
-            background: radial-gradient(circle at 30% 40%, rgba(255, 20, 147, 0.2) 0%, transparent 30%),
-                        radial-gradient(circle at 70% 60%, rgba(255, 20, 147, 0.2) 0%, transparent 30%),
-                        repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 30px);
-            animation: wave 20s infinite alternate ease-in-out;
+            background: radial-gradient(circle at 30% 40%, rgba(255, 20, 147, 0.25) 0%, transparent 35%),
+                        radial-gradient(circle at 70% 60%, rgba(255, 20, 147, 0.25) 0%, transparent 35%),
+                        repeating-linear-gradient(45deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 2px, transparent 2px, transparent 30px);
+            animation: wave 22s infinite alternate ease-in-out;
+            filter: blur(3px);
         }
         .waves::after {
             content: '';
@@ -54,8 +55,9 @@
             height: 200%;
             top: -50%;
             left: -50%;
-            background: radial-gradient(circle at 80% 20%, rgba(255, 20, 147, 0.2) 0%, transparent 40%);
-            animation: wave2 25s infinite alternate ease-in-out;
+            background: radial-gradient(circle at 80% 20%, rgba(255, 20, 147, 0.25) 0%, transparent 45%);
+            animation: wave2 28s infinite alternate ease-in-out;
+            filter: blur(5px);
         }
         @keyframes wave {
             0% { transform: translate(0, 0) rotate(0deg); }
@@ -66,15 +68,31 @@
             100% { transform: translate(5%, 5%) rotate(-2deg); }
         }
 
-        /* ===== ЛОГОТИП ===== */
+        /* ===== ЛОГОТИП С РОЗОВЫМ СВЕЧЕНИЕМ ===== */
         .logo {
             font-family: 'Oswald', sans-serif;
             font-weight: 700;
-            font-size: 2.8rem;
+            font-size: 3rem;
             color: white;
             text-decoration: none;
             line-height: 1;
-            text-shadow: none;
+            text-shadow: 0 0 20px rgba(255, 20, 147, 0.8);
+            letter-spacing: 2px;
+        }
+
+        /* ===== ГЛОБАЛЬНЫЕ СТИЛИ ДЛЯ SELECT (кастомные стрелки) ===== */
+        select.form-control,
+        select.form-control-majestic,
+        .modal select,
+        .admin-select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23ff1493" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 18px;
+            padding-right: 45px !important;
         }
 
         /* ===== СТИЛИ ДЛЯ СТРАНИЦЫ ВХОДА ===== */
@@ -417,7 +435,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(255,20,147,0.1), transparent 70%);
+            background: radial-gradient(circle, rgba(255,20,147,0.15), transparent 70%);
             opacity: 0;
             transition: 0.5s;
         }
@@ -613,14 +631,6 @@
             border-radius: 50px;
             width: 100%;
             margin-bottom: 15px;
-            /* Кастомная стрелка для select */
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23ff1493" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>');
-            background-repeat: no-repeat;
-            background-position: right 20px center;
-            background-size: 16px;
         }
         .modal input:focus, .modal select:focus, .modal textarea:focus {
             border-color: #ff1493;
@@ -762,25 +772,6 @@
         .filter-btn.active {
             background: #ff1493;
             border-color: #ff1493;
-        }
-
-        /* ===== АКТИВНОСТИ С ЭМОДЗИ ===== */
-        .activity-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 15px;
-            padding: 10px 15px;
-            margin-bottom: 8px;
-        }
-        .activity-item span {
-            font-size: 1.1rem;
-        }
-        .activity-emoji {
-            font-size: 1.5rem;
-            margin-right: 10px;
         }
     </style>
 </head>
@@ -1704,7 +1695,7 @@
                 const заявки = await supabaseRequest('Заявки на вступление', 'GET', null, `?Желаемый ник=eq.${encodeURIComponent(nick)}&Статус=eq.новая`);
                 if (заявки.length === 0) throw new Error('Заявка не найдена');
                 const заявка = заявки[0];
-                const id = заявка.id;
+                const id = заявка.id; // теперь колонка id есть
                 await supabaseRequest('Заявки на вступление', 'PATCH', {
                     'Статус': decision,
                     'Обработал': currentUserNick,
