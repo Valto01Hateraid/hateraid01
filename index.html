@@ -2183,27 +2183,44 @@
 
         // ---- Новости ----
         async function loadNews() {
-            const listDiv = document.getElementById('newsList');
-            try {
-                const новости = await получитьНовости();
-                if (новости.length === 0) {
-                    listDiv.innerHTML = '<p class="text-muted">Новостей пока нет</p>';
-                    return;
-                }
-                let html = '';
-                новости.forEach(n => {
-                    html += `
-                        <div class="news-item">
+    const listDiv = document.getElementById('newsList');
+    const addForm = document.getElementById('addNewsForm');
+    try {
+        const новости = await получитьНовости();
+        if (новости.length === 0) {
+            listDiv.innerHTML = '<p class="text-muted">Новостей пока нет</p>';
+        } else {
+            let html = '';
+            новости.forEach(n => {
+                html += `
+                    <div class="news-item" id="news-${n.id}">
+                        <div class="d-flex justify-content-between align-items-start">
                             <h5>${n['Заголовок']} ${n['Важная'] ? '<span class="badge-majestic">Важно</span>' : ''}</h5>
-                            <p>${n['Текст']}</p>
-                            <small class="text-secondary">${new Date(n['Дата']).toLocaleString()} | Автор: ${n['Автор']}</small>
+                            ${isAdmin ? `
+                                <div>
+                                    <button class="btn btn-sm btn-outline-majestic me-1" onclick="editNews(${n.id}, '${n['Заголовок']}', '${n['Текст']}')"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-sm btn-outline-majestic" onclick="deleteNews(${n.id})"><i class="fas fa-trash"></i></button>
+                                </div>
+                            ` : ''}
                         </div>
-                    `;
-                });
-                listDiv.innerHTML = html;
-            } catch (err) {
-                listDiv.innerHTML = '<p class="text-danger">Ошибка загрузки новостей</p>';
-            }
+                        <p>${n['Текст']}</p>
+                        <small class="text-secondary">${new Date(n['Дата']).toLocaleString()} | Автор: ${n['Автор']}</small>
+                    </div>
+                `;
+            });
+            listDiv.innerHTML = html;
+        }
+
+        // Показываем форму добавления новости только админам
+        if (isAdmin) {
+            addForm.classList.remove('hidden');
+        } else {
+            addForm.classList.add('hidden');
+        }
+    } catch (err) {
+        listDiv.innerHTML = '<p class="text-danger">Ошибка загрузки новостей</p>';
+    }
+}
         }
 
         document.getElementById('addNewsBtn')?.addEventListener('click', async () => {
