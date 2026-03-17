@@ -1084,8 +1084,8 @@
                 <button class="nav-link" id="news-tab" data-bs-toggle="tab" data-bs-target="#news" type="button"><i class="fas fa-newspaper me-2"></i>Новости</button>
             </li>
             <li class="nav-item" role="presentation">
-    <button class="nav-link" id="treasury-tab" data-bs-toggle="tab" data-bs-target="#treasury" type="button"><i class="fas fa-coins me-2"></i>Казна</button>
-</li>
+                <button class="nav-link" id="treasury-tab" data-bs-toggle="tab" data-bs-target="#treasury" type="button"><i class="fas fa-coins me-2"></i>Казна</button>
+            </li>
         </ul>
 
         <div class="tab-content mt-3">
@@ -1125,13 +1125,13 @@
                     </div>
                 </div>
             </div>
+            <div class="tab-pane fade" id="treasury">
+                <div class="glass-panel p-4">
+                    <div id="treasuryContent"></div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="tab-pane fade" id="treasury">
-    <div class="glass-panel p-4">
-        <div id="treasuryContent"></div>
-    </div>
-</div>
 
     <div class="footer-text">© Семья Hateraid | Majestic RP</div>
 
@@ -1547,9 +1547,9 @@
             new bootstrap.Tab(document.getElementById('profile-tab')).show();
         }
         // Обработчик для вкладки "Казна"
-document.getElementById('treasury-tab')?.addEventListener('shown.bs.tab', function (e) {
-    loadTreasury();
-});
+        document.getElementById('treasury-tab')?.addEventListener('shown.bs.tab', function (e) {
+            loadTreasury();
+        });
 
         // ---- Профиль ----
         async function renderProfile(user, containerId) {
@@ -2194,45 +2194,45 @@ document.getElementById('treasury-tab')?.addEventListener('shown.bs.tab', functi
         };
 
         // ---- Новости ----
-async function loadNews() {
-    const listDiv = document.getElementById('newsList');
-    const addForm = document.getElementById('addNewsForm');
-    try {
-        const новости = await получитьНовости();
-        if (новости.length === 0) {
-            listDiv.innerHTML = '<p class="text-muted">Новостей пока нет</p>';
-        } else {
-            let html = '';
-            новости.forEach(n => {
-                html += `
-                    <div class="news-item" id="news-${n.id}">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <h5>${n['Заголовок']} ${n['Важная'] ? '<span class="badge-majestic">Важно</span>' : ''}</h5>
-                            ${isAdmin ? `
-                                <div>
-                                    <button class="btn btn-sm btn-outline-majestic me-1" onclick="editNews(${n.id}, '${n['Заголовок']}', '${n['Текст']}')"><i class="fas fa-edit"></i></button>
-                                    <button class="btn btn-sm btn-outline-majestic" onclick="deleteNews(${n.id})"><i class="fas fa-trash"></i></button>
+        async function loadNews() {
+            const listDiv = document.getElementById('newsList');
+            const addForm = document.getElementById('addNewsForm');
+            try {
+                const новости = await получитьНовости();
+                if (новости.length === 0) {
+                    listDiv.innerHTML = '<p class="text-muted">Новостей пока нет</p>';
+                } else {
+                    let html = '';
+                    новости.forEach(n => {
+                        html += `
+                            <div class="news-item" id="news-${n.id}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h5>${n['Заголовок']} ${n['Важная'] ? '<span class="badge-majestic">Важно</span>' : ''}</h5>
+                                    ${isAdmin ? `
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-majestic me-1" onclick="editNews(${n.id}, '${n['Заголовок']}', '${n['Текст']}')"><i class="fas fa-edit"></i></button>
+                                            <button class="btn btn-sm btn-outline-majestic" onclick="deleteNews(${n.id})"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    ` : ''}
                                 </div>
-                            ` : ''}
-                        </div>
-                        <p>${n['Текст']}</p>
-                        <small class="text-secondary">${new Date(n['Дата']).toLocaleString()} | Автор: ${n['Автор']}</small>
-                    </div>
-                `;
-            });
-            listDiv.innerHTML = html;
-        }
+                                <p>${n['Текст']}</p>
+                                <small class="text-secondary">${new Date(n['Дата']).toLocaleString()} | Автор: ${n['Автор']}</small>
+                            </div>
+                        `;
+                    });
+                    listDiv.innerHTML = html;
+                }
 
-        // Показываем форму добавления новости только админам
-        if (isAdmin) {
-            addForm.classList.remove('hidden');
-        } else {
-            addForm.classList.add('hidden');
+                // Показываем форму добавления новости только админам
+                if (isAdmin) {
+                    addForm.classList.remove('hidden');
+                } else {
+                    addForm.classList.add('hidden');
+                }
+            } catch (err) {
+                listDiv.innerHTML = '<p class="text-danger">Ошибка загрузки новостей</p>';
+            }
         }
-    } catch (err) {
-        listDiv.innerHTML = '<p class="text-danger">Ошибка загрузки новостей</p>';
-    }
-}
 
         document.getElementById('addNewsBtn')?.addEventListener('click', async () => {
             const title = document.getElementById('newsTitle').value.trim();
@@ -2998,240 +2998,240 @@ async function loadNews() {
             removeAdminTabs();
         });
 
-window.deleteNews = async function(newsId) {
-    if (!confirm('Удалить новость?')) return;
-    try {
-        await supabaseRequest('Новости', 'DELETE', null, `?id=eq.${newsId}`);
-        showToast('Новость удалена', 'info');
-        loadNews();
-    } catch (err) {
-        showToast('Ошибка удаления: ' + err.message, 'error');
-    }
-};
+        window.deleteNews = async function(newsId) {
+            if (!confirm('Удалить новость?')) return;
+            try {
+                await supabaseRequest('Новости', 'DELETE', null, `?id=eq.${newsId}`);
+                showToast('Новость удалена', 'info');
+                loadNews();
+            } catch (err) {
+                showToast('Ошибка удаления: ' + err.message, 'error');
+            }
+        };
 
-window.editNews = async function(newsId, oldTitle, oldText) {
-    const newTitle = prompt('Введите новый заголовок:', oldTitle);
-    if (newTitle === null) return;
-    const newText = prompt('Введите новый текст:', oldText);
-    if (newText === null) return;
-    try {
-        await supabaseRequest('Новости', 'PATCH', {
-            'Заголовок': newTitle.trim(),
-            'Текст': newText.trim()
-        }, `?id=eq.${newsId}`);
-        showToast('Новость обновлена', 'success');
-        loadNews();
-    } catch (err) {
-        showToast('Ошибка редактирования: ' + err.message, 'error');
-    }
-};
+        window.editNews = async function(newsId, oldTitle, oldText) {
+            const newTitle = prompt('Введите новый заголовок:', oldTitle);
+            if (newTitle === null) return;
+            const newText = prompt('Введите новый текст:', oldText);
+            if (newText === null) return;
+            try {
+                await supabaseRequest('Новости', 'PATCH', {
+                    'Заголовок': newTitle.trim(),
+                    'Текст': newText.trim()
+                }, `?id=eq.${newsId}`);
+                showToast('Новость обновлена', 'success');
+                loadNews();
+            } catch (err) {
+                showToast('Ошибка редактирования: ' + err.message, 'error');
+            }
+        };
         // ==================== СЕМЕЙНАЯ КАЗНА ====================
 
-// Загрузка данных казны
-async function loadTreasury() {
-    const container = document.getElementById('treasuryContent');
-    if (!container) return;
+        // Загрузка данных казны
+        async function loadTreasury() {
+            const container = document.getElementById('treasuryContent');
+            if (!container) return;
 
-    try {
-        // Получаем баланс из таблицы Настройки
-        let balance = 0;
-        const settings = await supabaseRequest('Настройки', 'GET', null, '?Параметр=eq.баланс_казны');
-        if (settings.length > 0) {
-            balance = parseFloat(settings[0]['Значение']) || 0;
-        }
+            try {
+                // Получаем баланс из таблицы Настройки
+                let balance = 0;
+                const settings = await supabaseRequest('Настройки', 'GET', null, '?Параметр=eq.баланс_казны');
+                if (settings.length > 0) {
+                    balance = parseFloat(settings[0]['Значение']) || 0;
+                }
 
-        // Получаем последние 20 операций из таблицы Казна
-        const operations = await supabaseRequest('Казна', 'GET', null, '?order=Дата.desc&limit=20');
+                // Получаем последние 20 операций из таблицы Казна
+                const operations = await supabaseRequest('Казна', 'GET', null, '?order=Дата.desc&limit=20');
 
-        // Формируем HTML
-        let html = `
-            <div class="text-center mb-4">
-                <h2 class="display-4" style="color: #ff1493;">${balance.toLocaleString()} <small style="font-size: 1rem;">виртов</small></h2>
-                <p class="text-secondary">Текущий баланс семьи</p>
-            </div>
-        `;
-
-        // Кнопки: пополнить могут все, списать только админы
-        html += `<div class="d-flex gap-3 justify-content-center mb-4">`;
-        html += `<button class="btn btn-majestic" onclick="showTreasuryOperationModal('пополнение')"><i class="fas fa-plus-circle"></i> Пополнить</button>`;
-        if (isAdmin) {
-            html += `<button class="btn btn-outline-majestic" onclick="showTreasuryOperationModal('списание')"><i class="fas fa-minus-circle"></i> Списать</button>`;
-        }
-        html += `</div>`;
-
-        // История операций
-        html += '<h5 class="mb-3">Последние операции</h5>';
-        if (operations.length === 0) {
-            html += '<p class="text-muted">Пока нет операций</p>';
-        } else {
-            operations.forEach(op => {
-                const sign = op['Тип'] === 'пополнение' ? '+' : '-';
-                const color = op['Тип'] === 'пополнение' ? '#28a745' : '#dc3545';
-                html += `
-                    <div class="history-item">
-                        <div class="d-flex justify-content-between">
-                            <span><strong style="color: ${color};">${sign}${op['Сумма']}</strong> — ${op['Описание'] || ''}</span>
-                            <small class="text-secondary">${new Date(op['Дата']).toLocaleString()}</small>
-                        </div>
-                        <div><small>Игрок: ${op['Игрок'] || 'система'}</small></div>
+                // Формируем HTML
+                let html = `
+                    <div class="text-center mb-4">
+                        <h2 class="display-4" style="color: #ff1493;">${balance.toLocaleString()} <small style="font-size: 1rem;">виртов</small></h2>
+                        <p class="text-secondary">Текущий баланс семьи</p>
                     </div>
                 `;
-            });
+
+                // Кнопки: пополнить могут все, списать только админы
+                html += `<div class="d-flex gap-3 justify-content-center mb-4">`;
+                html += `<button class="btn btn-majestic" onclick="showTreasuryOperationModal('пополнение')"><i class="fas fa-plus-circle"></i> Пополнить</button>`;
+                if (isAdmin) {
+                    html += `<button class="btn btn-outline-majestic" onclick="showTreasuryOperationModal('списание')"><i class="fas fa-minus-circle"></i> Списать</button>`;
+                }
+                html += `</div>`;
+
+                // История операций
+                html += '<h5 class="mb-3">Последние операции</h5>';
+                if (operations.length === 0) {
+                    html += '<p class="text-muted">Пока нет операций</p>';
+                } else {
+                    operations.forEach(op => {
+                        const sign = op['Тип'] === 'пополнение' ? '+' : '-';
+                        const color = op['Тип'] === 'пополнение' ? '#28a745' : '#dc3545';
+                        html += `
+                            <div class="history-item">
+                                <div class="d-flex justify-content-between">
+                                    <span><strong style="color: ${color};">${sign}${op['Сумма']}</strong> — ${op['Описание'] || ''}</span>
+                                    <small class="text-secondary">${new Date(op['Дата']).toLocaleString()}</small>
+                                </div>
+                                <div><small>Игрок: ${op['Игрок'] || 'система'}</small></div>
+                            </div>
+                        `;
+                    });
+                }
+
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = '<p class="text-danger">Ошибка загрузки казны</p>';
+                console.error(err);
+            }
         }
 
-        container.innerHTML = html;
-    } catch (err) {
-        container.innerHTML = '<p class="text-danger">Ошибка загрузки казны</p>';
-        console.error(err);
-    }
-}
-
-// Открытие модалки операции
-window.showTreasuryOperationModal = function(type) {
-    // Проверка: если тип 'списание' и пользователь не админ — заблокировать
-    if (type === 'списание' && !isAdmin) {
-        showToast('Только администраторы могут списывать средства', 'error');
-        return;
-    }
-
-    const modalTitle = document.getElementById('treasuryModalTitle');
-    const operationType = document.getElementById('treasuryOperationType');
-    const amountInput = document.getElementById('treasuryAmount');
-    const descInput = document.getElementById('treasuryDescription');
-
-    // Очистить поля
-    amountInput.value = '';
-    descInput.value = '';
-
-    // Установить заголовок
-    if (type === 'пополнение') {
-        modalTitle.textContent = 'Пополнение казны';
-    } else {
-        modalTitle.textContent = 'Списание из казны';
-    }
-    operationType.value = type;
-
-    // Показать модальное окно
-    new bootstrap.Modal(document.getElementById('treasuryModal')).show();
-};
-
-// Обработчик подтверждения операции
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('confirmTreasuryBtn')?.addEventListener('click', async () => {
-       const type = document.getElementById('treasuryOperationType').value;
-    const amount = parseFloat(document.getElementById('treasuryAmount').value);
-    const description = document.getElementById('treasuryDescription').value.trim() || '';
-
-    // Валидация
-    if (isNaN(amount) || amount <= 0) {
-        showToast('Введите корректную сумму', 'warning');
-        return;
-    });
-});
-    }
-
-    // Дополнительная проверка для списания (на всякий случай)
-    if (type === 'списание' && !isAdmin) {
-        showToast('Недостаточно прав', 'error');
-        bootstrap.Modal.getInstance(document.getElementById('treasuryModal')).hide();
-        return;
-    }
-
-    try {
-        // Получаем текущий баланс
-        const settings = await supabaseRequest('Настройки', 'GET', null, '?Параметр=eq.баланс_казны');
-        let currentBalance = 0;
-        let settingId = null;
-        if (settings.length > 0) {
-            currentBalance = parseFloat(settings[0]['Значение']) || 0;
-            settingId = settings[0].id;
-        } else {
-            // Если записи нет, создадим её
-            const newSetting = await supabaseRequest('Настройки', 'POST', {
-                'Параметр': 'баланс_казны',
-                'Значение': '0'
-            });
-            settingId = newSetting[0].id;
-        }
-
-        // Вычисляем новый баланс
-        let newBalance;
-        if (type === 'пополнение') {
-            newBalance = currentBalance + amount;
-        } else {
-            if (currentBalance < amount) {
-                showToast('Недостаточно средств в казне', 'warning');
+        // Открытие модалки операции
+        window.showTreasuryOperationModal = function(type) {
+            // Проверка: если тип 'списание' и пользователь не админ — заблокировать
+            if (type === 'списание' && !isAdmin) {
+                showToast('Только администраторы могут списывать средства', 'error');
                 return;
             }
-            newBalance = currentBalance - amount;
-        }
 
-        // Обновляем баланс в таблице Настройки
-        await supabaseRequest('Настройки', 'PATCH', {
-            'Значение': newBalance.toString()
-        }, `?Параметр=eq.баланс_казны`);
+            const modalTitle = document.getElementById('treasuryModalTitle');
+            const operationType = document.getElementById('treasuryOperationType');
+            const amountInput = document.getElementById('treasuryAmount');
+            const descInput = document.getElementById('treasuryDescription');
 
-        // Записываем операцию в таблицу Казна
-        await supabaseRequest('Казна', 'POST', {
-            'Тип': type,
-            'Сумма': amount,
-            'Описание': description || (type === 'пополнение' ? 'Пополнение' : 'Списание'),
-            'Игрок': currentUserNick,
-            'Дата': new Date().toISOString()
+            // Очистить поля
+            amountInput.value = '';
+            descInput.value = '';
+
+            // Установить заголовок
+            if (type === 'пополнение') {
+                modalTitle.textContent = 'Пополнение казны';
+            } else {
+                modalTitle.textContent = 'Списание из казны';
+            }
+            operationType.value = type;
+
+            // Показать модальное окно
+            new bootstrap.Modal(document.getElementById('treasuryModal')).show();
+        };
+
+        // Обработчик подтверждения операции
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('confirmTreasuryBtn');
+            if (btn) {
+                btn.addEventListener('click', async () => {
+                    const type = document.getElementById('treasuryOperationType').value;
+                    const amount = parseFloat(document.getElementById('treasuryAmount').value);
+                    const description = document.getElementById('treasuryDescription').value.trim() || '';
+
+                    // Валидация
+                    if (isNaN(amount) || amount <= 0) {
+                        showToast('Введите корректную сумму', 'warning');
+                        return;
+                    }
+
+                    // Дополнительная проверка для списания (на всякий случай)
+                    if (type === 'списание' && !isAdmin) {
+                        showToast('Недостаточно прав', 'error');
+                        bootstrap.Modal.getInstance(document.getElementById('treasuryModal')).hide();
+                        return;
+                    }
+
+                    try {
+                        // Получаем текущий баланс
+                        const settings = await supabaseRequest('Настройки', 'GET', null, '?Параметр=eq.баланс_казны');
+                        let currentBalance = 0;
+                        if (settings.length > 0) {
+                            currentBalance = parseFloat(settings[0]['Значение']) || 0;
+                        } else {
+                            // Если записи нет, создадим её
+                            await supabaseRequest('Настройки', 'POST', {
+                                'Параметр': 'баланс_казны',
+                                'Значение': '0'
+                            });
+                            currentBalance = 0;
+                        }
+
+                        // Вычисляем новый баланс
+                        let newBalance;
+                        if (type === 'пополнение') {
+                            newBalance = currentBalance + amount;
+                        } else {
+                            if (currentBalance < amount) {
+                                showToast('Недостаточно средств в казне', 'warning');
+                                return;
+                            }
+                            newBalance = currentBalance - amount;
+                        }
+
+                        // Обновляем баланс в таблице Настройки
+                        await supabaseRequest('Настройки', 'PATCH', {
+                            'Значение': newBalance.toString()
+                        }, `?Параметр=eq.баланс_казны`);
+
+                        // Записываем операцию в таблицу Казна
+                        await supabaseRequest('Казна', 'POST', {
+                            'Тип': type,
+                            'Сумма': amount,
+                            'Описание': description || (type === 'пополнение' ? 'Пополнение' : 'Списание'),
+                            'Игрок': currentUserNick,
+                            'Дата': new Date().toISOString()
+                        });
+
+                        // Показываем уведомление
+                        if (type === 'пополнение') {
+                            showToast(`Казна пополнена на ${amount} виртов`, 'success');
+                        } else {
+                            showToast(`Списано ${amount} виртов из казны`, 'info');
+                        }
+
+                        // Закрываем модалку и обновляем страницу казны
+                        bootstrap.Modal.getInstance(document.getElementById('treasuryModal')).hide();
+                        loadTreasury();
+
+                    } catch (err) {
+                        showToast('Ошибка операции: ' + err.message, 'error');
+                    }
+                });
+            }
         });
-
-        // Показываем уведомление
-        if (type === 'пополнение') {
-            showToast(`Казня пополнена на ${amount} виртов`, 'success');
-        } else {
-            showToast(`Списано ${amount} виртов из казны`, 'info');
-        }
-
-        // Закрываем модалку и обновляем страницу казны
-        bootstrap.Modal.getInstance(document.getElementById('treasuryModal')).hide();
-        loadTreasury();
-
-    } catch (err) {
-        showToast('Ошибка операции: ' + err.message, 'error');
-    }
-});
     </script>
-<!-- Модальное окно профиля (для просмотра других игроков) -->
-<div class="modal fade" id="profileModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="profileModalLabel">Профиль игрока</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="profileModalBody">
-                <!-- данные подгружаются динамически -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+    <!-- Модальное окно профиля (для просмотра других игроков) -->
+    <div class="modal fade" id="profileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="profileModalLabel">Профиль игрока</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="profileModalBody">
+                    <!-- данные подгружаются динамически -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
     <!-- Модальное окно для операций с казной (пополнение/списание) -->
-<div class="modal fade" id="treasuryModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="treasuryModalTitle">Операция с казной</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="treasuryOperationType">
-                <input type="number" id="treasuryAmount" class="form-control" placeholder="Сумма" min="1" step="1" required>
-                <input type="text" id="treasuryDescription" class="form-control" placeholder="Описание (необязательно)">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                <button type="button" class="btn btn-majestic" id="confirmTreasuryBtn">Выполнить</button>
+    <div class="modal fade" id="treasuryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="treasuryModalTitle">Операция с казной</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="treasuryOperationType">
+                    <input type="number" id="treasuryAmount" class="form-control" placeholder="Сумма" min="1" step="1" required>
+                    <input type="text" id="treasuryDescription" class="form-control" placeholder="Описание (необязательно)">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-majestic" id="confirmTreasuryBtn">Выполнить</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 </body>
 </html>
