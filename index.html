@@ -2182,7 +2182,7 @@
         };
 
         // ---- Новости ----
-        async function loadNews() {
+async function loadNews() {
     const listDiv = document.getElementById('newsList');
     const addForm = document.getElementById('addNewsForm');
     try {
@@ -2287,6 +2287,10 @@
                     document.getElementById(`admin-${subId}`).classList.add('active');
                 });
             });
+                 // Загружаем панель овнера, если пользователь овнер
+                 if (adminRights.toLowerCase() === 'овнер') {
+                     loadOwnerPanel();
+           }
         }
 
         // Заявки
@@ -2982,8 +2986,36 @@
             toggleAdmin.textContent = '🔐 Я администратор';
             removeAdminTabs();
         });
+
+window.deleteNews = async function(newsId) {
+    if (!confirm('Удалить новость?')) return;
+    try {
+        await supabaseRequest('Новости', 'DELETE', null, `?id=eq.${newsId}`);
+        showToast('Новость удалена', 'info');
+        loadNews();
+    } catch (err) {
+        showToast('Ошибка удаления: ' + err.message, 'error');
+    }
+};
+
+window.editNews = async function(newsId, oldTitle, oldText) {
+    const newTitle = prompt('Введите новый заголовок:', oldTitle);
+    if (newTitle === null) return;
+    const newText = prompt('Введите новый текст:', oldText);
+    if (newText === null) return;
+    try {
+        await supabaseRequest('Новости', 'PATCH', {
+            'Заголовок': newTitle.trim(),
+            'Текст': newText.trim()
+        }, `?id=eq.${newsId}`);
+        showToast('Новость обновлена', 'success');
+        loadNews();
+    } catch (err) {
+        showToast('Ошибка редактирования: ' + err.message, 'error');
+    }
+};
     </script>
-    <!-- Модальное окно профиля (для просмотра других игроков) -->
+<!-- Модальное окно профиля (для просмотра других игроков) -->
 <div class="modal fade" id="profileModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
