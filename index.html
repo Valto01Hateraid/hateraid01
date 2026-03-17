@@ -3116,8 +3116,9 @@ window.showTreasuryOperationModal = function(type) {
 };
 
 // Обработчик подтверждения операции
-document.getElementById('confirmTreasuryBtn')?.addEventListener('click', async () => {
-    const type = document.getElementById('treasuryOperationType').value;
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('confirmTreasuryBtn')?.addEventListener('click', async () => {
+       const type = document.getElementById('treasuryOperationType').value;
     const amount = parseFloat(document.getElementById('treasuryAmount').value);
     const description = document.getElementById('treasuryDescription').value.trim() || '';
 
@@ -3125,6 +3126,8 @@ document.getElementById('confirmTreasuryBtn')?.addEventListener('click', async (
     if (isNaN(amount) || amount <= 0) {
         showToast('Введите корректную сумму', 'warning');
         return;
+    });
+});
     }
 
     // Дополнительная проверка для списания (на всякий случай)
