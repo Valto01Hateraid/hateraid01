@@ -3313,7 +3313,8 @@ document.getElementById('confirmAddPoints')?.addEventListener('click', async fun
         showToast('Ошибка: ' + error.message, 'error');
     }
 });
-        // ===== БАЗОВЫЕ ФУНКЦИИ ДЛЯ АДМИНКИ (ДОБАВЛЕНО) =====
+     
+// ===== БАЗОВЫЕ ФУНКЦИИ ДЛЯ АДМИНКИ (ДОБАВЛЕНО) =====
 async function adminRemovePoints(nick, amount) {
     if (!isAdmin) {
         showToast('Недостаточно прав', 'error');
