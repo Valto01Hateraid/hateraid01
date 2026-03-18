@@ -3315,29 +3315,6 @@ document.getElementById('confirmAddPoints')?.addEventListener('click', async fun
 });
     </script>
     
-    // ===== ГЛОБАЛЬНЫЕ ФУНКЦИИ ДЛЯ АДМИНКИ =====
-window.openAddPointsModal = function(nick) {
-    document.getElementById('pointsNick').value = nick;
-    document.getElementById('pointsAmount').value = '';
-    new bootstrap.Modal(document.getElementById('pointsModal')).show();
-};
-
-window.openRemovePointsModal = function(nick) {
-    document.getElementById('removePointsNick').value = nick;
-    document.getElementById('removePointsAmount').value = '';
-    new bootstrap.Modal(document.getElementById('removePointsModal')).show();
-};
-
-window.openAddWarningModal = function(nick) {
-    document.getElementById('warningNick').value = nick;
-    document.getElementById('warningReason').value = '';
-    new bootstrap.Modal(document.getElementById('warningModal')).show();
-};
-
-window.openRemoveWarningModal = function(nick) {
-    document.getElementById('removeWarningNick').value = nick;
-    new bootstrap.Modal(document.getElementById('removeWarningModal')).show();
-};
     <!-- Модальное окно профиля (для просмотра других игроков) -->
     <div class="modal fade" id="profileModal" tabindex="-1">
         <div class="modal-dialog">
