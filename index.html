@@ -2767,6 +2767,8 @@
                     'Баллы сегодня': новыеСегодня,
                     'Дата последних баллов': сегодня
                 }, `?Ник=eq.${encodeURIComponent(nick)}`);
+                // После обновления баллов, вызываем проверку авто-повышения
+await checkAndApplyAutoPromotion(nick, currentUserNick);
                 await supabaseRequest('Логи баллов', 'POST', {
                     'Дата': new Date().toISOString(),
                     'Игрок': nick,
@@ -3195,6 +3197,76 @@
                 });
             }
         });
+        // Автоматическое повышение ранга
+async function checkAndApplyAutoPromotion(nick, adminNick) {
+    try {
+        // Получаем данные игрока
+        const user = await получитьДанныеИгрока(nick);
+        if (!user) return;
+
+        // Получаем все ранги, отсортированные по порядку
+        const allRanks = await получитьВсеРанги(); // уже есть такая функция
+        if (!allRanks || allRanks.length === 0) return;
+
+        // Находим текущий ранг игрока
+        const currentRank = allRanks.find(r => r['Название'] === user['Ранг']);
+        if (!currentRank) return;
+
+        // Текущие баллы игрока
+        const currentPoints = user['Баллы всего'] || 0;
+
+        // Ищем все ранги, которые идут после текущего и являются авто
+        const higherRanks = allRanks.filter(r => r['Порядок'] > currentRank['Порядок'] && r['Тип повышения'] === 'авто');
+        // Сортируем по порядку возрастания
+        higherRanks.sort((a, b) => a['Порядок'] - b['Порядок']);
+
+        // Находим самый высокий доступный ранг, на который хватает баллов
+        let targetRank = null;
+        for (let rank of higherRanks) {
+            if (currentPoints >= rank['Требуется баллов']) {
+                targetRank = rank; // повышаем до последнего подходящего
+            } else {
+                break; // как только не хватило баллов, дальше не идём
+            }
+        }
+
+        // Если есть целевой ранг и он отличается от текущего
+        if (targetRank && targetRank['Название'] !== user['Ранг']) {
+            // Обновляем ранг игрока
+            await supabaseRequest('Участники', 'PATCH', {
+                'Ранг': targetRank['Название']
+            }, `?Ник=eq.${encodeURIComponent(nick)}`);
+
+            // Записываем в лог действий админов (указываем админа, который вызвал повышение)
+            await supabaseRequest('Логи действий админов', 'POST', {
+                'Дата': new Date().toISOString(),
+                'Админ': adminNick || 'система',
+                'Действие': 'авто-повышение',
+                'Цель': nick,
+                'Подробности': `${user['Ранг']} → ${targetRank['Название']} (по достижению ${targetRank['Требуется баллов']} баллов)`
+            });
+
+            // Воспроизводим звук повышения (опционально)
+            playSound('promote');
+
+            // Показываем уведомление (только если это не фоновая операция)
+            showToast(`${nick} автоматически повышен до ${targetRank['Название']}!`, 'success');
+
+            // Обновляем кэш
+            playersCache = null;
+
+            // Обновляем интерфейс, если нужно (например, если это текущий пользователь или открыт его профиль)
+            if (nick === currentUserNick) {
+                renderProfile(await получитьДанныеИгрока(nick), 'myProfileContent');
+            } else {
+                // Можно обновить список участников, если открыта соответствующая вкладка
+                // Но для простоты просто сбросим кэш и при следующей загрузке подтянется
+            }
+        }
+    } catch (err) {
+        console.error('Ошибка при авто-повышении:', err);
+    }
+}
     </script>
     <!-- Модальное окно профиля (для просмотра других игроков) -->
     <div class="modal fade" id="profileModal" tabindex="-1">
