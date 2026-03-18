@@ -3313,6 +3313,33 @@ document.getElementById('confirmAddPoints')?.addEventListener('click', async fun
         showToast('Ошибка: ' + error.message, 'error');
     }
 });
+        // ===== БАЗОВЫЕ ФУНКЦИИ ДЛЯ АДМИНКИ (ДОБАВЛЕНО) =====
+async function adminRemovePoints(nick, amount) {
+    if (!isAdmin) {
+        showToast('Недостаточно прав', 'error');
+        return;
+    }
+    showToast(`Функция снятия баллов для ${nick} на ${amount} временно не реализована`, 'info');
+    // TODO: добавить реальную логику
+}
+
+async function adminAddWarning(nick, reason) {
+    if (!isAdmin) {
+        showToast('Недостаточно прав', 'error');
+        return;
+    }
+    showToast(`Функция выдачи предупреждения для ${nick} временно не реализована`, 'info');
+    // TODO: добавить реальную логику
+}
+
+async function adminRemoveWarning(nick) {
+    if (!isAdmin) {
+        showToast('Недостаточно прав', 'error');
+        return;
+    }
+    showToast(`Функция снятия предупреждения для ${nick} временно не реализована`, 'info');
+    // TODO: добавить реальную логику
+}
     </script>
     
     <!-- Модальное окно профиля (для просмотра других игроков) -->
