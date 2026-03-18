@@ -15,7 +15,7 @@
         .waves::after { content:''; position:absolute; width:200%; height:200%; top:-50%; left:-50%; background:radial-gradient(circle at 80% 20%, rgba(255,20,147,0.25) 0%, transparent 45%); animation:wave2 28s infinite alternate ease-in-out; filter:blur(5px); }
         @keyframes wave { 0% { transform:translate(0,0) rotate(0deg); } 100% { transform:translate(-5%,-5%) rotate(2deg); } }
         @keyframes wave2 { 0% { transform:translate(0,0) rotate(0deg); } 100% { transform:translate(5%,5%) rotate(-2deg); } }
-        .logo { font-family:'Oswald',sans-serif; font-weight:700; font-size:3rem; color:#fff; text-decoration:none; line-height:1; text-shadow:0 0 20px rgba(255,20,147,0.8); letter-spacing:2px; }
+        .logo {position: relative;display: inline-block;padding: 0 10px;background: rgba(0,0,0,0.3);border-radius: 10px;}.logo::first-letter {color: gold;text-shadow: 0 0 20px gold;}::first-letter
         select.form-control, select.form-control-majestic, .modal select, .admin-select { -webkit-appearance:none; -moz-appearance:none; appearance:none; background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23ff1493" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'); background-repeat:no-repeat; background-position:right 15px center; background-size:18px; padding-right:45px !important; }
         .login-screen { flex:1; display:flex; align-items:center; justify-content:center; padding:20px; }
         .login-box { background:rgba(18,18,18,0.95); backdrop-filter:blur(15px); border:2px solid #ff1493; border-radius:60px; padding:40px 30px; width:100%; max-width:500px; box-shadow:0 0 90px rgba(255,20,147,0.4); animation:fadeInUp 0.6s ease; }
@@ -127,10 +127,13 @@
         .filter-btn:hover { background:#ff1493; border-color:#ff1493; }
         .filter-btn.active { background:#ff1493; border-color:#ff1493; }
         .avatar-placeholder { background:#2a2a2a; display:inline-flex; align-items:center; justify-content:center; color:#aaa; font-size:3rem; font-weight:700; border-radius:50%; width:140px; height:140px; border:4px solid #ff1493; }
+        <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+        #particles-js {position: fixed;top: 0;left: 0;width: 100%;height: 100%;z-index: -1;}
+        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
     </style>
 </head>
 <body>
-    <div class="waves"></div>
+    <div id="particles-js"></div>
     <div id="toast" class="toast-notification hidden">
         <i class="fas fa-info-circle" id="toastIcon"></i>
         <span id="toastMessage"></span>
@@ -181,6 +184,8 @@
             <li class="nav-item"><button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events" type="button"><i class="fas fa-calendar-alt me-2"></i>События</button></li>
             <li class="nav-item"><button class="nav-link" id="news-tab" data-bs-toggle="tab" data-bs-target="#news" type="button"><i class="fas fa-newspaper me-2"></i>Новости</button></li>
             <li class="nav-item"><button class="nav-link" id="treasury-tab" data-bs-toggle="tab" data-bs-target="#treasury" type="button"><i class="fas fa-coins me-2"></i>Казна</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button"><i class="fas fa-chart-line me-2"></i>Актив семьи</button></li>
+        
         </ul>
 
         <div class="tab-content mt-3">
@@ -191,6 +196,7 @@
             <div class="tab-pane fade" id="events"><div class="glass-panel p-4"><div id="eventsContent"></div></div></div>
             <div class="tab-pane fade" id="news"><div class="glass-panel p-4"><div id="newsList"></div><div id="addNewsForm" class="mt-4 hidden"><h5 class="mb-3">Добавить новость</h5><input type="text" id="newsTitle" class="form-control-majestic mb-2" placeholder="Заголовок"><textarea id="newsText" class="form-control-majestic mb-2" rows="3" placeholder="Текст новости"></textarea><button id="addNewsBtn" class="btn btn-majestic">Опубликовать</button></div></div></div>
             <div class="tab-pane fade" id="treasury"><div class="glass-panel p-4"><div id="treasuryContent"></div></div></div>
+            <div class="tab-pane fade" id="activity"><div class="glass-panel p-4"><div id="activityContent"></div></div></div>
         </div>
     </div>
 
@@ -417,50 +423,54 @@
         }
 
         // ========== АДМИНСКИЕ ФУНКЦИИ ==========
-        async function adminAddPoints(nick, activity, points) {
-            if (!isAdmin) return;
-            try {
-                const user = await получитьДанныеИгрока(nick);
-                if (!user) throw new Error('Игрок не найден');
-                const сегодня = new Date().toISOString().split('T')[0];
-                let баллыСегодня = user['Баллы сегодня'] || 0;
-                let датаПоследних = user['Дата последних баллов'] || '';
-                if (датаПоследних !== сегодня) {
-                    баллыСегодня = 0;
-                    await supabaseRequest('Участники', 'PATCH', { 'Баллы сегодня':0, 'Дата последних баллов':сегодня }, `?Ник=eq.${encodeURIComponent(nick)}`);
-                }
-                const настройки = await получитьНастройки();
-                const лимит = parseInt(настройки.find(n => n['Параметр'] === 'лимит_баллов_в_день')?.['Значение']) || 10;
-                if (баллыСегодня + points > лимит) {
-                    throw new Error(`Лимит баллов на сегодня (${лимит}) будет превышен. Осталось: ${лимит - баллыСегодня}`);
-                }
-                const новыеВсего = (user['Баллы всего'] || 0) + points;
-                const новыеСегодня = баллыСегодня + points;
-                await supabaseRequest('Участники', 'PATCH', {
-                    'Баллы всего': новыеВсего,
-                    'Баллы сегодня': новыеСегодня,
-                    'Дата последних баллов': сегодня
-                }, `?Ник=eq.${encodeURIComponent(nick)}`);
-                await supabaseRequest('Логи баллов', 'POST', {
-                    'Дата': new Date().toISOString(),
-                    'Игрок': nick,
-                    'Активность': activity,
-                    'Баллы': points,
-                    'Начислил': currentUserNick,
-                    'Статус': 'одобрено'
-                });
-                await checkAndApplyAutoPromotion(nick, currentUserNick);
-                showToast(`Начислено! Всего: ${новыеВсего}`, 'success');
-                playersCache = null;
-                if (nick === currentUserNick) {
-                    renderProfile(await получитьДанныеИгрока(nick), 'myProfileContent');
-                } else {
-                    loadMembers();
-                }
-            } catch (err) {
-                showToast(err.message, 'error');
-            }
+       async function adminAddPoints(nick, activity, points) {
+    if (!isAdmin) return;
+    try {
+        const user = await получитьДанныеИгрока(nick);
+        if (!user) throw new Error('Игрок не найден');
+        const сегодня = new Date().toISOString().split('T')[0];
+        let баллыСегодня = user['Баллы сегодня'] || 0;
+        let датаПоследних = user['Дата последних баллов'] || '';
+        if (датаПоследних !== сегодня) {
+            баллыСегодня = 0;
+            await supabaseRequest('Участники', 'PATCH', {
+                'Баллы сегодня': 0,
+                'Дата последних баллов': сегодня
+            }, `?Ник=eq.${encodeURIComponent(nick)}`);
         }
+        const настройки = await получитьНастройки();
+        const лимит = parseInt(настройки.find(n => n['Параметр'] === 'лимит_баллов_в_день')?.['Значение']) || 10;
+        if (баллыСегодня + points > лимит) {
+            throw new Error(`Лимит баллов на сегодня (${лимит}) будет превышен. Осталось: ${лимит - баллыСегодня}`);
+        }
+        const новыеВсего = (user['Баллы всего'] || 0) + points;
+        const новыеСегодня = баллыСегодня + points;
+        await supabaseRequest('Участники', 'PATCH', {
+            'Баллы всего': новыеВсего,
+            'Баллы сегодня': новыеСегодня,
+            'Дата последних баллов': сегодня
+        }, `?Ник=eq.${encodeURIComponent(nick)}`);
+        await checkAndApplyAutoPromotion(nick, currentUserNick);
+        await supabaseRequest('Логи баллов', 'POST', {
+            'Дата': new Date().toISOString(),
+            'Игрок': nick,
+            'Активность': activity,
+            'Баллы': points,
+            'Начислил': currentUserNick,
+            'Статус': 'одобрено'
+        });
+        showToast(`Начислено! Всего: ${новыеВсего}`, 'success');
+        playersCache = null;
+        confetti({particleCount: 100, spread: 70, origin: { y: 0.6 }});
+        if (nick === currentUserNick) {
+            renderProfile(await получитьДанныеИгрока(nick), 'myProfileContent');
+        } else {
+            loadMembers();
+        }
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
 
         async function adminRemovePoints(nick, amount) {
             if (!isAdmin) {
@@ -708,6 +718,12 @@
             else if (isAdmin) icon = '<i class="fas fa-crown silver-crown"></i>';
             else icon = '<i class="fas fa-user user-icon"></i>';
             welcomeUser.innerHTML = `${icon} ${user['Ник']}`;
+            #welcomeUser {
+    border: 2px solid #ff1493;
+    border-radius: 30px;
+    padding: 5px 20px;
+    box-shadow: 0 0 15px #ff1493;
+}
 
             renderProfile(user, 'myProfileContent');
             loadMembers();
@@ -733,6 +749,9 @@
         document.getElementById('treasury-tab')?.addEventListener('shown.bs.tab', function (e) {
             loadTreasury();
         });
+        document.getElementById('activity-tab')?.addEventListener('shown.bs.tab', function (e) {
+    loadFamilyActivity();
+});
 
         // ========== ПРОФИЛЬ ==========
         async function renderProfile(user, containerId) {
@@ -787,7 +806,7 @@
             const details = await получитьДеталиАктивностей(nick);
             const filtered = details.filter(d => d['Активность'] === activity);
             let html = filtered.map(d => `<div class="history-item"><small>${new Date(d['Дата']).toLocaleString()}</small><div><strong>+${d['Баллы']}</strong> баллов</div><small>Начислил: ${d['Начислил']}</small></div>`).join('');
-            alert(html || 'Нет записей');
+            showToast(html || 'Нет записей', 'info');
         };
 
         window.openAvatarModal = function(nick) {
@@ -812,16 +831,23 @@
         async function loadMembers() {
             const container = document.getElementById('membersContent');
             if (!container) return;
+            // Заглушка для онлайн: пока 0 (потом можно добавить логику)
+            const onlinePlayers = 0; // players.filter(p => p['онлайн']).length;
+            const onlineAdmins = 0; // players.filter(p => p['Права'] !== 'участник' && p['онлайн']).length;
             const players = await получитьВсехУчастников();
             const ranks = await получитьВсеРанги();
             const total = players.length;
             const admins = players.filter(p => p['Права']?.toLowerCase() !== 'участник').length;
-            const last = players.sort((a,b) => new Date(b['Дата вступления'] || 0) - new Date(a['Дата вступления'] || 0))[0];
+            const today = new Date().toISOString().split('T')[0];
+            const newToday = players.filter(p => p['Дата вступления'] === today).length;
             let html = `
-                <div class="row mb-4 text-center">
-                    <div class="col-md-4"><div class="glass-panel p-3"><div class="stat-number">${total}</div><div>Всего игроков</div></div></div>
-                    <div class="col-md-4"><div class="glass-panel p-3"><div class="stat-number">${admins}</div><div>Администраторов</div></div></div>
-                    <div class="col-md-4"><div class="glass-panel p-3"><div class="stat-number">${last ? last['Ник'] : '-'}</div><div>Последний принятый</div></div></div>
+            <div class="row mb-4 text-center">
+            <div class="col-3"><div class="glass-panel p-2"><div class="stat-number">${total}</div><div>Всего игроков</div></div></div>
+            <div class="col-3"><div class="glass-panel p-2"><div class="stat-number">${onlinePlayers}</div><div>Игроков в сети</div></div></div>
+            <div class="col-3"><div class="glass-panel p-2"><div class="stat-number">${admins}</div><div>Администраторы</div></div></div>
+            <div class="col-3"><div class="glass-panel p-2"><div class="stat-number">${onlineAdmins}</div><div>Админы в сети</div></div></div>
+            <div class="col-md-4"><div class="glass-panel p-3"><div class="stat-number">${newToday}</div><div>Новых сегодня</div></div></div>
+            </div>
                 </div>
                 <div class="mb-3"><input type="text" id="memberSearch" class="form-control-majestic" placeholder="Поиск по нику..."></div>
                 <div class="mb-3"><select id="memberRankFilter" class="form-control-majestic"><option value="">Все ранги</option>${ranks.map(r => `<option value="${r['Название']}">${r['Название']}</option>`).join('')}</select></div>
@@ -960,10 +986,111 @@
             }catch(e){ showToast('Ошибка отправки','error'); }
         });
 
-        window.получитьБонус = async function(игрок){ /* функция уже есть, оставляем */ };
-        window.обменятьРПГнаБаллы = async function(игрок){ /* функция уже есть, оставляем */ };
-        window.обменятьВиртыНаБаллы = async function(игрок){ /* функция уже есть, оставляем */ };
+        window.получитьБонус = async function(игрок) {
+    try {
+        const user = await получитьДанныеИгрока(игрок);
+        if (!user) throw new Error('Игрок не найден');
+        const сегодня = new Date().toISOString().split('T')[0];
+        if (user['последний_бонус'] === сегодня) {
+            showToast('Вы уже получили бонус сегодня', 'warning');
+            playSound('promote'); // или другой звук, если есть
+            return;
+        }
+        let серия = 1;
+        if (user['последний_бонус']) {
+            const последний = new Date(user['последний_бонус']);
+            const вчера = new Date();
+            вчера.setDate(вчера.getDate() - 1);
+            if (последний.toDateString() === вчера.toDateString()) {
+                серия = (user['серия_бонусов'] || 0) + 1;
+            }
+        }
+        let рпгНаграда = Math.floor(Math.random() * 20) + 5;
+        let виртыНаграда = Math.floor(Math.random() * 1500) + 500;
+        if (серия === 7) {
+            рпгНаграда = Math.floor(Math.random() * 50) + 50;
+            виртыНаграда = Math.floor(Math.random() * 3000) + 2000;
+        }
+        await supabaseRequest('Участники', 'PATCH', {
+            рпг_баллы: (user['рпг_баллы'] || 0) + рпгНаграда,
+            вирты: (user['вирты'] || 0) + виртыНаграда,
+            последний_бонус: сегодня,
+            серия_бонусов: серия
+        }, `?Ник=eq.${encodeURIComponent(игрок)}`);
+        await supabaseRequest('Логи_РПГ', 'POST', {
+            игрок: игрок,
+            активность: 'Ежедневный бонус',
+            награда_рпг: рпгНаграда,
+            кем_выдано: 'система'
+        });
+        showToast(`Бонус получен! +${рпгНаграда} РПГ, +${виртыНаграда} виртов`, 'success');
+        renderProfile(await получитьДанныеИгрока(игрок), 'myProfileContent');
+        loadRPGBoard();
+    } catch (e) {
+        showToast('Ошибка при получении бонуса', 'error');
+    }
+};
+        // Обмен РПГ на баллы
+window.обменятьРПГнаБаллы = async function(игрок) {
+    try {
+        const user = await получитьДанныеИгрока(игрок);
+        if (!user) throw new Error('Игрок не найден');
+        const рпг = user['рпг_баллы'] || 0;
+        if (рпг < 1000) {
+            showToast('Недостаточно РПГ-баллов', 'warning');
+            return;
+        }
+        const обменов = Math.floor(рпг / 1000);
+        const потрачено = обменов * 1000;
+        await supabaseRequest('Участники', 'PATCH', {
+            рпг_баллы: рпг - потрачено,
+            'Баллы всего': (user['Баллы всего'] || 0) + обменов
+        }, `?Ник=eq.${encodeURIComponent(игрок)}`);
+        await supabaseRequest('Логи действий админов', 'POST', {
+            'Дата': new Date().toISOString(),
+            'Админ': 'система',
+            'Действие': 'обмен РПГ',
+            'Цель': игрок,
+            'Подробности': `${потрачено} РПГ → ${обменов} баллов`
+        });
+        showToast(`Обмен успешен! +${обменов} баллов`, 'success');
+        renderProfile(await получитьДанныеИгрока(игрок), 'myProfileContent');
+        loadRPGBoard();
+    } catch (e) {
+        showToast('Ошибка обмена', 'error');
+    }
+};
 
+// Обмен виртов на баллы
+window.обменятьВиртыНаБаллы = async function(игрок) {
+    try {
+        const user = await получитьДанныеИгрока(игрок);
+        if (!user) throw new Error('Игрок не найден');
+        const вирты = user['вирты'] || 0;
+        if (вирты < 20000) {
+            showToast('Недостаточно виртов', 'warning');
+            return;
+        }
+        const обменов = Math.floor(вирты / 20000);
+        const потрачено = обменов * 20000;
+        await supabaseRequest('Участники', 'PATCH', {
+            вирты: вирты - потрачено,
+            'Баллы всего': (user['Баллы всего'] || 0) + обменов
+        }, `?Ник=eq.${encodeURIComponent(игрок)}`);
+        await supabaseRequest('Логи действий админов', 'POST', {
+            'Дата': new Date().toISOString(),
+            'Админ': 'система',
+            'Действие': 'обмен виртов',
+            'Цель': игрок,
+            'Подробности': `${потрачено} виртов → ${обменов} баллов`
+        });
+        showToast(`Обмен успешен! +${обменов} баллов`, 'success');
+        renderProfile(await получитьДанныеИгрока(игрок), 'myProfileContent');
+        loadRPGBoard();
+    } catch (e) {
+        showToast('Ошибка обмена', 'error');
+    }
+};
         // ========== СОБЫТИЯ ==========
         async function loadEvents() {
             const container = document.getElementById('eventsContent');
@@ -1327,6 +1454,73 @@
             });
             div.innerHTML=html;
         }
+        // Функции для управления РПГ-заданиями
+window.showAddRPGTaskModal = function() {
+    document.getElementById('rpgTaskId').value = '';
+    document.getElementById('rpgTaskName').value = '';
+    document.getElementById('rpgTaskDesc').value = '';
+    document.getElementById('rpgTaskReward').value = '';
+    document.getElementById('rpgTaskActive').checked = true;
+    document.getElementById('rpgTaskModalTitle').textContent = 'Добавление задания';
+    new bootstrap.Modal(document.getElementById('rpgTaskModal')).show();
+};
+
+window.editRPGTask = async function(id) {
+    const tasks = await supabaseRequest('РПГ_активности', 'GET', null, `?id=eq.${id}`);
+    if (tasks.length === 0) return;
+    const t = tasks[0];
+    document.getElementById('rpgTaskId').value = t.id;
+    document.getElementById('rpgTaskName').value = t.название;
+    document.getElementById('rpgTaskDesc').value = t.описание || '';
+    document.getElementById('rpgTaskReward').value = t.награда_рпг;
+    document.getElementById('rpgTaskActive').checked = t.активно;
+    document.getElementById('rpgTaskModalTitle').textContent = 'Редактирование задания';
+    new bootstrap.Modal(document.getElementById('rpgTaskModal')).show();
+};
+
+window.toggleRPGTask = async function(id) {
+    const tasks = await supabaseRequest('РПГ_активности', 'GET', null, `?id=eq.${id}`);
+    if (tasks.length === 0) return;
+    const newActive = !tasks[0].активно;
+    await supabaseRequest('РПГ_активности', 'PATCH', { активно: newActive }, `?id=eq.${id}`);
+    showToast(`Задание ${newActive ? 'активировано' : 'деактивировано'}`, 'info');
+    loadRPGAdminPanel();
+};
+
+// Обработчик сохранения
+document.getElementById('saveRPGTaskBtn')?.addEventListener('click', async () => {
+    const id = document.getElementById('rpgTaskId').value;
+    const name = document.getElementById('rpgTaskName').value.trim();
+    const desc = document.getElementById('rpgTaskDesc').value.trim();
+    const reward = parseInt(document.getElementById('rpgTaskReward').value);
+    const active = document.getElementById('rpgTaskActive').checked;
+    if (!name || !reward) {
+        showToast('Заполните название и награду', 'warning');
+        return;
+    }
+    try {
+        if (id) {
+            await supabaseRequest('РПГ_активности', 'PATCH', {
+                название: name,
+                описание: desc,
+                награда_рпг: reward,
+                активно: active
+            }, `?id=eq.${id}`);
+        } else {
+            await supabaseRequest('РПГ_активности', 'POST', {
+                название: name,
+                описание: desc,
+                награда_рпг: reward,
+                активно: active
+            });
+        }
+        showToast('Задание сохранено', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('rpgTaskModal')).hide();
+        loadRPGAdminPanel();
+    } catch (err) {
+        showToast('Ошибка: ' + err.message, 'error');
+    }
+});
         window.approveReport = async function(id){
             try{
                 const отчет = (await supabaseRequest('Отчеты_РПГ','GET',null,`?id=eq.${id}`))[0];
@@ -1454,11 +1648,29 @@
                         if(settings.length>0) currentBalance = parseFloat(settings[0]['Значение'])||0;
                         else { await supabaseRequest('Настройки','POST',{ 'Параметр':'баланс_казны','Значение':'0' }); }
                         let newBalance;
-                        if(type==='пополнение') newBalance = currentBalance + amount;
-                        else {
-                            if(currentBalance<amount) { showToast('Недостаточно средств в казне','warning'); return; }
-                            newBalance = currentBalance - amount;
-                        }
+if (type === 'пополнение') {
+    // Проверить, достаточно ли у игрока виртов
+    if ((currentUser['вирты'] || 0) < amount) {
+        showToast('У вас недостаточно виртов', 'warning');
+        return;
+    }
+    // Списать вирты у игрока
+    await supabaseRequest('Участники', 'PATCH', {
+        вирты: (currentUser['вирты'] || 0) - amount
+    }, `?Ник=eq.${encodeURIComponent(currentUserNick)}`);
+    newBalance = currentBalance + amount;
+} else { // списание
+    // Проверить, достаточно ли в казне
+    if (currentBalance < amount) {
+        showToast('Недостаточно средств в казне', 'warning');
+        return;
+    }
+    // Начислить вирты игроку (админу или тому, кто списывает)
+    await supabaseRequest('Участники', 'PATCH', {
+        вирты: (currentUser['вирты'] || 0) + amount
+    }, `?Ник=eq.${encodeURIComponent(currentUserNick)}`);
+    newBalance = currentBalance - amount;
+}
                         await supabaseRequest('Настройки','PATCH',{ 'Значение':newBalance.toString() },'?Параметр=eq.баланс_казны');
                         await supabaseRequest('Казна','POST',{ 'Тип':type, 'Сумма':amount, 'Описание':description||(type==='пополнение'?'Пополнение':'Списание'), 'Игрок':currentUserNick, 'Дата':new Date().toISOString() });
                         showToast(type==='пополнение'?`Казна пополнена на ${amount} виртов`:`Списано ${amount} виртов из казны`, type==='пополнение'?'success':'info');
@@ -1466,7 +1678,29 @@
                         loadTreasury();
                     } catch(err) { showToast('Ошибка операции: '+err.message,'error'); }
                 });
+                // Обновить данные currentUser после изменения виртов
+currentUser = await получитьДанныеИгрока(currentUserNick);
             }
+            async function loadFamilyActivity() {
+    const container = document.getElementById('activityContent');
+    if (!container) return;
+    try {
+        const players = await получитьВсехУчастников();
+        // Сортируем по баллам (по убыванию)
+        const sorted = players.sort((a,b) => (b['Баллы всего']||0) - (a['Баллы всего']||0));
+        const top10 = sorted.slice(0,10);
+        let html = '<h5 class="mb-3">Топ 10 по общим баллам</h5>';
+        top10.forEach((p, i) => {
+            html += `<div class="history-item">${i+1}. ${p['Ник']} — ${p['Баллы всего']||0} баллов</div>`;
+        });
+        // Можно добавить общую сумму баллов семьи
+        const totalPoints = players.reduce((sum, p) => sum + (p['Баллы всего']||0), 0);
+        html += `<hr><p><strong>Общий баланс баллов семьи:</strong> ${totalPoints}</p>`;
+        container.innerHTML = html;
+    } catch (err) {
+        container.innerHTML = '<p class="text-danger">Ошибка загрузки</p>';
+    }
+}
 
             // ===== ОБРАБОТЧИКИ ДЛЯ КНОПОК ПОДТВЕРЖДЕНИЯ (СНЯТИЕ БАЛЛОВ, ВАРНЫ) =====
             document.getElementById('confirmRemovePoints')?.addEventListener('click', async function() {
@@ -1515,6 +1749,23 @@
         });
 
         // ========== МОДАЛКИ (HTML) УЖЕ ЕСТЬ В ФАЙЛЕ ==========
+        particlesJS('particles-js', {
+    particles: {
+        number: { value: 80, density: { enable: true, value_area: 800 } },
+        color: { value: '#ff1493' },
+        shape: { type: 'circle' },
+        opacity: { value: 0.5, random: false },
+        size: { value: 3, random: true },
+        line_linked: { enable: true, distance: 150, color: '#ff1493', opacity: 0.4, width: 1 },
+        move: { enable: true, speed: 2, direction: 'none', random: false, straight: false, out_mode: 'out' }
+    },
+    interactivity: {
+        detect_on: 'canvas',
+        events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' }, resize: true },
+        modes: { repulse: { distance: 100, duration: 0.4 }, push: { particles_nb: 4 } }
+    },
+    retina_detect: true
+});
     </script>
 
     <!-- Модальное окно профиля -->
@@ -1553,5 +1804,30 @@
             </div>
         </div>
     </div>
+    <!-- Модальное окно для РПГ-задания -->
+<div class="modal fade" id="rpgTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rpgTaskModalTitle">Добавление задания</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="rpgTaskId">
+                <input type="text" id="rpgTaskName" class="form-control" placeholder="Название задания" required>
+                <textarea id="rpgTaskDesc" class="form-control" placeholder="Описание (необязательно)" rows="2"></textarea>
+                <input type="number" id="rpgTaskReward" class="form-control" placeholder="Награда (РПГ)" min="1" required>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="rpgTaskActive" checked>
+                    <label class="form-check-label" for="rpgTaskActive">Активно</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-majestic" id="saveRPGTaskBtn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
