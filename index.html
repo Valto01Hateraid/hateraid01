@@ -1661,6 +1661,29 @@
             };
             new bootstrap.Modal(document.getElementById('avatarModal')).show();
         };
+        // ===== ФУНКЦИИ ДЛЯ ОТКРЫТИЯ МОДАЛЬНЫХ ОКОН АДМИНКИ =====
+function openAddPointsModal(nick) {
+    document.getElementById('pointsNick').value = nick;
+    document.getElementById('pointsAmount').value = '';
+    new bootstrap.Modal(document.getElementById('pointsModal')).show();
+}
+
+function openRemovePointsModal(nick) {
+    document.getElementById('removePointsNick').value = nick;
+    document.getElementById('removePointsAmount').value = '';
+    new bootstrap.Modal(document.getElementById('removePointsModal')).show();
+}
+
+function openAddWarningModal(nick) {
+    document.getElementById('warningNick').value = nick;
+    document.getElementById('warningReason').value = '';
+    new bootstrap.Modal(document.getElementById('warningModal')).show();
+}
+
+function openRemoveWarningModal(nick) {
+    document.getElementById('removeWarningNick').value = nick;
+    new bootstrap.Modal(document.getElementById('removeWarningModal')).show();
+}
 
         // ---- Участники ----
         async function loadMembers() {
@@ -2986,7 +3009,50 @@ await checkAndApplyAutoPromotion(nick, currentUserNick);
             const adminPane = document.getElementById('admin');
             if (adminPane) adminPane.remove();
         }
+// ===== ОБРАБОТЧИКИ ДЛЯ КНОПОК ПОДТВЕРЖДЕНИЯ (СНЯТИЕ БАЛЛОВ, ВАРНЫ) =====
+document.getElementById('confirmRemovePoints')?.addEventListener('click', async function() {
+    const nick = document.getElementById('removePointsNick').value;
+    const amount = parseFloat(document.getElementById('removePointsAmount').value);
+    if (!nick || isNaN(amount) || amount <= 0) {
+        showToast('Введите корректную сумму', 'warning');
+        return;
+    }
+    try {
+        await adminRemovePoints(nick, amount);
+        bootstrap.Modal.getInstance(document.getElementById('removePointsModal')).hide();
+    } catch (error) {
+        showToast('Ошибка: ' + error.message, 'error');
+    }
+});
 
+document.getElementById('confirmAddWarning')?.addEventListener('click', async function() {
+    const nick = document.getElementById('warningNick').value;
+    const reason = document.getElementById('warningReason').value.trim();
+    if (!nick || !reason) {
+        showToast('Заполните ник и причину', 'warning');
+        return;
+    }
+    try {
+        await adminAddWarning(nick, reason);
+        bootstrap.Modal.getInstance(document.getElementById('warningModal')).hide();
+    } catch (error) {
+        showToast('Ошибка: ' + error.message, 'error');
+    }
+});
+
+document.getElementById('confirmRemoveWarning')?.addEventListener('click', async function() {
+    const nick = document.getElementById('removeWarningNick').value;
+    if (!nick) {
+        showToast('Ник не указан', 'warning');
+        return;
+    }
+    try {
+        await adminRemoveWarning(nick);
+        bootstrap.Modal.getInstance(document.getElementById('removeWarningModal')).hide();
+    } catch (error) {
+        showToast('Ошибка: ' + error.message, 'error');
+    }
+});
         // Выход
         logoutBtn.addEventListener('click', () => {
             mainInterface.classList.add('hidden');
@@ -3313,6 +3379,48 @@ document.getElementById('confirmAddPoints')?.addEventListener('click', async fun
         showToast('Ошибка: ' + error.message, 'error');
     }
 });
+        // ===== АВТОМАТИЧЕСКОЕ ПОВЫШЕНИЕ =====
+async function checkAndApplyAutoPromotion(nick, adminNick) {
+    try {
+        const user = await получитьДанныеИгрока(nick);
+        if (!user) return;
+        const allRanks = await получитьВсеРанги();
+        if (!allRanks || allRanks.length === 0) return;
+        const currentRank = allRanks.find(r => r['Название'] === user['Ранг']);
+        if (!currentRank) return;
+        const currentPoints = user['Баллы всего'] || 0;
+        const higherRanks = allRanks.filter(r => r['Порядок'] > currentRank['Порядок'] && r['Тип повышения'] === 'авто');
+        higherRanks.sort((a, b) => a['Порядок'] - b['Порядок']);
+        let targetRank = null;
+        for (let rank of higherRanks) {
+            if (currentPoints >= rank['Требуется баллов']) {
+                targetRank = rank;
+            } else {
+                break;
+            }
+        }
+        if (targetRank && targetRank['Название'] !== user['Ранг']) {
+            await supabaseRequest('Участники', 'PATCH', {
+                'Ранг': targetRank['Название']
+            }, `?Ник=eq.${encodeURIComponent(nick)}`);
+            await supabaseRequest('Логи действий админов', 'POST', {
+                'Дата': new Date().toISOString(),
+                'Админ': adminNick || 'система',
+                'Действие': 'авто-повышение',
+                'Цель': nick,
+                'Подробности': `${user['Ранг']} → ${targetRank['Название']} (по достижению ${targetRank['Требуется баллов']} баллов)`
+            });
+            playSound('promote');
+            showToast(`${nick} автоматически повышен до ${targetRank['Название']}!`, 'success');
+            playersCache = null;
+            if (nick === currentUserNick) {
+                renderProfile(await получитьДанныеИгрока(nick), 'myProfileContent');
+            }
+        }
+    } catch (err) {
+        console.error('Ошибка при авто-повышении:', err);
+    }
+}
      
 // ===== БАЗОВЫЕ ФУНКЦИИ ДЛЯ АДМИНКИ (ДОБАВЛЕНО) =====
 async function adminRemovePoints(nick, amount) {
@@ -3341,6 +3449,145 @@ async function adminRemoveWarning(nick) {
     showToast(`Функция снятия предупреждения для ${nick} временно не реализована`, 'info');
     // TODO: добавить реальную логику
 }
+        // ===== АДМИНСКИЕ ФУНКЦИИ (СНЯТИЕ БАЛЛОВ, ВАРНЫ) =====
+async function adminRemovePoints(nick, amount) {
+    if (!isAdmin) {
+        showToast('Недостаточно прав', 'error');
+        return;
+    }
+    try {
+        const user = await получитьДанныеИгрока(nick);
+        if (!user) throw new Error('Игрок не найден');
+
+        const новыеВсего = (user['Баллы всего'] || 0) - amount;
+        if (новыеВсего < 0) {
+            showToast('Нельзя снять больше, чем есть у игрока', 'warning');
+            return;
+        }
+
+        await supabaseRequest('Участники', 'PATCH', {
+            'Баллы всего': новыеВсего
+        }, `?Ник=eq.${encodeURIComponent(nick)}`);
+
+        // Логируем снятие баллов как отрицательную запись в Логи баллов
+        await supabaseRequest('Логи баллов', 'POST', {
+            'Дата': new Date().toISOString(),
+            'Игрок': nick,
+            'Активность': 'Списание',
+            'Баллы': -amount,
+            'Начислил': currentUserNick,
+            'Статус': 'одобрено'
+        });
+
+        // Логируем действие админа
+        await supabaseRequest('Логи действий админов', 'POST', {
+            'Дата': new Date().toISOString(),
+            'Админ': currentUserNick,
+            'Действие': 'снятие баллов',
+            'Цель': nick,
+            'Подробности': `Снято ${amount} баллов`
+        });
+
+        showToast(`Снято ${amount} баллов у игрока ${nick}`, 'info');
+        playersCache = null; // сброс кэша
+        if (nick === currentUserNick) {
+            renderProfile(await получитьДанныеИгрока(nick), 'myProfileContent');
+        } else {
+            loadMembers();
+        }
+    } catch (err) {
+        showToast('Ошибка: ' + err.message, 'error');
+    }
+}
+
+async function adminAddWarning(nick, reason) {
+    if (!isAdmin) {
+        showToast('Недостаточно прав', 'error');
+        return;
+    }
+    try {
+        const user = await получитьДанныеИгрока(nick);
+        if (!user) throw new Error('Игрок не найден');
+
+        const новыеПредупреждения = (user['Предупреждения'] || 0) + 1;
+        await supabaseRequest('Участники', 'PATCH', {
+            'Предупреждения': новыеПредупреждения
+        }, `?Ник=eq.${encodeURIComponent(nick)}`);
+
+        await supabaseRequest('Логи предупреждений', 'POST', {
+            'Дата': new Date().toISOString(),
+            'Игрок': nick,
+            'Причина': reason,
+            'Выдал': currentUserNick
+        });
+
+        await supabaseRequest('Логи действий админов', 'POST', {
+            'Дата': new Date().toISOString(),
+            'Админ': currentUserNick,
+            'Действие': 'выдача предупреждения',
+            'Цель': nick,
+            'Подробности': reason
+        });
+
+        showToast(`Предупреждение выдано игроку ${nick}`, 'warning');
+        playersCache = null;
+        if (nick === currentUserNick) {
+            renderProfile(await получитьДанныеИгрока(nick), 'myProfileContent');
+        } else {
+            loadMembers();
+        }
+    } catch (err) {
+        showToast('Ошибка: ' + err.message, 'error');
+    }
+}
+
+async function adminRemoveWarning(nick) {
+    if (!isAdmin) {
+        showToast('Недостаточно прав', 'error');
+        return;
+    }
+    try {
+        const user = await получитьДанныеИгрока(nick);
+        if (!user) throw new Error('Игрок не найден');
+
+        const текущие = user['Предупреждения'] || 0;
+        if (текущие <= 0) {
+            showToast('У игрока нет предупреждений', 'warning');
+            return;
+        }
+
+        const новыеПредупреждения = текущие - 1;
+        await supabaseRequest('Участники', 'PATCH', {
+            'Предупреждения': новыеПредупреждения
+        }, `?Ник=eq.${encodeURIComponent(nick)}`);
+
+        await supabaseRequest('Логи предупреждений', 'POST', {
+            'Дата': new Date().toISOString(),
+            'Игрок': nick,
+            'Причина': 'Снятие предупреждения',
+            'Выдал': currentUserNick
+        });
+
+        await supabaseRequest('Логи действий админов', 'POST', {
+            'Дата': new Date().toISOString(),
+            'Админ': currentUserNick,
+            'Действие': 'снятие предупреждения',
+            'Цель': nick,
+            'Подробности': 'Снято одно предупреждение'
+        });
+
+        showToast(`Предупреждение снято у игрока ${nick}`, 'info');
+        playersCache = null;
+        if (nick === currentUserNick) {
+            renderProfile(await получитьДанныеИгрока(nick), 'myProfileContent');
+        } else {
+            loadMembers();
+        }
+    } catch (err) {
+        showToast('Ошибка: ' + err.message, 'error');
+    }
+}
+        
     </script>
     
     <!-- Модальное окно профиля (для просмотра других игроков) -->
