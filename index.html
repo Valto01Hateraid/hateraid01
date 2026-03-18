@@ -718,12 +718,6 @@
             else if (isAdmin) icon = '<i class="fas fa-crown silver-crown"></i>';
             else icon = '<i class="fas fa-user user-icon"></i>';
             welcomeUser.innerHTML = `${icon} ${user['Ник']}`;
-            #welcomeUser {
-    border: 2px solid #ff1493;
-    border-radius: 30px;
-    padding: 5px 20px;
-    box-shadow: 0 0 15px #ff1493;
-}
 
             renderProfile(user, 'myProfileContent');
             loadMembers();
