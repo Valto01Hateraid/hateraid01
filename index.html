@@ -3290,6 +3290,29 @@ function openRemoveWarningModal(nick) {
     document.getElementById('removeWarningNick').value = nick;
     new bootstrap.Modal(document.getElementById('removeWarningModal')).show();
 }
+        // Обработчик для кнопки "Начислить" (с отладкой)
+document.getElementById('confirmAddPoints')?.addEventListener('click', async function() {
+    console.log('Клик по кнопке "Начислить"');
+    const nick = document.getElementById('pointsNick').value;
+    const activity = document.getElementById('pointsActivity').value;
+    const amount = parseFloat(document.getElementById('pointsAmount').value);
+    console.log('Данные:', { nick, activity, amount });
+
+    if (!nick || isNaN(amount) || amount <= 0) {
+        showToast('Заполните все поля', 'warning');
+        return;
+    }
+
+    try {
+        console.log('Вызов adminAddPoints...');
+        await adminAddPoints(nick, activity, amount);
+        console.log('adminAddPoints выполнена успешно');
+        bootstrap.Modal.getInstance(document.getElementById('pointsModal')).hide();
+    } catch (error) {
+        console.error('Ошибка в adminAddPoints:', error);
+        showToast('Ошибка: ' + error.message, 'error');
+    }
+});
     </script>
     
     // ===== ГЛОБАЛЬНЫЕ ФУНКЦИИ ДЛЯ АДМИНКИ =====
