@@ -1,23 +1,20 @@
 <!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.5,user-scalable=yes"><title>Hateraid — Управление семьёй</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;600;700&display=swap" rel="stylesheet"><style>
 *{margin:0;padding:0;box-sizing:border-box}
-html, body { height: 100%; margin: 0; padding: 0; }
-body{font-family:'Oswald',sans-serif;background:linear-gradient(135deg,#0a0a0a 0%,#1a0a1a 50%,#0a0a0a 100%);color:#f0f0f0;min-height:100%;display:flex;flex-direction:column;overflow-x:hidden;position:relative}
-.waves{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;background:linear-gradient(135deg,#0a0a0a 0%,#1a0a1a 70%,#0a0a0a 100%);overflow:hidden}
-.waves::before{content:'';position:absolute;width:200%;height:200%;top:-50%;left:-50%;background:radial-gradient(circle at 30% 40%,rgba(255,20,147,0.25) 0%,transparent 35%),radial-gradient(circle at 70% 60%,rgba(255,20,147,0.25) 0%,transparent 35%),repeating-linear-gradient(45deg,rgba(255,255,255,0.04) 0px,rgba(255,255,255,0.04) 2px,transparent 2px,transparent 30px);animation:wave 22s infinite alternate ease-in-out;filter:blur(3px)}
-.waves::after{content:'';position:absolute;width:200%;height:200%;top:-50%;left:-50%;background:radial-gradient(circle at 80% 20%,rgba(255,20,147,0.25) 0%,transparent 45%);animation:wave2 28s infinite alternate ease-in-out;filter:blur(5px)}
-@keyframes wave{0%{transform:translate(0,0) rotate(0deg)}100%{transform:translate(-5%,-5%) rotate(2deg)}}
-@keyframes wave2{0%{transform:translate(0,0) rotate(0deg)}100%{transform:translate(5%,5%) rotate(-2deg)}}
-.logo {font-family: 'Oswald', sans-serif;font-weight: 700;font-size: 3rem;color: #fff;text-decoration: none;line-height: 1.2;text-shadow: 0 0 20px rgba(255,20,147,0.8);letter-spacing: 2px;position: relative;display: inline-block;padding: 5px 15px;background: #1a1a1a;border: 2px solid #ff1493;border-radius: 12px;box-shadow: 0 0 15px rgba(255,20,147,0.5);transition: 0.3s;text-align: center;}.logo:hover {border-color: #ff69b4;box-shadow: 0 0 25px #ff1493;}.logo::first-letter {color: gold;text-shadow: 0 0 20px gold;}
+html,body{height:100%;overflow:hidden;margin:0;padding:0}
+body{font-family:'Oswald',sans-serif;background:linear-gradient(135deg,#0a0a0a 0%,#1a0a1a 50%,#0a0a0a 100%);color:#f0f0f0;display:flex;flex-direction:column}
+#particles-js{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1}
+#toast{position:fixed;top:20px;right:20px;z-index:9999}
+.logo{font-family:'Oswald',sans-serif;font-weight:700;font-size:3rem;color:#fff;text-decoration:none;line-height:1.2;text-shadow:0 0 20px rgba(255,20,147,0.8);letter-spacing:2px;display:inline-block;padding:5px 15px;background:#1a1a1a;border:2px solid #ff1493;border-radius:12px;box-shadow:0 0 15px rgba(255,20,147,0.5);transition:.3s;text-align:center}.logo:hover{border-color:#ff69b4;box-shadow:0 0 25px #ff1493}.logo::first-letter{color:gold;text-shadow:0 0 20px gold}
 select.form-control,select.form-control-majestic,.modal select,.admin-select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23ff1493" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>');background-repeat:no-repeat;background-position:right 15px center;background-size:18px;padding-right:45px!important}
-.login-screen{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-screen{height:100%;display:flex;align-items:center;justify-content:center;padding:20px}
 .login-box{background:rgba(18,18,18,0.95);backdrop-filter:blur(15px);border:2px solid #ff1493;border-radius:60px;padding:40px 30px;width:100%;max-width:500px;box-shadow:0 0 90px rgba(255,20,147,0.4);animation:fadeInUp .6s ease}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
 .form-control-majestic{background:#222;border:1px solid #333;color:#fff;font-weight:400;font-family:'Oswald',sans-serif;padding:15px 25px;border-radius:50px;margin-bottom:20px;width:100%;font-size:16px;transition:.3s}
 .form-control-majestic:focus{border-color:#ff1493;box-shadow:0 0 25px rgba(255,20,147,0.4);background:#2a2a2a;color:#fff;outline:none}
 .form-control-majestic::placeholder{color:#aaa;font-weight:300}
-.glass-panel{background:rgba(20,20,20,0.75);backdrop-filter:blur(15px);border:1px solid rgba(255,20,147,0.4);border-radius:35px;box-shadow:0 20px 40px rgba(0,0,0,0.8),0 0 0 1px rgba(255,20,147,0.3) inset,0 0 40px rgba(255,20,147,0.3);transition:all .3s cubic-bezier(0.2,0.9,0.3,1)}
+.glass-panel{background:rgba(20,20,20,0.75);backdrop-filter:blur(15px);border:1px solid rgba(255,20,147,0.4);border-radius:35px;box-shadow:0 20px 40px rgba(0,0,0,0.8),0 0 0 1px rgba(255,20,147,0.3) inset,0 0 40px rgba(255,20,147,0.3);transition:.3s}
 .glass-panel:hover{box-shadow:0 25px 50px rgba(0,0,0,1),0 0 0 2px rgba(255,20,147,0.7) inset,0 0 60px rgba(255,20,147,0.6);transform:translateY(-3px)}
-.btn-majestic{background:linear-gradient(145deg,#ff1493,#ff69b4);border:none;color:#fff;font-weight:600;font-family:'Oswald',sans-serif;padding:12px 30px;border-radius:50px;transition:.2s;text-transform:uppercase;letter-spacing:1px;box-shadow:0 8px 25px rgba(255,20,147,0.6);position:relative;overflow:hidden;transform:scale(1)}
+.btn-majestic{background:linear-gradient(145deg,#ff1493,#ff69b4);border:none;color:#fff;font-weight:600;font-family:'Oswald',sans-serif;padding:12px 30px;border-radius:50px;transition:.2s;text-transform:uppercase;letter-spacing:1px;box-shadow:0 8px 25px rgba(255,20,147,0.6);position:relative;overflow:hidden}
 .btn-majestic::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:rgba(255,255,255,0.15);transform:rotate(45deg);transition:.5s;opacity:0}
 .btn-majestic:hover::after{opacity:1;transform:rotate(45deg) translate(20%,20%)}
 .btn-majestic:hover{transform:scale(1.05);box-shadow:0 12px 35px rgba(255,20,147,0.9)}
@@ -45,8 +42,7 @@ select.form-control,select.form-control-majestic,.modal select,.admin-select{-we
 .activity-stat-card:hover{background:#222;border-left-color:#ff69b4}
 .history-item{background:#1a1a1a;border-left:5px solid #ff1493;padding:12px 16px;margin-bottom:12px;border-radius:12px;transition:.2s;box-shadow:0 2px 10px rgba(0,0,0,0.3)}
 .history-item:hover{background:#222;transform:translateX(5px)}
-.footer-text{color:#666;font-size:14px;text-align:center;opacity:.8;margin-top:0px;padding:10px 0}
-.footer-text {margin-top: 30px;padding: 15px 0;text-align: center;}
+.footer-text{color:#666;font-size:14px;text-align:center;opacity:.8;margin-top:30px;padding:15px 0}
 .hidden{display:none!important}
 .application-item,.news-item{background:#1a1a1a;border-radius:25px;padding:20px;margin-bottom:20px;border:1px solid #333;transition:.3s}
 .application-item:hover,.news-item:hover{border-color:#ff1493;box-shadow:0 0 25px rgba(255,20,147,0.2)}
@@ -120,10 +116,12 @@ select.form-control,select.form-control-majestic,.modal select,.admin-select{-we
 .filter-btn:hover{background:#ff1493;border-color:#ff1493}
 .filter-btn.active{background:#ff1493;border-color:#ff1493}
 .avatar-placeholder{background:#2a2a2a;display:inline-flex;align-items:center;justify-content:center;color:#aaa;font-size:3rem;font-weight:700;border-radius:50%;width:140px;height:140px;border:4px solid #ff1493}
-.row.mb-4.text-center {margin-left: 0;margin-right: 0;}.row.mb-4.text-center > [class*="col-"] {padding-left: 5px;padding-right: 5px;}.mb-3 {margin-top: 15px !important;}
-html, body {height: 100% !important;margin: 0 !important;padding: 0 !important;overflow: hidden !important;}#loginPage {height: 100% !important;display: flex !important;align-items: center !important;justify-content: center !important;}#mainInterface {height: 100% !important;overflow-y: auto !important;display: flex;flex-direction: column;}#mainInterface .tab-content {flex: 1 0 auto;}.footer-text {flex-shrink: 0;margin-top: 30px;padding: 15px 0;text-align: center;}#particles-js {position: fixed !important;top: 0 !important;left: 0 !important;width: 100% !important;height: 100% !important;z-index: -1 !important;}
-#memberSearch {margin-top: 30px;}
-.hidden { display: none !important; }
+#loginPage,#mainInterface{height:100%;overflow-y:auto}
+#mainInterface{padding-bottom:0}
+.row.mb-4.text-center{margin-left:0;margin-right:0}
+.row.mb-4.text-center>[class*="col-"]{padding-left:5px;padding-right:5px}
+.mb-3{margin-top:15px!important}
+#memberSearch{margin-top:30px}
 </style></head><body><div id="particles-js"></div><div id="toast" class="toast-notification hidden"><i class="fas fa-info-circle" id="toastIcon"></i><span id="toastMessage"></span></div>
 
 <!-- Модальные окна -->
@@ -138,15 +136,38 @@ html, body {height: 100% !important;margin: 0 !important;padding: 0 !important;o
 <div class="modal fade" id="removeWarningModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Снятие предупреждения</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="removeWarningNick" class="form-control" placeholder="Ник игрока" readonly></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-majestic" id="confirmRemoveWarning">Снять</button></div></div></div></div>
 <div class="modal fade" id="rpgReportModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="rpgReportTitle">Отправить отчёт</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="reportTaskId"><input type="text" id="reportTaskName" class="form-control" readonly><textarea id="reportText" class="form-control" placeholder="Текст отчёта" rows="3" required></textarea><input type="text" id="reportLinks" class="form-control" placeholder="Ссылки на скриншоты/видео (через запятую)"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-majestic" id="submitReportBtn">Отправить на проверку</button></div></div></div></div>
 <div class="modal fade" id="viewReportModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Проверка отчёта</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="viewReportBody"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button><button type="button" class="btn btn-success" id="approveReportBtn">Одобрить</button><button type="button" class="btn btn-danger" id="rejectReportBtn">Отклонить</button></div></div></div></div>
- 
+
 <!-- Страница входа -->
 <div id="loginPage" class="login-screen"><div class="login-box"><div class="text-center mb-4"><span class="logo">Hateraid</span></div><p class="text-center text-secondary mb-4">Войдите в систему семьи</p><input type="text" id="loginNickInput" class="form-control-majestic" placeholder="Ваш ник"><div id="adminPasswordField" class="hidden"><input type="password" id="loginPasswordInput" class="form-control-majestic" placeholder="Пароль"></div><button id="loginBtn" class="btn btn-majestic w-100 mb-3">Войти</button><div class="text-center"><a href="#" id="toggleAdminMode" style="color:#ff69b4; text-decoration:none; font-weight:600;">🔐 Я администратор</a></div><div id="loginError" class="text-danger text-center mt-3"></div><div class="text-center mt-3"><a href="#" id="openApplyModal" style="color:#ff69b4; text-decoration:none;">Вступить в семью</a></div></div></div>
 
 <!-- Основной интерфейс -->
-<div id="mainInterface" class="container py-4 hidden"><div class="footer-text">© Семья Hateraid | Majestic RP<div class="d-flex flex-wrap justify-content-between align-items-center mb-4"><span class="logo">Hateraid</span><div class="d-flex align-items-center"><span id="welcomeUser" class="me-3 fs-5"></span><button id="logoutBtn" class="btn btn-outline-majestic"><i class="fas fa-sign-out-alt"></i> Выйти</button></div></div></div>
-<ul class="nav nav-tabs-custom" id="mainTabs" role="tablist"><li class="nav-item"><button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button"><i class="fas fa-user me-2"></i>Мой профиль</button></li><li class="nav-item"><button class="nav-link" id="members-tab" data-bs-toggle="tab" data-bs-target="#members" type="button"><i class="fas fa-users me-2"></i>Участники</button></li><li class="nav-item"><button class="nav-link" id="achievements-tab" data-bs-toggle="tab" data-bs-target="#achievements" type="button"><i class="fas fa-trophy me-2"></i>Достижения</button></li><li class="nav-item"><button class="nav-link" id="rpg-tab" data-bs-toggle="tab" data-bs-target="#rpg" type="button"><i class="fas fa-gamepad me-2"></i>РПГ</button></li><li class="nav-item"><button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events" type="button"><i class="fas fa-calendar-alt me-2"></i>События</button></li><li class="nav-item"><button class="nav-link" id="news-tab" data-bs-toggle="tab" data-bs-target="#news" type="button"><i class="fas fa-newspaper me-2"></i>Новости</button></li><li class="nav-item"><button class="nav-link" id="treasury-tab" data-bs-toggle="tab" data-bs-target="#treasury" type="button"><i class="fas fa-coins me-2"></i>Казна</button></li><li class="nav-item"><button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button"><i class="fas fa-chart-line me-2"></i>Актив семьи</button></li></ul>
-<div class="tab-content mt-3"><div class="tab-pane fade show active" id="profile"><div class="glass-panel p-4"><div id="myProfileContent"></div></div></div><div class="tab-pane fade" id="members"><div class="glass-panel p-4"><div id="membersContent"></div></div></div><div class="tab-pane fade" id="achievements"><div class="glass-panel p-4"><div id="achievementsContent"></div></div></div><div class="tab-pane fade" id="rpg"><div class="glass-panel p-4"><div id="rpgContent"></div></div></div><div class="tab-pane fade" id="events"><div class="glass-panel p-4"><div id="eventsContent"></div></div></div><div class="tab-pane fade" id="news"><div class="glass-panel p-4"><div id="newsList"></div><div id="addNewsForm" class="mt-4 hidden"><h5 class="mb-3">Добавить новость</h5><input type="text" id="newsTitle" class="form-control-majestic mb-2" placeholder="Заголовок"><textarea id="newsText" class="form-control-majestic mb-2" rows="3" placeholder="Текст новости"></textarea><button id="addNewsBtn" class="btn btn-majestic">Опубликовать</button></div></div></div><div class="tab-pane fade" id="treasury"><div class="glass-panel p-4"><div id="treasuryContent"></div></div></div><div class="tab-pane fade" id="activity"><div class="glass-panel p-4"><div id="activityContent"></div></div></div></div></div>
+<div id="mainInterface" class="container py-4 hidden">
+ <div class="d-flex flex-wrap justify-content-between align-items-center mb-4"><span class="logo">Hateraid</span><div class="d-flex align-items-center"><span id="welcomeUser" class="me-3 fs-5"></span><button id="logoutBtn" class="btn btn-outline-majestic"><i class="fas fa-sign-out-alt"></i> Выйти</button></div></div>
+ <ul class="nav nav-tabs-custom" id="mainTabs" role="tablist">
+  <li class="nav-item"><button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button"><i class="fas fa-user me-2"></i>Мой профиль</button></li>
+  <li class="nav-item"><button class="nav-link" id="members-tab" data-bs-toggle="tab" data-bs-target="#members" type="button"><i class="fas fa-users me-2"></i>Участники</button></li>
+  <li class="nav-item"><button class="nav-link" id="achievements-tab" data-bs-toggle="tab" data-bs-target="#achievements" type="button"><i class="fas fa-trophy me-2"></i>Достижения</button></li>
+  <li class="nav-item"><button class="nav-link" id="rpg-tab" data-bs-toggle="tab" data-bs-target="#rpg" type="button"><i class="fas fa-gamepad me-2"></i>РПГ</button></li>
+  <li class="nav-item"><button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events" type="button"><i class="fas fa-calendar-alt me-2"></i>События</button></li>
+  <li class="nav-item"><button class="nav-link" id="news-tab" data-bs-toggle="tab" data-bs-target="#news" type="button"><i class="fas fa-newspaper me-2"></i>Новости</button></li>
+  <li class="nav-item"><button class="nav-link" id="treasury-tab" data-bs-toggle="tab" data-bs-target="#treasury" type="button"><i class="fas fa-coins me-2"></i>Казна</button></li>
+  <li class="nav-item"><button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button"><i class="fas fa-chart-line me-2"></i>Актив семьи</button></li>
+  <li class="nav-item"><button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button"><i class="fas fa-cog me-2"></i>Настройки</button></li>
+ </ul>
+ <div class="tab-content mt-3">
+  <div class="tab-pane fade show active" id="profile"><div class="glass-panel p-4"><div id="myProfileContent"></div></div></div>
+  <div class="tab-pane fade" id="members"><div class="glass-panel p-4"><div id="membersContent"></div></div></div>
+  <div class="tab-pane fade" id="achievements"><div class="glass-panel p-4"><div id="achievementsContent"></div></div></div>
+  <div class="tab-pane fade" id="rpg"><div class="glass-panel p-4"><div id="rpgContent"></div></div></div>
+  <div class="tab-pane fade" id="events"><div class="glass-panel p-4"><div id="eventsContent"></div></div></div>
+  <div class="tab-pane fade" id="news"><div class="glass-panel p-4"><div id="newsList"></div><div id="addNewsForm" class="mt-4 hidden"><h5 class="mb-3">Добавить новость</h5><input type="text" id="newsTitle" class="form-control-majestic mb-2" placeholder="Заголовок"><textarea id="newsText" class="form-control-majestic mb-2" rows="3" placeholder="Текст новости"></textarea><button id="addNewsBtn" class="btn btn-majestic">Опубликовать</button></div></div></div>
+  <div class="tab-pane fade" id="treasury"><div class="glass-panel p-4"><div id="treasuryContent"></div></div></div>
+  <div class="tab-pane fade" id="activity"><div class="glass-panel p-4"><div id="activityContent"></div></div></div>
+  <div class="tab-pane fade" id="settings"><div class="glass-panel p-4"><div id="settingsContent"></div></div></div>
+ </div>
+ <div class="footer-text">© Семья Hateraid | Majestic RP</div>
 </div>
+
 <audio id="soundPromote" preload="auto" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
 <audio id="soundDemote" preload="auto" src="https://www.soundjay.com/misc/sounds/buzzer-or-wrong-answer-02.mp3"></audio>
 
@@ -159,27 +180,12 @@ const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 let playersCache=null,lastFetch=0,ranksCache=null,ranksLastFetch=0,settingsCache=null,settingsLastFetch=0;
 const CACHE_TTL=6e4;
-
-async function supabaseRequest(table,method='GET',body=null,params=''){
- const url=`${SUPABASE_URL}/rest/v1/${table}${params}`;
- const headers={'apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${SUPABASE_ANON_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'};
- const options={method,headers}; if(body) options.body=JSON.stringify(body);
- try{
-  const res=await fetch(url,options);
-  if(!res.ok){ const e=await res.text(); throw new Error(`Ошибка Supabase (${res.status}): ${e}`); }
-  return await res.json();
- }catch(e){ throw (console.error('Supabase request error:',e),e); }
-}
+async function supabaseRequest(t,m='GET',b=null,p=''){ const u=`${SUPABASE_URL}/rest/v1/${t}${p}`, h={'apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${SUPABASE_ANON_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'}, o={method:m,headers:h}; if(b) o.body=JSON.stringify(b); try{ const r=await fetch(u,o); if(!r.ok) throw new Error(`Ошибка Supabase (${r.status}): ${await r.text()}`); return await r.json(); }catch(e){ throw (console.error('Supabase error:',e),e); } }
 
 let currentUser=null,currentUserNick='',isAdmin=!1,adminRights='',adminMode=!1;
 const loginPage=document.getElementById('loginPage'),mainInterface=document.getElementById('mainInterface'),loginNick=document.getElementById('loginNickInput'),loginPass=document.getElementById('loginPasswordInput'),adminPassField=document.getElementById('adminPasswordField'),toggleAdmin=document.getElementById('toggleAdminMode'),loginBtn=document.getElementById('loginBtn'),loginError=document.getElementById('loginError'),logoutBtn=document.getElementById('logoutBtn'),welcomeUser=document.getElementById('welcomeUser'),toast=document.getElementById('toast'),toastIcon=document.getElementById('toastIcon'),toastMessage=document.getElementById('toastMessage');
 
-function openAddPointsModal(nick) {
-    document.getElementById('pointsNick').value = nick;
-    document.getElementById('pointsAmount').value = '';
-    new bootstrap.Modal(document.getElementById('pointsModal')).show();
-}
- function showLoginError(m){loginError.textContent=m;}
+function showLoginError(m){loginError.textContent=m;}
 function showToast(m,t='info'){
  toast.classList.remove('hidden'); toastMessage.textContent=m;
  if(t==='success'){ toastIcon.className='fas fa-check-circle'; toast.style.background='#28a745'; }
@@ -195,44 +201,14 @@ async function получитьДанныеИгрока(ник){
  catch(e){ showToast('Ошибка получения данных игрока','error'); return null; }
 }
 async function войтиКакАдмин(ник,пароль){
- try{
-  const d=await supabaseRequest('Участники','GET',null,`?Ник=eq.${encodeURIComponent(ник)}`);
-  if(!d.length) return{успех:!1,причина:'Пользователь не найден'};
-  const игрок=d[0], права=игрок['Права']||'участник';
-  if(права.toLowerCase()==='участник') return{успех:!1,причина:'У вас нет прав администратора'};
-  return игрок['Пароль']===пароль?{успех:!0,игрок}:{успех:!1,причина:'Неверный пароль'};
- }catch(e){ return{успех:!1,причина:'Ошибка соединения'}; }
+ try{ const d=await supabaseRequest('Участники','GET',null,`?Ник=eq.${encodeURIComponent(ник)}`); if(!d.length) return{успех:!1,причина:'Пользователь не найден'}; const игрок=d[0], права=игрок['Права']||'участник'; if(права.toLowerCase()==='участник') return{успех:!1,причина:'У вас нет прав администратора'}; return игрок['Пароль']===пароль?{успех:!0,игрок}:{успех:!1,причина:'Неверный пароль'}; }catch(e){ return{успех:!1,причина:'Ошибка соединения'}; }
 }
-async function получитьВсехУчастников(force=!1){
- const n=Date.now();
- if(!force&&playersCache&&n-lastFetch<CACHE_TTL) return playersCache;
- try{ const d=await supabaseRequest('Участники','GET'); playersCache=d; lastFetch=n; return d; }catch(e){ return[]; }
-}
-async function получитьВсеРанги(force=!1){
- const n=Date.now();
- if(!force&&ranksCache&&n-ranksLastFetch<CACHE_TTL) return ranksCache;
- try{ const d=await supabaseRequest('Ранги','GET'); ranksCache=d.sort((a,b)=>(a['Порядок']||0)-(b['Порядок']||0)); ranksLastFetch=n; return ranksCache; }catch(e){ return[]; }
-}
-async function получитьНастройки(force=!1){
- const n=Date.now();
- if(!force&&settingsCache&&n-settingsLastFetch<CACHE_TTL) return settingsCache;
- try{ const d=await supabaseRequest('Настройки','GET'); settingsCache=d; settingsLastFetch=n; return d; }catch(e){ return[]; }
-}
-async function получитьСтатистикуАктивностей(ник){
- try{ const logs=await supabaseRequest('Логи баллов','GET',null,`?Игрок=eq.${encodeURIComponent(ник)}`); const s={}; logs.forEach(l=>{ const a=l['Активность'], p=parseFloat(l['Баллы'])||0; s[a]=(s[a]||0)+p; }); return s; }catch(e){ return{}; }
-}
-async function получитьДеталиАктивностей(ник){
- try{ return await supabaseRequest('Логи баллов','GET',null,`?Игрок=eq.${encodeURIComponent(ник)}&order=Дата.desc`); }catch(e){ return[]; }
-}
-async function получитьИсториюИгрока(ник){
- const h=[];
- try{ (await supabaseRequest('Логи баллов','GET',null,`?Игрок=eq.${encodeURIComponent(ник)}`)).forEach(l=>h.push({дата:l['Дата'],тип:'баллы',описание:`+${l['Баллы']} за ${l['Активность']}`,кем:l['Начислил']})); }catch(e){}
- try{ (await supabaseRequest('Логи предупреждений','GET',null,`?Игрок=eq.${encodeURIComponent(ник)}`)).forEach(l=>h.push({дата:l['Дата'],тип:'предупреждение',описание:`Причина: ${l['Причина']}`,кем:l['Выдал']})); }catch(e){}
- try{ (await supabaseRequest('Логи действий админов','GET',null,`?Цель=eq.${encodeURIComponent(ник)}`)).forEach(l=>h.push({дата:l['Дата'],тип:l['Действие'],описание:l['Подробности'],кем:l['Админ']})); }catch(e){}
- try{ (await supabaseRequest('Достижения игроков','GET',null,`?Игрок=eq.${encodeURIComponent(ник)}`)).forEach(l=>h.push({дата:l['Дата получения'],тип:'достижение',описание:`Получено: ${l['Достижение']}`,кем:l['Кем выдано']})); }catch(e){}
- try{ (await supabaseRequest('Логи_РПГ','GET',null,`?игрок=eq.${encodeURIComponent(ник)}`)).forEach(l=>h.push({дата:l['дата'],тип:'рпг',описание:`+${l['награда_рпг']} РПГ за задание "${l['активность']}"`,кем:l['кем_выдано']})); }catch(e){}
- h.sort((a,b)=>new Date(b.дата)-new Date(a.дата)); return h;
-}
+async function получитьВсехУчастников(f=!1){ const n=Date.now(); if(!f&&playersCache&&n-lastFetch<CACHE_TTL) return playersCache; try{ const d=await supabaseRequest('Участники','GET'); playersCache=d; lastFetch=n; return d; }catch(e){ return[]; } }
+async function получитьВсеРанги(f=!1){ const n=Date.now(); if(!f&&ranksCache&&n-ranksLastFetch<CACHE_TTL) return ranksCache; try{ const d=await supabaseRequest('Ранги','GET'); ranksCache=d.sort((a,b)=>(a['Порядок']||0)-(b['Порядок']||0)); ranksLastFetch=n; return ranksCache; }catch(e){ return[]; } }
+async function получитьНастройки(f=!1){ const n=Date.now(); if(!f&&settingsCache&&n-settingsLastFetch<CACHE_TTL) return settingsCache; try{ const d=await supabaseRequest('Настройки','GET'); settingsCache=d; settingsLastFetch=n; return d; }catch(e){ return[]; } }
+async function получитьСтатистикуАктивностей(ник){ try{ const logs=await supabaseRequest('Логи баллов','GET',null,`?Игрок=eq.${encodeURIComponent(ник)}`); const s={}; logs.forEach(l=>{ const a=l['Активность'], p=parseFloat(l['Баллы'])||0; s[a]=(s[a]||0)+p; }); return s; }catch(e){ return{}; } }
+async function получитьДеталиАктивностей(ник){ try{ return await supabaseRequest('Логи баллов','GET',null,`?Игрок=eq.${encodeURIComponent(ник)}&order=Дата.desc`); }catch(e){ return[]; } }
+async function получитьИсториюИгрока(ник){ const h=[]; try{ (await supabaseRequest('Логи баллов','GET',null,`?Игрок=eq.${encodeURIComponent(ник)}`)).forEach(l=>h.push({дата:l['Дата'],тип:'баллы',описание:`+${l['Баллы']} за ${l['Активность']}`,кем:l['Начислил']})); }catch(e){} try{ (await supabaseRequest('Логи предупреждений','GET',null,`?Игрок=eq.${encodeURIComponent(ник)}`)).forEach(l=>h.push({дата:l['Дата'],тип:'предупреждение',описание:`Причина: ${l['Причина']}`,кем:l['Выдал']})); }catch(e){} try{ (await supabaseRequest('Логи действий админов','GET',null,`?Цель=eq.${encodeURIComponent(ник)}`)).forEach(l=>h.push({дата:l['Дата'],тип:l['Действие'],описание:l['Подробности'],кем:l['Админ']})); }catch(e){} try{ (await supabaseRequest('Достижения игроков','GET',null,`?Игрок=eq.${encodeURIComponent(ник)}`)).forEach(l=>h.push({дата:l['Дата получения'],тип:'достижение',описание:`Получено: ${l['Достижение']}`,кем:l['Кем выдано']})); }catch(e){} try{ (await supabaseRequest('Логи_РПГ','GET',null,`?игрок=eq.${encodeURIComponent(ник)}`)).forEach(l=>h.push({дата:l['дата'],тип:'рпг',описание:`+${l['награда_рпг']} РПГ за задание "${l['активность']}"`,кем:l['кем_выдано']})); }catch(e){} h.sort((a,b)=>new Date(b.дата)-new Date(a.дата)); return h; }
 async function получитьВсеДостижения(){ try{ return await supabaseRequest('Достижения','GET'); }catch(e){ return[]; } }
 async function получитьДостиженияИгрока(ник){ try{ return await supabaseRequest('Достижения игроков','GET',null,`?Игрок=eq.${encodeURIComponent(ник)}`); }catch(e){ return[]; } }
 async function получитьВсеСобытия(){ try{ return await supabaseRequest('События','GET',null,'?order=Дата.asc'); }catch(e){ return[]; } }
@@ -242,15 +218,65 @@ async function получитьВсеРПГЗадания(){ try{ return await s
 async function получитьОтчетыИгрока(игрок){ try{ return await supabaseRequest('Отчеты_РПГ','GET',null,`?игрок=eq.${encodeURIComponent(игрок)}&order=дата_отправки.desc`); }catch(e){ return[]; } }
 async function получитьОтчетыНаПроверке(){ try{ return await supabaseRequest('Отчеты_РПГ','GET',null,'?статус=eq.на проверке&order=дата_отправки.asc'); }catch(e){ return[]; } }
 async function получитьЗаявки(){ try{ return await supabaseRequest('Заявки на вступление','GET',null,'?Статус=eq.новая'); }catch(e){ return[]; } }
-async function получитьЛоги(){
+async function получитьЛоги(){ try{ const b=await supabaseRequest('Логи баллов','GET',null,'?order=Дата.desc&limit=20'), p=await supabaseRequest('Логи предупреждений','GET',null,'?order=Дата.desc&limit=20'), a=await supabaseRequest('Логи действий админов','GET',null,'?order=Дата.desc&limit=20'); return{баллы:b,преды:p,админЛоги:a}; }catch(e){ return{баллы:[],преды:[],админЛоги:[]}; } }
+
+// ========== НАГРАДЫ ЗА ДОСТИЖЕНИЯ ==========
+async function checkAndApplyAchievementRewards(nick, adminNick='система'){
  try{
-  const баллы=await supabaseRequest('Логи баллов','GET',null,'?order=Дата.desc&limit=20');
-  const преды=await supabaseRequest('Логи предупреждений','GET',null,'?order=Дата.desc&limit=20');
-  const админЛоги=await supabaseRequest('Логи действий админов','GET',null,'?order=Дата.desc&limit=20');
-  return{баллы,преды,админЛоги};
- }catch(e){ return{баллы:[],преды:[],админЛоги:[]}; }
+  const user=await получитьДанныеИгрока(nick); if(!user) return;
+  const allAch=await получитьВсеДостижения(), userAch=await получитьДостиженияИгрока(nick), obtainedNames=userAch.map(a=>a['Достижение']);
+  const баллы=user['Баллы всего']||0, предупреждения=user['Предупреждения']||0;
+  for(let a of allAch){
+   if(obtainedNames.includes(a['Название'])) continue;
+   let achieved=!1;
+   if(a['Условие тип']==='баллы' && баллы>=a['Условие значение']) achieved=!0;
+   else if(a['Условие тип']==='предупреждения' && предупреждения>=a['Условие значение']) achieved=!0;
+   if(achieved){
+    await supabaseRequest('Достижения игроков','POST',{Игрок:nick,Достижение:a['Название'],'Дата получения':new Date().toISOString(),'Кем выдано':adminNick});
+    if((a['Награда баллы']||0)>0 || (a['Награда вирты']||0)>0){
+     const upd={}; if(a['Награда баллы']) upd['Баллы всего']=(user['Баллы всего']||0)+a['Награда баллы'];
+     if(a['Награда вирты']) upd['вирты']=(user['вирты']||0)+a['Награда вирты'];
+     await supabaseRequest('Участники','PATCH',upd,`?Ник=eq.${encodeURIComponent(nick)}`);
+     let msg=`Получено достижение "${a['Название']}"`;
+     if(a['Награда баллы']) msg+=`, +${a['Награда баллы']} баллов`;
+     if(a['Награда вирты']) msg+=`, +${a['Награда вирты']} виртов`;
+     showToast(msg,'success'); confetti({particleCount:80,spread:60,origin:{y:.5}});
+     playersCache=null;
+    }
+   }
+  }
+ }catch(err){ console.error('checkAchievementRewards error:',err); }
 }
 
+// ========== ЛИЧНЫЙ КАБИНЕТ (НАСТРОЙКИ) ==========
+async function loadSettings(){
+ const c=document.getElementById('settingsContent'); if(!c) return;
+ const user=currentUser;
+ let html=`
+  <h5>Настройки профиля</h5>
+  <div class="mb-3"><label>Ник</label><input type="text" class="form-control" value="${user['Ник']}" disabled></div>
+  <div class="mb-3"><label>Новый пароль (оставьте пустым, если не меняете)</label><input type="password" id="newPass" class="form-control" placeholder="Новый пароль"></div>
+  <div class="mb-3"><label>Telegram ID (для уведомлений)</label><input type="text" id="telegramId" class="form-control" placeholder="@username или ID" value="${user['Telegram ID']||''}"></div>
+  <div class="mb-3"><label>Тема оформления</label><select id="themeSelect" class="form-control"><option value="dark" ${user['Тема']==='dark'?'selected':''}>Тёмная</option><option value="light" ${user['Тема']==='light'?'selected':''}>Светлая</option></select></div>
+  <div class="mb-3"><label>Уведомления в Telegram</label><input type="checkbox" id="notifyTelegram" ${user['Уведомления Telegram']?'checked':''}> <label for="notifyTelegram">включить</label></div>
+  <button class="btn btn-majestic" id="saveSettingsBtn">Сохранить настройки</button>
+  <div id="settingsMessage" class="mt-3"></div>
+ `;
+ c.innerHTML=html;
+ document.getElementById('saveSettingsBtn').onclick=async()=>{
+  const newPass=document.getElementById('newPass').value.trim(), tg=document.getElementById('telegramId').value.trim(), theme=document.getElementById('themeSelect').value, notify=document.getElementById('notifyTelegram').checked;
+  const updates={};
+  if(newPass) updates['Пароль']=newPass;
+  if(tg!==(user['Telegram ID']||'')) updates['Telegram ID']=tg||null;
+  if(theme!==(user['Тема']||'dark')) updates['Тема']=theme;
+  if(notify!==(user['Уведомления Telegram']||!1)) updates['Уведомления Telegram']=notify;
+  if(Object.keys(updates).length){
+   try{ await supabaseRequest('Участники','PATCH',updates,`?Ник=eq.${encodeURIComponent(currentUserNick)}`); showToast('Настройки сохранены','success'); if(updates.Тема) document.body.className=theme==='light'?'theme-light':''; currentUser=await получитьДанныеИгрока(currentUserNick); }catch(err){ showToast('Ошибка: '+err.message,'error'); }
+  }else showToast('Нет изменений','info');
+ };
+}
+
+// ========== АДМИНСКИЕ ФУНКЦИИ ==========
 async function adminAddPoints(nick,activity,points){
  if(!isAdmin) return;
  try{
@@ -263,6 +289,7 @@ async function adminAddPoints(nick,activity,points){
   const новыеВсего=(user['Баллы всего']||0)+points, новыеСегодня=баллыСегодня+points;
   await supabaseRequest('Участники','PATCH',{'Баллы всего':новыеВсего,'Баллы сегодня':новыеСегодня,'Дата последних баллов':сегодня},`?Ник=eq.${encodeURIComponent(nick)}`);
   await checkAndApplyAutoPromotion(nick,currentUserNick);
+  await checkAndApplyAchievementRewards(nick,currentUserNick);
   await supabaseRequest('Логи баллов','POST',{Дата:new Date().toISOString(),Игрок:nick,Активность:activity,Баллы:points,Начислил:currentUserNick,Статус:'одобрено'});
   showToast(`Начислено! Всего: ${новыеВсего}`,'success'); playersCache=null; confetti({particleCount:100,spread:70,origin:{y:.6}});
   nick===currentUserNick?renderProfile(await получитьДанныеИгрока(nick),'myProfileContent'):loadMembers();
@@ -289,6 +316,7 @@ async function adminAddWarning(nick,reason){
   await supabaseRequest('Логи предупреждений','POST',{Дата:new Date().toISOString(),Игрок:nick,Причина:reason,Выдал:currentUserNick});
   await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'выдача предупреждения',Цель:nick,Подробности:reason});
   showToast(`Предупреждение выдано игроку ${nick}`,'warning'); playersCache=null;
+  await checkAndApplyAchievementRewards(nick,currentUserNick);
   nick===currentUserNick?renderProfile(await получитьДанныеИгрока(nick),'myProfileContent'):loadMembers();
  }catch(err){ showToast('Ошибка: '+err.message,'error'); }
 }
@@ -333,22 +361,22 @@ document.getElementById('applyBtn').addEventListener('click',async()=>{
  try{ await supabaseRequest('Заявки на вступление','POST',{'Дата подачи':new Date().toISOString(),'Желаемый ник':n,Контакт:c,Статус:'новая'}); showToast('✓ Заявка отправлена!','success'); document.getElementById('applyNick').value=''; document.getElementById('applyContact').value=''; bootstrap.Modal.getInstance(document.getElementById('applyModal')).hide(); }catch(err){ showToast('Ошибка: '+err.message,'error'); }
 });
 toggleAdmin.addEventListener('click',e=>{ e.preventDefault(); adminMode=!adminMode; adminMode?(adminPassField.classList.remove('hidden'),toggleAdmin.textContent='👤 Обычный вход'):(adminPassField.classList.add('hidden'),toggleAdmin.textContent='🔐 Я администратор'); });
-console.log('loginBtn clicked');alert('Клик по кнопке');loginBtn.addEventListener('click',async()=>{
+loginBtn.addEventListener('click',async()=>{
  const n=loginNick.value.trim(); if(!n) return showLoginError('Введите ник');
  if(adminMode){ const p=loginPass.value.trim(); if(!p) return showLoginError('Введите пароль'); const r=await войтиКакАдмин(n,p); if(r.успех){ isAdmin=!0; adminRights=r.игрок['Права']||''; currentUserNick=r.игрок['Ник']; currentUser=r.игрок; showMainInterface(r.игрок); }else showLoginError(r.причина); }
  else{ const u=await получитьДанныеИгрока(n); u?(isAdmin=!1,adminRights='',currentUserNick=u['Ник'],currentUser=u,showMainInterface(u)):showLoginError('Игрок с таким ником не найден'); }
 });
-console.log('showMainInterface called');
- function showMainInterface(u){
+function showMainInterface(u){
  loginPage.classList.add('hidden'); mainInterface.classList.remove('hidden'); let icon='';
  icon=adminRights.toLowerCase()==='овнер'?'<i class="fas fa-crown gold-crown"></i>':isAdmin?'<i class="fas fa-crown silver-crown"></i>':'<i class="fas fa-user user-icon"></i>';
  welcomeUser.innerHTML=`${icon} ${u['Ник']}`;
- renderProfile(u,'myProfileContent'); loadMembers(); loadAchievements(u['Ник']); loadRPGBoard(); loadEvents(); loadNews();
+ renderProfile(u,'myProfileContent'); loadMembers(); loadAchievements(u['Ник']); loadRPGBoard(); loadEvents(); loadNews(); loadSettings();
  if(isAdmin){ addAdminTabs(); loadApplications(); loadLogs(); loadRanksManagement(); loadPlayerManagement(); loadRPGAdminPanel(); checkNewApplications(); }else removeAdminTabs();
  new bootstrap.Tab(document.getElementById('profile-tab')).show();
 }
 document.getElementById('treasury-tab')?.addEventListener('shown.bs.tab',()=>loadTreasury());
 document.getElementById('activity-tab')?.addEventListener('shown.bs.tab',()=>loadFamilyActivity());
+document.getElementById('settings-tab')?.addEventListener('shown.bs.tab',loadSettings);
 
 async function renderProfile(u,containerId){
  const c=document.getElementById(containerId); if(!c) return; if(!u){ c.innerHTML='<p class="text-danger">Ошибка загрузки профиля</p>'; return; }
@@ -377,7 +405,7 @@ window.openAvatarModal=function(n){
 };
 async function loadMembers(){
  const c=document.getElementById('membersContent'); if(!c) return;
- const players=await получитьВсехУчастников(), ranks=await получитьВсеРанги(), total=players.length, admins=players.filter(p=>p['Права']?.toLowerCase()!=='участник').length, today=new Date().toISOString().split('T')[0], newToday=players.filter(p=>p['Дата вступления']===today).length;
+ const players=await получитьВсехУчастников(), ranks=await получитьВсеРанги(), total=players.length, admins=players.filter(p=>p['Права']?.toLowerCase()!=='участник').length;
  let html=`<div class="row mb-4 text-center"><div class="col-3"><div class="glass-panel p-2"><div class="stat-number">0</div><div>Игроков в сети</div></div></div><div class="col-3"><div class="glass-panel p-2"><div class="stat-number">0</div><div>Админы в сети</div></div></div><div class="col-3"><div class="glass-panel p-2"><div class="stat-number">${total}</div><div>Всего игроков</div></div></div><div class="col-3"><div class="glass-panel p-2"><div class="stat-number">${admins}</div><div>Администраторы</div></div></div><div class="mb-3"><input type="text" id="memberSearch" class="form-control-majestic" placeholder="Поиск по нику..."></div><div class="mb-3"><select id="memberRankFilter" class="form-control-majestic"><option value="">Все ранги</option>${ranks.map(r=>`<option value="${r['Название']}">${r['Название']}</option>`).join('')}</select></div><div class="row" id="memberCards"></div>`;
  c.innerHTML=html;
  const s=document.getElementById('memberSearch'), f=document.getElementById('memberRankFilter'), cards=document.getElementById('memberCards');
@@ -539,7 +567,7 @@ async function loadPlayerManagement(){
 function getTargetNickFromPanel(){ const s=document.getElementById('adminPlayerSelect'), i=document.getElementById('adminNickInput'); return i.value.trim()||(s?s.value:''); }
 window.adminPromoteFromPanel=function(){ const n=getTargetNickFromPanel(); n?adminPromote(n):showToast('Введите ник или выберите игрока','warning'); };
 window.adminDemoteFromPanel=function(){ const n=getTargetNickFromPanel(); n?adminDemote(n):showToast('Введите ник или выберите игрока','warning'); };
-function openAddPointsModalFromPanel() {const nick = getTargetNickFromPanel();if (!nick) { showToast('Введите ник или выберите игрока','warning'); return; }openAddPointsModal(nick);}
+function openAddPointsModalFromPanel(){ const n=getTargetNickFromPanel(); n?openAddPointsModal(n):showToast('Введите ник или выберите игрока','warning'); }
 function openRemovePointsModalFromPanel(){ const n=getTargetNickFromPanel(); n?openRemovePointsModal(n):showToast('Введите ник или выберите игрока','warning'); }
 function openAddWarningModalFromPanel(){ const n=getTargetNickFromPanel(); n?openAddWarningModal(n):showToast('Введите ник или выберите игрока','warning'); }
 function openRemoveWarningModalFromPanel(){ const n=getTargetNickFromPanel(); n?openRemoveWarningModal(n):showToast('Введите ник или выберите игрока','warning'); }
@@ -613,9 +641,10 @@ document.addEventListener('DOMContentLoaded',function(){
    if (document.getElementById('profile-tab').classList.contains('active')) {renderProfile(currentUser, 'myProfileContent');}
   }catch(err){ showToast('Ошибка операции: '+err.message,'error'); }
  });
- document.getElementById('confirmAddPoints')?.addEventListener('click', async function() {console.log('Клик по кнопке Начислить');const nick = document.getElementById('pointsNick').value;const activity = document.getElementById('pointsActivity').value;const amount = parseFloat(document.getElementById('pointsAmount').value);console.log('Данные:', { nick, activity, amount });if (!nick || isNaN(amount) || amount <= 0) {showToast('Заполните все поля', 'warning');return;}try {console.log('Вызов adminAddPoints...');await adminAddPoints(nick, activity, amount);console.log('adminAddPoints выполнена успешно');bootstrap.Modal.getInstance(document.getElementById('pointsModal')).hide();} catch (error) {console.error('Ошибка в adminAddPoints:', error);showToast('Ошибка: ' + error.message, 'error');}});
+ document.getElementById('confirmAddPoints')?.addEventListener('click', async function() {const nick = document.getElementById('pointsNick').value;const activity = document.getElementById('pointsActivity').value;const amount = parseFloat(document.getElementById('pointsAmount').value);if (!nick || isNaN(amount) || amount <= 0) {showToast('Заполните все поля', 'warning');return;}try {await adminAddPoints(nick, activity, amount);bootstrap.Modal.getInstance(document.getElementById('pointsModal')).hide();} catch (error) {showToast('Ошибка: ' + error.message, 'error');}});
  document.getElementById('confirmRemovePoints')?.addEventListener('click',async function(){ const n=document.getElementById('removePointsNick').value, a=parseFloat(document.getElementById('removePointsAmount').value); if(!n||isNaN(a)||a<=0) return showToast('Введите корректную сумму','warning'); try{ await adminRemovePoints(n,a); bootstrap.Modal.getInstance(document.getElementById('removePointsModal')).hide(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } });
  document.getElementById('confirmAddWarning')?.addEventListener('click',async function(){ const n=document.getElementById('warningNick').value, r=document.getElementById('warningReason').value.trim(); if(!n||!r) return showToast('Заполните ник и причину','warning'); try{ await adminAddWarning(n,r); bootstrap.Modal.getInstance(document.getElementById('warningModal')).hide(); currentUser=await получитьДанныеИгрока(currentUserNick); }catch(err){ showToast('Ошибка: '+err.message,'error'); } });
+ document.getElementById('confirmRemoveWarning')?.addEventListener('click',async function(){ const n=document.getElementById('removeWarningNick').value; if(!n) return showToast('Ник не указан','warning'); try{ await adminRemoveWarning(n); bootstrap.Modal.getInstance(document.getElementById('removeWarningModal')).hide(); currentUser=await получитьДанныеИгрока(currentUserNick); }catch(err){ showToast('Ошибка: '+err.message,'error'); } });
 });
 async function loadFamilyActivity(){
  const c=document.getElementById('activityContent'); if(!c) return;
