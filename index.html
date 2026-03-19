@@ -1670,11 +1670,11 @@ if (type === 'пополнение') {
                         showToast(type==='пополнение'?`Казна пополнена на ${amount} виртов`:`Списано ${amount} виртов из казны`, type==='пополнение'?'success':'info');
                         bootstrap.Modal.getInstance(document.getElementById('treasuryModal')).hide();
                         loadTreasury();
+                        // Обновить данные currentUser
+                        currentUser = await получитьДанныеИгрока(currentUserNick);
                     } catch(err) { showToast('Ошибка операции: '+err.message,'error'); }
                 });
-                // Обновить данные currentUser после изменения виртов
-currentUser = await получитьДанныеИгрока(currentUserNick);
-            }
+                
             async function loadFamilyActivity() {
     const container = document.getElementById('activityContent');
     if (!container) return;
