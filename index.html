@@ -1722,25 +1722,14 @@ if (type === 'пополнение') {
                 try {
                     await adminAddWarning(nick, reason);
                     bootstrap.Modal.getInstance(document.getElementById('warningModal')).hide();
+                    currentUser = await получитьДанныеИгрока(currentUserNick); // обновляем данные
                 } catch (error) {
                     showToast('Ошибка: ' + error.message, 'error');
                 }
             });
 
-            document.getElementById('confirmRemoveWarning')?.addEventListener('click', async function() {
-                const nick = document.getElementById('removeWarningNick').value;
-                if (!nick) {
-                    showToast('Ник не указан', 'warning');
-                    return;
-                }
-                try {
-                    await adminRemoveWarning(nick);
-                    bootstrap.Modal.getInstance(document.getElementById('removeWarningModal')).hide();
-                } catch (error) {
-                    showToast('Ошибка: ' + error.message, 'error');
-                }
-            });
-        });
+// Обновить данные currentUser
+currentUser = await получитьДанныеИгрока(currentUserNick);
 
         // ========== МОДАЛКИ (HTML) УЖЕ ЕСТЬ В ФАЙЛЕ ==========
         particlesJS('particles-js', {
