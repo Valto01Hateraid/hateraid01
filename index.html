@@ -332,12 +332,13 @@ document.getElementById('applyBtn').addEventListener('click',async()=>{
  try{ await supabaseRequest('Заявки на вступление','POST',{'Дата подачи':new Date().toISOString(),'Желаемый ник':n,Контакт:c,Статус:'новая'}); showToast('✓ Заявка отправлена!','success'); document.getElementById('applyNick').value=''; document.getElementById('applyContact').value=''; bootstrap.Modal.getInstance(document.getElementById('applyModal')).hide(); }catch(err){ showToast('Ошибка: '+err.message,'error'); }
 });
 toggleAdmin.addEventListener('click',e=>{ e.preventDefault(); adminMode=!adminMode; adminMode?(adminPassField.classList.remove('hidden'),toggleAdmin.textContent='👤 Обычный вход'):(adminPassField.classList.add('hidden'),toggleAdmin.textContent='🔐 Я администратор'); });
-loginBtn.addEventListener('click',async()=>{
+console.log('loginBtn clicked');alert('Клик по кнопке');loginBtn.addEventListener('click',async()=>{
  const n=loginNick.value.trim(); if(!n) return showLoginError('Введите ник');
  if(adminMode){ const p=loginPass.value.trim(); if(!p) return showLoginError('Введите пароль'); const r=await войтиКакАдмин(n,p); if(r.успех){ isAdmin=!0; adminRights=r.игрок['Права']||''; currentUserNick=r.игрок['Ник']; currentUser=r.игрок; showMainInterface(r.игрок); }else showLoginError(r.причина); }
  else{ const u=await получитьДанныеИгрока(n); u?(isAdmin=!1,adminRights='',currentUserNick=u['Ник'],currentUser=u,showMainInterface(u)):showLoginError('Игрок с таким ником не найден'); }
 });
-function showMainInterface(u){
+console.log('showMainInterface called');
+ function showMainInterface(u){
  loginPage.classList.add('hidden'); mainInterface.classList.remove('hidden'); let icon='';
  icon=adminRights.toLowerCase()==='овнер'?'<i class="fas fa-crown gold-crown"></i>':isAdmin?'<i class="fas fa-crown silver-crown"></i>':'<i class="fas fa-user user-icon"></i>';
  welcomeUser.innerHTML=`${icon} ${u['Ник']}`;
