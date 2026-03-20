@@ -196,7 +196,7 @@ function showToast(m,t='info'){
 }
 function playSound(t){ const s=document.getElementById(t==='promote'?'soundPromote':'soundDemote'); if(s) s.play().catch(()=>{}); }
 
-async function sendTelegramNotification(telegramId, message) {if (!telegramId) return;const TELEPUSH_TOKEN = 'YOUR_TELEPUSH_TOKEN';try {await fetch(`https://telepush.dev/api/inlets/${3a8386}/messages`, {method: 'POST',headers: { 'Content-Type': 'application/json' },body: JSON.stringify({ recipient: telegramId, text: message })});} catch (e) {console.error('Ошибка отправки в Telegram:', e);}}
+async function sendTelegramNotification(telegramId, message) {if (!telegramId) return;const TELEPUSH_TOKEN = '3a8386';try {await fetch(`https://telepush.dev/api/inlets/${3a8386}/messages`, {method: 'POST',headers: { 'Content-Type': 'application/json' },body: JSON.stringify({ recipient: telegramId, text: message })});} catch (e) {console.error('Ошибка отправки в Telegram:', e);}}
  
 async function получитьДанныеИгрока(ник){
  try{ const d=await supabaseRequest('Участники','GET',null,`?Ник=eq.${encodeURIComponent(ник)}`); return d.length?d[0]:null; }
