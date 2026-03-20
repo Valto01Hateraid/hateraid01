@@ -186,7 +186,7 @@ let currentUser=null,currentUserNick='',isAdmin=!1,adminRights='',adminMode=!1;
 const loginPage=document.getElementById('loginPage'),mainInterface=document.getElementById('mainInterface'),loginNick=document.getElementById('loginNickInput'),loginPass=document.getElementById('loginPasswordInput'),adminPassField=document.getElementById('adminPasswordField'),toggleAdmin=document.getElementById('toggleAdminMode'),loginBtn=document.getElementById('loginBtn'),loginError=document.getElementById('loginError'),logoutBtn=document.getElementById('logoutBtn'),welcomeUser=document.getElementById('welcomeUser'),toast=document.getElementById('toast'),toastIcon=document.getElementById('toastIcon'),toastMessage=document.getElementById('toastMessage');
 
 function showLoginError(m){loginError.textContent=m;}
-function (m,t='info'){
+function showToast(m,t='info'){
  toast.classList.remove('hidden'); toastMessage.textContent=m;
  if(t==='success'){ toastIcon.className='fas fa-check-circle'; toast.style.background='#28a745'; }
  else if(t==='warning'){ toastIcon.className='fas fa-exclamation-triangle'; toast.style.background='#ffc107'; }
