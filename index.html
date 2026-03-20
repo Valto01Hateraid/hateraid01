@@ -117,7 +117,24 @@ select.form-control,select.form-control-majestic,.modal select,.admin-select{-we
 .filter-btn:hover{background:#ff1493;border-color:#ff1493}
 .filter-btn.active{background:#ff1493;border-color:#ff1493}
 .avatar-placeholder{background:#2a2a2a;display:inline-flex;align-items:center;justify-content:center;color:#aaa;font-size:3rem;font-weight:700;border-radius:50%;width:140px;height:140px;border:4px solid #ff1493}
-html, body {height: 100% !important;margin: 0 !important;padding: 0 !important;overflow: hidden !important;}#loginPage, #mainInterface {height: 100% !important;overflow-y: auto !important;}#particles-js {position: fixed !important;top: 0 !important;left: 0 !important;width: 100% !important;height: 100% !important;z-index: -1 !important;}
+html, body {
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+#loginPage, #mainInterface {
+    height: 100% !important;
+    overflow-y: auto !important;
+}
+#particles-js {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: -1 !important;
+}
 .row.mb-4.text-center{margin-left:0;margin-right:0}
 .row.mb-4.text-center>[class*="col-"]{padding-left:5px;padding-right:5px}
 .mb-3{margin-top:15px!important}
@@ -434,7 +451,7 @@ async function loadAchievements(userNick){
   const all=await получитьВсеДостижения(), userA=await получитьДостиженияИгрока(userNick), obtainedNames=userA.map(a=>a['Достижение']), user=await получитьДанныеИгрока(userNick), баллы=user['Баллы всего']||0, предупреждения=user['Предупреждения']||0;
   let html='<div class="achievement-filter"><button class="filter-btn active" data-filter="all">Все</button><button class="filter-btn" data-filter="obtained">Полученные</button><button class="filter-btn" data-filter="not">Неполученные</button></div><div class="row" id="achievementCards"></div>';
   c.innerHTML=html; const cards=document.getElementById('achievementCards'), btns=document.querySelectorAll('.filter-btn');
-  function renderAchievements(filter = 'all') {
+function renderAchievements(filter = 'all') {
     let filtered = allAchievements;
     if (filter === 'obtained') filtered = allAchievements.filter(a => obtainedNames.includes(a['Название']));
     else if (filter === 'not') filtered = allAchievements.filter(a => !obtainedNames.includes(a['Название']));
@@ -446,10 +463,26 @@ async function loadAchievements(userNick){
         else if (a['Условие тип'] === 'предупреждения') progress = Math.min(предупреждения / max * 100, 100);
         const iconHtml = a['Иконка'] || '⭐';
         const rewardParts = [];
-        if (a['Награда баллы'] > 0) rewardParts.push(`🎯 +${a['Награда баллы']} баллов`);
-        if (a['Награда вирты'] > 0) rewardParts.push(`💰 +${a['Награда вирты']} виртов`);
+        if (a['Награда баллы'] && a['Награда баллы'] > 0) rewardParts.push(`🎯 +${a['Награда баллы']} баллов`);
+        if (a['Награда вирты'] && a['Награда вирты'] > 0) rewardParts.push(`💰 +${a['Награда вирты']} виртов`);
         const rewardText = rewardParts.length ? `<div class="achievement-reward">${rewardParts.join(' ')}</div>` : '';
-        return `<div class="col-md-4"><div class="achievement-card"><div class="achievement-icon">${iconHtml}</div><div class="achievement-title">${a['Название']}</div><div class="achievement-desc">${a['Описание']}</div>${rewardText}${obtained ? '<div class="achievement-obtained"><i class="fas fa-check-circle"></i></div>' : `<div class="achievement-progress"><div class="achievement-progress-bar" style="width: ${progress}%;"></div></div><div>${Math.round(progress)}%</div>`}</div></div>`;}).join('');
+        return `
+            <div class="col-md-4">
+                <div class="achievement-card">
+                    <div class="achievement-icon">${iconHtml}</div>
+                    <div class="achievement-title">${a['Название']}</div>
+                    <div class="achievement-desc">${a['Описание']}</div>
+                    ${rewardText}
+                    ${obtained ? 
+                        '<div class="achievement-obtained"><i class="fas fa-check-circle"></i></div>' : 
+                        `<div class="achievement-progress"><div class="achievement-progress-bar" style="width: ${progress}%;"></div></div>
+                         <div>${Math.round(progress)}%</div>`
+                    }
+                </div>
+            </div>
+        `;
+    }).join('');
+}
    cards.innerHTML=filtered.map(a=>{ const obtained=obtainedNames.includes(a['Название']); let progress=0, max=a['Условие значение']; if(a['Условие тип']==='баллы') progress=Math.min(баллы/max*100,100); else if(a['Условие тип']==='предупреждения') progress=Math.min(предупреждения/max*100,100); const icon=a['Иконка']||'⭐'; return `<div class="col-md-4"><div class="achievement-card"><div class="achievement-icon">${icon}</div><div class="achievement-title">${a['Название']}</div><div class="achievement-desc">${a['Описание']}</div>${obtained?'<div class="achievement-obtained"><i class="fas fa-check-circle"></i></div>':'<div class="achievement-progress"><div class="achievement-progress-bar" style="width:'+progress+'%;"></div></div><div>'+Math.round(progress)+'%</div>'}</div></div>`; }).join('');
   }
   btns.forEach(b=>{ b.addEventListener('click',()=>{ btns.forEach(bb=>bb.classList.remove('active')); b.classList.add('active'); render(b.dataset.filter); }); }); render('all');
@@ -607,18 +640,70 @@ async function loadRPGAdminPanel(){
 async function loadRPGReportsList(){
  const d=document.getElementById('rpgReportsList'); if(!d) return; const o=await получитьОтчетыНаПроверке(); if(!o.length){ d.innerHTML='<p class="text-muted">Нет новых отчётов</p>'; return; } let h=''; o.forEach(x=>{ h+=`<div class="application-item"><div class="d-flex justify-content-between"><div><strong>${x.игрок}</strong> (задание #${x.id_задания})</div><small>${new Date(x.дата_отправки).toLocaleString()}</small></div><div class="mb-2">${x.текст_отчета}</div><div>${x.ссылки||''}</div><div class="mt-2"><button class="btn btn-sm btn-success" onclick="approveReport(${x.id})">Одобрить</button><button class="btn btn-sm btn-danger" onclick="rejectReport(${x.id})">Отклонить</button></div></div>`; }); d.innerHTML=h;
 }
-window.showAddRPGTaskModal=function(){
- document.getElementById('rpgTaskId').value=''; document.getElementById('rpgTaskName').value=''; document.getElementById('rpgTaskDesc').value=''; document.getElementById('rpgTaskReward').value=''; document.getElementById('rpgTaskActive').checked=!0; document.getElementById('rpgTaskModalTitle').textContent='Добавление задания'; new bootstrap.Modal(document.getElementById('rpgTaskModal')).show();
+window.showAddRPGTaskModal = function() {
+    document.getElementById('rpgTaskId').value = '';
+    document.getElementById('rpgTaskName').value = '';
+    document.getElementById('rpgTaskDesc').value = '';
+    document.getElementById('rpgTaskReward').value = '';
+    document.getElementById('rpgTaskActive').checked = true;
+    document.getElementById('rpgTaskModalTitle').textContent = 'Добавление задания';
+    new bootstrap.Modal(document.getElementById('rpgTaskModal')).show();
 };
-window.editRPGTask=async function(id){
- const t=(await supabaseRequest('РПГ_активности','GET',null,`?id=eq.${id}`))[0]; if(t){ document.getElementById('rpgTaskId').value=t.id; document.getElementById('rpgTaskName').value=t.название; document.getElementById('rpgTaskDesc').value=t.описание||''; document.getElementById('rpgTaskReward').value=t.награда_рпг; document.getElementById('rpgTaskActive').checked=t.активно; document.getElementById('rpgTaskModalTitle').textContent='Редактирование задания'; new bootstrap.Modal(document.getElementById('rpgTaskModal')).show(); }
+
+window.editRPGTask = async function(id) {
+    const tasks = await supabaseRequest('РПГ_активности', 'GET', null, `?id=eq.${id}`);
+    if (tasks.length === 0) return;
+    const t = tasks[0];
+    document.getElementById('rpgTaskId').value = t.id;
+    document.getElementById('rpgTaskName').value = t.название;
+    document.getElementById('rpgTaskDesc').value = t.описание || '';
+    document.getElementById('rpgTaskReward').value = t.награда_рпг;
+    document.getElementById('rpgTaskActive').checked = t.активно;
+    document.getElementById('rpgTaskModalTitle').textContent = 'Редактирование задания';
+    new bootstrap.Modal(document.getElementById('rpgTaskModal')).show();
 };
-window.toggleRPGTask=async function(id){
- const t=(await supabaseRequest('РПГ_активности','GET',null,`?id=eq.${id}`))[0]; if(t){ const newActive=!t.активно; await supabaseRequest('РПГ_активности','PATCH',{активно:newActive},`?id=eq.${id}`); (`Задание ${newActive?'активировано':'деактивировано'}`,'info'); loadRPGAdminPanel(); }
+
+window.toggleRPGTask = async function(id) {
+    const tasks = await supabaseRequest('РПГ_активности', 'GET', null, `?id=eq.${id}`);
+    if (tasks.length === 0) return;
+    const newActive = !tasks[0].активно;
+    await supabaseRequest('РПГ_активности', 'PATCH', { активно: newActive }, `?id=eq.${id}`);
+    showToast(`Задание ${newActive ? 'активировано' : 'деактивировано'}`, 'info');
+    loadRPGAdminPanel();
 };
-document.getElementById('saveRPGTaskBtn')?.addEventListener('click',async()=>{
- const id=document.getElementById('rpgTaskId').value, name=document.getElementById('rpgTaskName').value.trim(), desc=document.getElementById('rpgTaskDesc').value.trim(), reward=parseInt(document.getElementById('rpgTaskReward').value), active=document.getElementById('rpgTaskActive').checked; if(!name||!reward) return ('Заполните название и награду','warning');
- try{ if(id) await supabaseRequest('РПГ_активности','PATCH',{название:name,описание:desc,награда_рпг:reward,активно:active},`?id=eq.${id}`); else await supabaseRequest('РПГ_активности','POST',{название:name,описание:desc,награда_рпг:reward,активно:active}); ('Задание сохранено','success'); bootstrap.Modal.getInstance(document.getElementById('rpgTaskModal')).hide(); loadRPGAdminPanel(); }catch(err){ ('Ошибка: '+err.message,'error'); }
+
+document.getElementById('saveRPGTaskBtn')?.addEventListener('click', async () => {
+    const id = document.getElementById('rpgTaskId').value;
+    const name = document.getElementById('rpgTaskName').value.trim();
+    const desc = document.getElementById('rpgTaskDesc').value.trim();
+    const reward = parseInt(document.getElementById('rpgTaskReward').value);
+    const active = document.getElementById('rpgTaskActive').checked;
+    if (!name || !reward) {
+        showToast('Заполните название и награду', 'warning');
+        return;
+    }
+    try {
+        if (id) {
+            await supabaseRequest('РПГ_активности', 'PATCH', {
+                название: name,
+                описание: desc,
+                награда_рпг: reward,
+                активно: active
+            }, `?id=eq.${id}`);
+        } else {
+            await supabaseRequest('РПГ_активности', 'POST', {
+                название: name,
+                описание: desc,
+                награда_рпг: reward,
+                активно: active
+            });
+        }
+        showToast('Задание сохранено', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('rpgTaskModal')).hide();
+        loadRPGAdminPanel();
+    } catch (err) {
+        showToast('Ошибка: ' + err.message, 'error');
+    }
 });
 window.approveReport=async function(id){
  try{ const r=(await supabaseRequest('Отчеты_РПГ','GET',null,`?id=eq.${id}`))[0]; if(!r) throw new Error('Отчёт не найден'); await supabaseRequest('Отчеты_РПГ','PATCH',{статус:'одобрено',дата_обработки:new Date().toISOString(),модератор:currentUserNick},`?id=eq.${id}`); const z=(await supabaseRequest('РПГ_активности','GET',null,`?id=eq.${r.id_задания}`))[0]; if(z){ await supabaseRequest('Участники','PATCH',{рпг_баллы:supabase.raw(`рпг_баллы + ${z.награда_рпг}`)},`?Ник=eq.${encodeURIComponent(r.игрок)}`); await supabaseRequest('Логи_РПГ','POST',{игрок:r.игрок,активность:z.название,награда_рпг:z.награда_рпг,кем_выдано:currentUserNick}); } ('Отчёт одобрен','success'); loadRPGAdminPanel(); loadRPGBoard(); }catch(e){ ('Ошибка одобрения','error'); }
