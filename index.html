@@ -358,7 +358,7 @@ async function applyReferralBonus(nick){
     if(inviter===nick) return;
     const existing=await supabaseRequest('Рефералы','GET',null,`?Приглашённый=eq.${nick}`);
     if(existing.length) return;
-    await supabaseRequest('Рефералы','POST',{Пригласивший:inviter,Приглашённый:nick,Дата:new Date().toISOString(),Бонус выплачен:false});
+    await supabaseRequest('Рефералы','POST',{Пригласивший:inviter,Приглашённый:nick,Дата:new Date().toISOString(),Бонус 'выплачен':false});
     const bonus=10;
     const inviterUser=await получитьДанныеИгрока(inviter);
     await supabaseRequest('Участники','PATCH',{'Баллы всего':(inviterUser['Баллы всего']||0)+bonus,'Баллы за рефералов':(inviterUser['Баллы за рефералов']||0)+bonus},`?Ник=eq.${inviter}`);
