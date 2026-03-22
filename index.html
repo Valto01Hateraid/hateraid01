@@ -147,7 +147,6 @@ select.form-control,select.form-control-majestic,.modal select,.admin-select{-we
 .chat-input-area button:hover{background:#ff69b4}
 </style></head><body><div id="particles-js"></div><div id="toast" class="toast-notification hidden"><i class="fas fa-info-circle" id="toastIcon"></i><span id="toastMessage"></span></div>
 
-<!-- Модальные окна -->
 <div class="modal fade" id="applyModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Вступление в семью</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="applyNick" class="form-control" placeholder="Желаемый ник"><input type="text" id="applyContact" class="form-control" placeholder="Discord / Telegram"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-majestic" id="applyBtn">Отправить заявку</button></div></div></div></div>
 <div class="modal fade" id="avatarModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Изменение аватара</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="avatarUrl" class="form-control" placeholder="Ссылка на изображение (можно GIF)"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-majestic" id="saveAvatarBtn">Сохранить</button></div></div></div></div>
 <div class="modal fade" id="rankModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="rankModalTitle">Добавление ранга</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="rankName" class="form-control" placeholder="Название"><input type="number" id="rankOrder" class="form-control" placeholder="Порядок"><input type="number" id="rankPoints" class="form-control" placeholder="Требуется баллов"><select id="rankType" class="form-control"><option value="авто">Автоматическое</option><option value="ручной">Ручное</option></select></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-majestic" id="saveRankBtn">Сохранить</button></div></div></div></div>
@@ -160,14 +159,11 @@ select.form-control,select.form-control-majestic,.modal select,.admin-select{-we
 <div class="modal fade" id="rpgReportModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="rpgReportTitle">Отправить отчёт</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="reportTaskId"><input type="text" id="reportTaskName" class="form-control" readonly><textarea id="reportText" class="form-control" placeholder="Текст отчёта" rows="3" required></textarea><input type="text" id="reportLinks" class="form-control" placeholder="Ссылки на скриншоты/видео (через запятую)"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-majestic" id="submitReportBtn">Отправить на проверку</button></div></div></div></div>
 <div class="modal fade" id="viewReportModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Проверка отчёта</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="viewReportBody"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button><button type="button" class="btn btn-success" id="approveReportBtn">Одобрить</button><button type="button" class="btn btn-danger" id="rejectReportBtn">Отклонить</button></div></div></div></div>
 
-<!-- Плавающая иконка чата (скрыта до входа) -->
 <div id="chatToggle" class="chat-toggle" style="display:none;"><i class="fas fa-comment-dots"></i></div>
 <div id="chatPanel" class="chat-panel hidden"><div class="chat-header"><span>Чат семьи</span><i class="fas fa-times" id="chatClose"></i></div><div id="chatMessages" class="chat-messages"></div><div class="chat-input-area"><input type="text" id="chatInput" placeholder="Написать сообщение..." maxlength="200"><button id="chatSend"><i class="fas fa-paper-plane"></i></button></div></div>
 
-<!-- Страница входа -->
 <div id="loginPage" class="login-screen"><div class="login-box"><div class="text-center mb-4"><span class="logo">Hateraid</span></div><p class="text-center text-secondary mb-4">Войдите в систему семьи</p><input type="text" id="loginNickInput" class="form-control-majestic" placeholder="Ваш ник"><div id="adminPasswordField" class="hidden"><input type="password" id="loginPasswordInput" class="form-control-majestic" placeholder="Пароль"></div><button id="loginBtn" class="btn btn-majestic w-100 mb-3">Войти</button><div class="text-center"><a href="#" id="toggleAdminMode" style="color:#ff69b4; text-decoration:none; font-weight:600;">🔐 Я администратор</a></div><div id="loginError" class="text-danger text-center mt-3"></div><div class="text-center mt-3"><a href="#" id="openApplyModal" style="color:#ff69b4; text-decoration:none;">Вступить в семью</a></div></div></div>
 
-<!-- Основной интерфейс -->
 <div id="mainInterface" class="container py-4 hidden">
  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4"><span class="logo">Hateraid</span><div class="d-flex align-items-center"><span id="welcomeUser" class="me-3 fs-5"></span><button id="logoutBtn" class="btn btn-outline-majestic"><i class="fas fa-sign-out-alt"></i> Выйти</button></div></div>
  <ul class="nav nav-tabs-custom" id="mainTabs" role="tablist">
@@ -204,7 +200,6 @@ select.form-control,select.form-control-majestic,.modal select,.admin-select{-we
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
 <script>
-// ---------- CONFIG ----------
 const SUPABASE_URL='https://oatmjnbayxtukogkgnid.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hdG1qbmJheXh0dWtvZ2tnbmlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MDMwNzksImV4cCI6MjA4OTE3OTA3OX0.x-UE4MRx3N-vii3rI5_EGxW-8C1UjlGe-VRXIemAEw0';
 
@@ -226,7 +221,6 @@ function showToast(m,t='info'){
 }
 function playSound(t){ const s=document.getElementById(t==='promote'?'soundPromote':'soundDemote'); if(s) s.play().catch(()=>{}); }
 
-// ---------- TELEGRAM ----------
 async function sendTelegramNotification(telegramId, message) {
     if (!telegramId) return;
     const TELEPUSH_TOKEN = '3a8386';
@@ -239,7 +233,6 @@ async function sendTelegramNotification(telegramId, message) {
     } catch (e) { console.error('Ошибка отправки в Telegram:', e); }
 }
 
-// ---------- ОСНОВНЫЕ ФУНКЦИИ ----------
 async function получитьДанныеИгрока(ник){
  try{ const d=await supabaseRequest('Участники','GET',null,`?Ник=eq.${encodeURIComponent(ник)}`); return d.length?d[0]:null; }
  catch(e){ showToast('Ошибка получения данных игрока','error'); return null; }
@@ -264,7 +257,6 @@ async function получитьОтчетыНаПроверке(){ try{ return a
 async function получитьЗаявки(){ try{ return await supabaseRequest('Заявки на вступление','GET',null,'?Статус=eq.новая'); }catch(e){ return[]; } }
 async function получитьЛоги(){ try{ const b=await supabaseRequest('Логи баллов','GET',null,'?order=Дата.desc&limit=20'), p=await supabaseRequest('Логи предупреждений','GET',null,'?order=Дата.desc&limit=20'), a=await supabaseRequest('Логи действий админов','GET',null,'?order=Дата.desc&limit=20'); return{баллы:b,преды:p,админЛоги:a}; }catch(e){ return{баллы:[],преды:[],админЛоги:[]}; } }
 
-// ---------- НАГРАДЫ ЗА ДОСТИЖЕНИЯ ----------
 async function checkAndApplyAchievementRewards(nick, adminNick='система'){
  try{
   const user=await получитьДанныеИгрока(nick); if(!user) return;
@@ -292,7 +284,6 @@ async function checkAndApplyAchievementRewards(nick, adminNick='система')
  }catch(err){ console.error('checkAchievementRewards error:',err); }
 }
 
-// ---------- ЛИЧНЫЙ КАБИНЕТ ----------
 async function loadSettings(){
  const c=document.getElementById('settingsContent'); if(!c) return;
  const user=currentUser;
@@ -320,7 +311,6 @@ async function loadSettings(){
  };
 }
 
-// ---------- РЕФЕРАЛЫ ----------
 async function loadReferral(){
  const c=document.getElementById('referralContent'); if(!c) return;
  const user=currentUser;
@@ -358,7 +348,7 @@ async function applyReferralBonus(nick){
     if(inviter===nick) return;
     const existing=await supabaseRequest('Рефералы','GET',null,`?Приглашённый=eq.${nick}`);
     if(existing.length) return;
-    await supabaseRequest('Рефералы','POST',{Пригласивший:inviter,Приглашённый:nick,Дата:new Date().toISOString(),Бонус 'выплачен':false});
+    await supabaseRequest('Рефералы','POST',{Пригласивший:inviter,Приглашённый:nick,Дата:new Date().toISOString(),'Бонус выплачен':false});
     const bonus=10;
     const inviterUser=await получитьДанныеИгрока(inviter);
     await supabaseRequest('Участники','PATCH',{'Баллы всего':(inviterUser['Баллы всего']||0)+bonus,'Баллы за рефералов':(inviterUser['Баллы за рефералов']||0)+bonus},`?Ник=eq.${inviter}`);
@@ -367,7 +357,6 @@ async function applyReferralBonus(nick){
  }
 }
 
-// ---------- АДМИНСКИЕ ФУНКЦИИ ----------
 async function adminAddPoints(nick,activity,points){
  if(!isAdmin) return;
  try{
@@ -382,8 +371,8 @@ async function adminAddPoints(nick,activity,points){
   await checkAndApplyAutoPromotion(nick,currentUserNick);
   await checkAndApplyAchievementRewards(nick,currentUserNick);
   await supabaseRequest('Логи баллов','POST',{Дата:new Date().toISOString(),Игрок:nick,Активность:activity,Баллы:points,Начислил:currentUserNick,Статус:'одобрено'});
-  // Запись в активность
-  await supabaseRequest('Активность','INSERT',{Игрок:nick,Дата:сегодня,Баллы:points},"?on_conflict=(Игрок,Дата) DO UPDATE SET Баллы=Активность.Баллы+excluded.Баллы");
+  const todayDate=сегодня;
+  await supabaseRequest('Активность','POST',{Игрок:nick,Дата:todayDate,Баллы:points},"?on_conflict=(Игрок,Дата) DO UPDATE SET Баллы=Активность.Баллы+excluded.Баллы");
   showToast(`Начислено! Всего: ${новыеВсего}`,'success'); playersCache=null; confetti({particleCount:100,spread:70,origin:{y:.6}});
   if (user && user['Уведомления Telegram'] && user['Telegram ID']) sendTelegramNotification(user['Telegram ID'], `Вам начислено ${points} баллов за ${activity}.`);
   nick===currentUserNick?renderProfile(await получитьДанныеИгрока(nick),'myProfileContent'):loadMembers();
@@ -479,7 +468,6 @@ document.getElementById('activity-tab')?.addEventListener('shown.bs.tab',()=>loa
 document.getElementById('settings-tab')?.addEventListener('shown.bs.tab',loadSettings);
 document.getElementById('referral-tab')?.addEventListener('shown.bs.tab',loadReferral);
 
-// ---------- ПРОФИЛЬ ----------
 async function renderProfile(u,containerId){
  const c=document.getElementById(containerId); if(!c) return; if(!u){ c.innerHTML='<p class="text-danger">Ошибка загрузки профиля</p>'; return; }
  const w=u['Предупреждения']||0, a=u['Аватар']||'https://picsum.photos/150/150?random='+u['Ник'];
@@ -660,7 +648,7 @@ async function loadLogs(){
 }
 async function loadRanksManagement(){
  const c=document.getElementById('admin-ranks'); if(!c) return;
- try{ const r=await получитьВсеРанги(); c.innerHTML=`<h5>Управление рангами</h5><button class="btn btn-majestic mb-3" onclick="showAddRankModal()">+ Добавить ранг</button><table class="ranks-table"><thead> th><th>Название</th><th>Порядок</th><th>Требуется баллов</th><th>Тип повышения</th><th>Действия</th> </thead><tbody>${r.map(x=>`<tr><td>${x['Название']}</td><td>${x['Порядок']}</td><td>${x['Требуется баллов']}</td><td>${x['Тип повышения']}</td><td><button class="btn btn-sm btn-outline-majestic" onclick="editRank('${x['Название']}')">✎</button><button class="btn btn-sm btn-outline-majestic" onclick="deleteRank('${x['Название']}')">🗑</button></td></tr>`).join('')}</tbody></table>`; }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки рангов</p>'; }
+ try{ const r=await получитьВсеРанги(); c.innerHTML=`<h5>Управление рангами</h5><button class="btn btn-majestic mb-3" onclick="showAddRankModal()">+ Добавить ранг</button><table class="ranks-table"><thead> <th>Название</th><th>Порядок</th><th>Требуется баллов</th><th>Тип повышения</th><th>Действия</th> </thead><tbody>${r.map(x=>`<tr><td>${x['Название']}</td><td>${x['Порядок']}</td><td>${x['Требуется баллов']}</td><td>${x['Тип повышения']}</td><td><button class="btn btn-sm btn-outline-majestic" onclick="editRank('${x['Название']}')">✎</button><button class="btn btn-sm btn-outline-majestic" onclick="deleteRank('${x['Название']}')">🗑</button></td></tr>`).join('')}</tbody></table>`; }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки рангов</p>'; }
 }
 window.showAddRankModal=function(){
  document.getElementById('rankModalTitle').innerText='Добавление ранга'; document.getElementById('rankName').value=''; document.getElementById('rankOrder').value=''; document.getElementById('rankPoints').value=''; document.getElementById('rankType').value='авто';
@@ -701,7 +689,7 @@ window.adminDemote=async function(n){
  try{ const u=await получитьДанныеИгрока(n); if(!u) throw new Error('Игрок не найден'); const cur=u['Ранг']; const ranks=await получитьВсеРанги(); const curR=ranks.find(r=>r['Название']===cur); if(!curR) throw new Error('Ранг не найден'); const prev=ranks.find(r=>r['Порядок']===curR['Порядок']-1); if(!prev) throw new Error('Нет более низкого ранга'); await supabaseRequest('Участники','PATCH',{Ранг:prev['Название']},`?Ник=eq.${encodeURIComponent(n)}`); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'понизил',Цель:n,Подробности:`${cur} → ${prev['Название']}`}); showToast(`Понижен до ${prev['Название']}`,'info'); playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ showToast(err.message,'error'); }
 };
 async function loadRPGAdminPanel(){
- const c=document.getElementById('admin-rpg'); if(!c) return; const z=await получитьВсеРПГЗадания(); c.innerHTML=`<h5>Управление РПГ-заданиями</h5><button class="btn btn-majestic mb-3" onclick="showAddRPGTaskModal()">+ Добавить задание</button><table class="ranks-table"><thead> th><th>ID</th><th>Название</th><th>Описание</th><th>Награда РПГ</th><th>Активно</th><th>Действия</th> </thead><tbody>${z.map(x=>`<tr><td>${x.id}</td><td>${x.название}</td><td>${x.описание||''}</td><td>${x.награда_рпг}</td><td>${x.активно?'Да':'Нет'}</td><td><button class="btn btn-sm btn-outline-majestic" onclick="editRPGTask(${x.id})">✎</button><button class="btn btn-sm btn-outline-majestic" onclick="toggleRPGTask(${x.id})">🔁</button></td></tr>`).join('')}</tbody></table><hr><h5>Отчёты на проверке</h5><div id="rpgReportsList"></div>`; loadRPGReportsList();
+ const c=document.getElementById('admin-rpg'); if(!c) return; const z=await получитьВсеРПГЗадания(); c.innerHTML=`<h5>Управление РПГ-заданиями</h5><button class="btn btn-majestic mb-3" onclick="showAddRPGTaskModal()">+ Добавить задание</button><table class="ranks-table"><thead> <th>ID</th><th>Название</th><th>Описание</th><th>Награда РПГ</th><th>Активно</th><th>Действия</th> </thead><tbody>${z.map(x=>`<tr><td>${x.id}</td><td>${x.название}</td><td>${x.описание||''}</td><td>${x.награда_рпг}</td><td>${x.активно?'Да':'Нет'}</td><td><button class="btn btn-sm btn-outline-majestic" onclick="editRPGTask(${x.id})">✎</button><button class="btn btn-sm btn-outline-majestic" onclick="toggleRPGTask(${x.id})">🔁</button></td></tr>`).join('')}</tbody></table><hr><h5>Отчёты на проверке</h5><div id="rpgReportsList"></div>`; loadRPGReportsList();
 }
 async function loadRPGReportsList(){
  const d=document.getElementById('rpgReportsList'); if(!d) return; const o=await получитьОтчетыНаПроверке(); if(!o.length){ d.innerHTML='<p class="text-muted">Нет новых отчётов</p>'; return; } let h=''; o.forEach(x=>{ h+=`<div class="application-item"><div class="d-flex justify-content-between"><div><strong>${x.игрок}</strong> (задание #${x.id_задания})</div><small>${new Date(x.дата_отправки).toLocaleString()}</small></div><div class="mb-2">${x.текст_отчета}</div><div>${x.ссылки||''}</div><div class="mt-2"><button class="btn btn-sm btn-success" onclick="approveReport(${x.id})">Одобрить</button><button class="btn btn-sm btn-danger" onclick="rejectReport(${x.id})">Отклонить</button></div></div>`; }); d.innerHTML=h;
@@ -797,17 +785,17 @@ document.addEventListener('DOMContentLoaded',function(){
 async function loadFamilyActivity(){
  const c=document.getElementById('activityContent'); if(!c) return;
  try{
-  const players=await получитьВсехУчастников(), sorted=players.sort((a,b)=>(b['Баллы всего']||0)-(a['Баллы всего']||0)), top10=sorted.slice(0,10);
-  // Получение активности за неделю
+  const players=await получитьВсехУчастников(), sorted=players.sort((a,b)=>(b['Баллы всего']||0)-(a['Баллы всего']||0));
   const weekAgo=new Date(Date.now()-7*24*60*60*1000).toISOString().split('T')[0];
   const activities=await supabaseRequest('Активность','GET',null,`?Дата>=${weekAgo}&order=Дата.desc`);
   const totalWeekly=activities.reduce((s,a)=>s+(a['Баллы']||0),0);
-  let html='<div class="d-flex justify-content-between mb-3"><h5>Топ 10 по общим баллам</h5><select id="activityFilter" class="form-control-majestic w-auto"><option value="all">Всего</option><option value="week">За неделю</option></select></div>';
-  const filter=document.createElement('select');
-  const currentFilter='all';
+  let html='<div class="d-flex justify-content-between mb-3"><h5>Топ 10 по общим баллам</h5><select id="activityFilter" class="form-control-majestic w-auto"><option value="all">Всего</option><option value="week">За неделю</option></select></div><div id="rankingContainer"></div>';
+  c.innerHTML=html;
+  const container=document.getElementById('rankingContainer');
+  const filter=document.getElementById('activityFilter');
   function renderRanking(){
     let data;
-    if(currentFilter==='week'){
+    if(filter.value==='week'){
         const map=new Map();
         activities.forEach(a=>{ map.set(a['Игрок'],(map.get(a['Игрок'])||0)+a['Баллы']); });
         data=Array.from(map.entries()).map(([nick,points])=>({Ник:nick,'Баллы всего':points})).sort((a,b)=>b['Баллы всего']-a['Баллы всего']);
@@ -815,14 +803,13 @@ async function loadFamilyActivity(){
         data=sorted;
     }
     const top=data.slice(0,10);
-    let h='<h5 class="mb-3">Топ 10 по '+(currentFilter==='week'?'активности за неделю':'общим баллам')+'</h5>';
+    let h='<h5 class="mb-3">Топ 10 по '+(filter.value==='week'?'активности за неделю':'общим баллам')+'</h5>';
     top.forEach((p,i)=>{ h+=`<div class="history-item">${i+1}. ${p['Ник']} — ${p['Баллы всего']||0} баллов</div>`; });
-    const total=currentFilter==='week'?totalWeekly:players.reduce((s,p)=>s+(p['Баллы всего']||0),0);
-    h+=`<hr><p><strong>Общий баланс ${currentFilter==='week'?'за неделю':'семьи'}:</strong> ${total}</p>`;
-    c.innerHTML=h;
-    const sel=document.getElementById('activityFilter');
-    if(sel) sel.addEventListener('change',(e)=>{ currentFilter=e.target.value; renderRanking(); });
+    const total=filter.value==='week'?totalWeekly:players.reduce((s,p)=>s+(p['Баллы всего']||0),0);
+    h+=`<hr><p><strong>Общий баланс ${filter.value==='week'?'за неделю':'семьи'}:</strong> ${total}</p>`;
+    container.innerHTML=h;
   }
+  filter.addEventListener('change',renderRanking);
   renderRanking();
  }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки</p>'; }
 }
@@ -830,7 +817,6 @@ particlesJS('particles-js',{particles:{number:{value:80,density:{enable:!0,value
 </script>
 
 <script>
-// ========== МИНИ-ЧАТ ==========
 let chatInterval = null;
 function loadChatMessages() {
     if (!currentUserNick) return;
@@ -884,8 +870,7 @@ document.addEventListener('click', (e) => {
     }
 });
 </script>
- 
-<!-- Модальные окна: профиль, казна, rpgTask -->
+
 <div class="modal fade" id="profileModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="profileModalLabel">Профиль игрока</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="profileModalBody"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button></div></div></div></div>
 <div class="modal fade" id="treasuryModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="treasuryModalTitle">Операция с казной</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="treasuryOperationType"><input type="number" id="treasuryAmount" class="form-control" placeholder="Сумма" min="1" step="1" required><input type="text" id="treasuryDescription" class="form-control" placeholder="Описание (необязательно)"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-majestic" id="confirmTreasuryBtn">Выполнить</button></div></div></div></div>
 <div class="modal fade" id="rpgTaskModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="rpgTaskModalTitle">Добавление задания</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="rpgTaskId"><input type="text" id="rpgTaskName" class="form-control" placeholder="Название задания" required><textarea id="rpgTaskDesc" class="form-control" placeholder="Описание (необязательно)" rows="2"></textarea><input type="number" id="rpgTaskReward" class="form-control" placeholder="Награда (РПГ)" min="1" required><div class="form-check mt-2"><input class="form-check-input" type="checkbox" id="rpgTaskActive" checked><label class="form-check-label" for="rpgTaskActive">Активно</label></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-majestic" id="saveRPGTaskBtn">Сохранить</button></div></div></div></div>
