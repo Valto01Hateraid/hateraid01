@@ -124,6 +124,26 @@ select.form-control,select.form-control-majestic,.modal select,.admin-select{-we
 .mb-3{margin-top:15px!important}
 #memberSearch{margin-top:30px}
 ::-webkit-scrollbar {width: 0;background: transparent;}* {scrollbar-width: none;}
+<style>
+.chat-toggle {position: fixed;bottom: 20px;right: 20px;width: 60px;height: 60px;background: linear-gradient(145deg, #ff1493, #ff69b4);border-radius: 50%;display: flex;align-items: center;justify-content: center;cursor: pointer;box-shadow: 0 0 20px rgba(255,20,147,0.6);transition: 0.3s;z-index: 1000;}
+.chat-toggle i {font-size: 28px;color: white;}
+.chat-toggle:hover {transform: scale(1.05);box-shadow: 0 0 30px #ff1493;}
+.chat-panel {position: fixed;bottom: 90px;right: 20px;width: 350px;height: 500px;background: rgba(30,30,40,0.95);backdrop-filter: blur(10px);border-radius: 20px;border: 1px solid #ff1493;box-shadow: 0 0 30px rgba(0,0,0,0.5);display: flex;flex-direction: column;overflow: hidden;z-index: 999;transition: 0.3s;}
+.chat-panel.hidden {display: none;}
+.chat-header {background: #ff1493;padding: 12px 15px;font-weight: 700;display: flex;justify-content: space-between;align-items: center;cursor: pointer;}
+.chat-header span {color: white;}
+.chat-header i {color: white;cursor: pointer;}
+.chat-messages {flex: 1;overflow-y: auto;padding: 10px;display: flex;flex-direction: column;gap: 8px;}
+.chat-message {background: rgba(0,0,0,0.5);border-radius: 15px;padding: 8px 12px;max-width: 80%;word-wrap: break-word;}
+.chat-message.own {align-self: flex-end;background: #ff1493;color: white;}
+.chat-message .author {font-weight: 600;font-size: 0.8rem;margin-bottom: 3px;color: #ff69b4;}
+.chat-message.own .author {color: #ffe6f0;}
+.chat-message .text {font-size: 0.9rem;}
+.chat-message .time {font-size: 0.7rem;color: #aaa;margin-top: 3px;text-align: right;}
+.chat-input-area {display: flex;padding: 10px;border-top: 1px solid #444;}
+.chat-input-area input {flex: 1;background: #222;border: 1px solid #ff1493;border-radius: 30px;padding: 8px 15px;color: white;outline: none;}
+.chat-input-area button {background: #ff1493;border: none;border-radius: 30px;margin-left: 8px;width: 40px;height: 40px;color: white;cursor: pointer;}
+.chat-input-area button:hover {background: #ff69b4;}</style>
 </style></head><body><div id="particles-js"></div><div id="toast" class="toast-notification hidden"><i class="fas fa-info-circle" id="toastIcon"></i><span id="toastMessage"></span></div>
 
 <!-- Модальные окна (все как в вашем коде, без изменений) -->
@@ -138,7 +158,8 @@ select.form-control,select.form-control-majestic,.modal select,.admin-select{-we
 <div class="modal fade" id="removeWarningModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Снятие предупреждения</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="removeWarningNick" class="form-control" placeholder="Ник игрока" readonly></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-majestic" id="confirmRemoveWarning">Снять</button></div></div></div></div>
 <div class="modal fade" id="rpgReportModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="rpgReportTitle">Отправить отчёт</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="reportTaskId"><input type="text" id="reportTaskName" class="form-control" readonly><textarea id="reportText" class="form-control" placeholder="Текст отчёта" rows="3" required></textarea><input type="text" id="reportLinks" class="form-control" placeholder="Ссылки на скриншоты/видео (через запятую)"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-majestic" id="submitReportBtn">Отправить на проверку</button></div></div></div></div>
 <div class="modal fade" id="viewReportModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Проверка отчёта</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="viewReportBody"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button><button type="button" class="btn btn-success" id="approveReportBtn">Одобрить</button><button type="button" class="btn btn-danger" id="rejectReportBtn">Отклонить</button></div></div></div></div>
-
+<div id="chatToggle" class="chat-toggle"><i class="fas fa-comment-dots"></i></div><div id="chatPanel" class="chat-panel hidden"><div class="chat-header"><span>Чат семьи</span><i class="fas fa-times" id="chatClose"></i></div><div id="chatMessages" class="chat-messages"></div><div class="chat-input-area"><input type="text" id="chatInput" placeholder="Написать сообщение..." maxlength="200"><button id="chatSend"><i class="fas fa-paper-plane"></i></button></div></div>
+ 
 <!-- Страница входа -->
 <div id="loginPage" class="login-screen"><div class="login-box"><div class="text-center mb-4"><span class="logo">Hateraid</span></div><p class="text-center text-secondary mb-4">Войдите в систему семьи</p><input type="text" id="loginNickInput" class="form-control-majestic" placeholder="Ваш ник"><div id="adminPasswordField" class="hidden"><input type="password" id="loginPasswordInput" class="form-control-majestic" placeholder="Пароль"></div><button id="loginBtn" class="btn btn-majestic w-100 mb-3">Войти</button><div class="text-center"><a href="#" id="toggleAdminMode" style="color:#ff69b4; text-decoration:none; font-weight:600;">🔐 Я администратор</a></div><div id="loginError" class="text-danger text-center mt-3"></div><div class="text-center mt-3"><a href="#" id="openApplyModal" style="color:#ff69b4; text-decoration:none;">Вступить в семью</a></div></div></div>
 
@@ -721,6 +742,91 @@ async function loadFamilyActivity(){
  }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки</p>'; }
 }
 particlesJS('particles-js',{particles:{number:{value:80,density:{enable:!0,value_area:800}},color:{value:'#ff1493'},shape:{type:'circle'},opacity:{value:.5,random:!1},size:{value:3,random:!0},line_linked:{enable:!0,distance:150,color:'#ff1493',opacity:.4,width:1},move:{enable:!0,speed:2,direction:'none',random:!1,straight:!1,out_mode:'out'}},interactivity:{detect_on:'canvas',events:{onhover:{enable:!0,mode:'repulse'},onclick:{enable:!0,mode:'push'},resize:!0},modes:{repulse:{distance:100,duration:.4},push:{particles_nb:4}}},retina_detect:!0});
+<script>
+// ========== МИНИ-ЧАТ ==========
+let chatInterval = null;
+
+function loadChatMessages() {
+    if (!currentUserNick) return;
+    supabaseRequest('Чат', 'GET', null, '?order=Дата.desc&limit=50').then(messages => {
+        const container = document.getElementById('chatMessages');
+        if (!container) return;
+        let html = '';
+        messages.reverse().forEach(msg => {
+            const isOwn = msg['Игрок'] === currentUserNick;
+            html += `
+                <div class="chat-message ${isOwn ? 'own' : ''}">
+                    <div class="author">${escapeHtml(msg['Игрок'])}</div>
+                    <div class="text">${escapeHtml(msg['Сообщение'])}</div>
+                    <div class="time">${new Date(msg['Дата']).toLocaleTimeString()}</div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+        container.scrollTop = container.scrollHeight;
+    }).catch(console.error);
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+async function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text || !currentUserNick) return;
+    try {
+        await supabaseRequest('Чат', 'POST', {
+            'Игрок': currentUserNick,
+            'Сообщение': text,
+            'Дата': new Date().toISOString()
+        });
+        input.value = '';
+        loadChatMessages();
+        // звук отправки (необязательно)
+        playSound('demote'); // короткий звук
+    } catch (err) {
+        showToast('Ошибка отправки сообщения', 'error');
+    }
+}
+
+// Открыть/закрыть чат
+const chatToggle = document.getElementById('chatToggle');
+const chatPanel = document.getElementById('chatPanel');
+const chatClose = document.getElementById('chatClose');
+const chatSend = document.getElementById('chatSend');
+const chatInput = document.getElementById('chatInput');
+
+chatToggle.addEventListener('click', () => {
+    if (chatPanel.classList.contains('hidden')) {
+        chatPanel.classList.remove('hidden');
+        loadChatMessages();
+        if (chatInterval) clearInterval(chatInterval);
+        chatInterval = setInterval(loadChatMessages, 5000); // обновление каждые 5 сек
+    } else {
+        chatPanel.classList.add('hidden');
+        if (chatInterval) clearInterval(chatInterval);
+    }
+});
+chatClose.addEventListener('click', () => {
+    chatPanel.classList.add('hidden');
+    if (chatInterval) clearInterval(chatInterval);
+});
+chatSend.addEventListener('click', sendChatMessage);
+chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendChatMessage();
+});
+
+// Закрыть чат при клике вне (опционально)
+document.addEventListener('click', (e) => {
+    if (!chatPanel.classList.contains('hidden') && !chatPanel.contains(e.target) && !chatToggle.contains(e.target)) {
+        chatPanel.classList.add('hidden');
+        if (chatInterval) clearInterval(chatInterval);
+    }
+});
+</script>
 </script>
 
 <!-- Модальные окна: профиль, казна, rpgTask -->
