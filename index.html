@@ -125,9 +125,46 @@ select.form-control,select.form-control-majestic,.modal select,.admin-select{-we
 #memberSearch{margin-top:30px}
 ::-webkit-scrollbar {width: 0;background: transparent;}* {scrollbar-width: none;}
 <style>
-.chat-toggle {position: fixed;bottom: 20px;right: 20px;width: 60px;height: 60px;background: linear-gradient(145deg, #ff1493, #ff69b4);border-radius: 50%;display: flex;align-items: center;justify-content: center;cursor: pointer;box-shadow: 0 0 20px rgba(255,20,147,0.6);transition: 0.3s;z-index: 1000;}
-.chat-toggle i {font-size: 28px;color: white;}
-.chat-toggle:hover {transform: scale(1.05);box-shadow: 0 0 30px #ff1493;}
+/* Плавающая кнопка чата */
+.chat-toggle {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(145deg, #ff1493, #ff69b4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(255,20,147,0.6);
+    transition: 0.3s;
+    z-index: 1000;
+    border: none;
+    outline: none;
+}
+.chat-toggle i {
+    font-size: 28px;
+    color: white;
+    transition: 0.3s;
+}
+.chat-toggle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px #ff1493;
+}
+.chat-toggle:hover i {
+    transform: rotate(5deg);
+}
+/* Анимация пульсации (необязательно) */
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255,20,147,0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(255,20,147,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,20,147,0); }
+}
+.chat-toggle {
+    animation: pulse 2s infinite;
+}
 .chat-panel {position: fixed;bottom: 90px;right: 20px;width: 350px;height: 500px;background: rgba(30,30,40,0.95);backdrop-filter: blur(10px);border-radius: 20px;border: 1px solid #ff1493;box-shadow: 0 0 30px rgba(0,0,0,0.5);display: flex;flex-direction: column;overflow: hidden;z-index: 999;transition: 0.3s;}
 .chat-panel.hidden {display: none;}
 .chat-header {background: #ff1493;padding: 12px 15px;font-weight: 700;display: flex;justify-content: space-between;align-items: center;cursor: pointer;}
