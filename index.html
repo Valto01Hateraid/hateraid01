@@ -125,38 +125,33 @@ select.form-control,select.form-control-majestic,.modal select,.admin-select{-we
 #memberSearch{margin-top:30px}
 ::-webkit-scrollbar {width: 0;background: transparent;}* {scrollbar-width: none;}
 <style>
-/* Плавающая кнопка чата */
 .chat-toggle {
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(145deg, #ff1493, #ff69b4);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 0 20px rgba(255,20,147,0.6);
-    transition: 0.3s;
-    z-index: 1000;
-    border: none;
-    outline: none;
+    position: fixed !important;
+    bottom: 25px !important;
+    right: 25px !important;
+    width: 60px !important;
+    height: 60px !important;
+    background: linear-gradient(145deg, #ff1493, #ff69b4) !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    box-shadow: 0 0 20px rgba(255,20,147,0.6) !important;
+    transition: 0.3s !important;
+    z-index: 1000 !important;
+    border: 2px solid #ff69b4 !important;
+    animation: pulse 2s infinite !important;
 }
 .chat-toggle i {
-    font-size: 28px;
-    color: white;
-    transition: 0.3s;
+    font-size: 28px !important;
+    color: white !important;
+    transition: 0.3s !important;
 }
 .chat-toggle:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 30px #ff1493;
+    transform: scale(1.05) !important;
+    box-shadow: 0 0 30px #ff1493 !important;
 }
-.chat-toggle:hover i {
-    transform: rotate(5deg);
-}
-/* Анимация пульсации (необязательно) */
 @keyframes pulse {
     0% { box-shadow: 0 0 0 0 rgba(255,20,147,0.4); }
     70% { box-shadow: 0 0 0 15px rgba(255,20,147,0); }
@@ -196,7 +191,8 @@ select.form-control,select.form-control-majestic,.modal select,.admin-select{-we
 <div class="modal fade" id="rpgReportModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="rpgReportTitle">Отправить отчёт</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="reportTaskId"><input type="text" id="reportTaskName" class="form-control" readonly><textarea id="reportText" class="form-control" placeholder="Текст отчёта" rows="3" required></textarea><input type="text" id="reportLinks" class="form-control" placeholder="Ссылки на скриншоты/видео (через запятую)"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-majestic" id="submitReportBtn">Отправить на проверку</button></div></div></div></div>
 <div class="modal fade" id="viewReportModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Проверка отчёта</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="viewReportBody"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button><button type="button" class="btn btn-success" id="approveReportBtn">Одобрить</button><button type="button" class="btn btn-danger" id="rejectReportBtn">Отклонить</button></div></div></div></div>
 <div id="chatToggle" class="chat-toggle"><i class="fas fa-comment-dots"></i></div><div id="chatPanel" class="chat-panel hidden"><div class="chat-header"><span>Чат семьи</span><i class="fas fa-times" id="chatClose"></i></div><div id="chatMessages" class="chat-messages"></div><div class="chat-input-area"><input type="text" id="chatInput" placeholder="Написать сообщение..." maxlength="200"><button id="chatSend"><i class="fas fa-paper-plane"></i></button></div></div>
- 
+<div id="chatToggle" class="chat-toggle" style="display:none;"><i class="fas fa-comment-dots"></i></div>
+    
 <!-- Страница входа -->
 <div id="loginPage" class="login-screen"><div class="login-box"><div class="text-center mb-4"><span class="logo">Hateraid</span></div><p class="text-center text-secondary mb-4">Войдите в систему семьи</p><input type="text" id="loginNickInput" class="form-control-majestic" placeholder="Ваш ник"><div id="adminPasswordField" class="hidden"><input type="password" id="loginPasswordInput" class="form-control-majestic" placeholder="Пароль"></div><button id="loginBtn" class="btn btn-majestic w-100 mb-3">Войти</button><div class="text-center"><a href="#" id="toggleAdminMode" style="color:#ff69b4; text-decoration:none; font-weight:600;">🔐 Я администратор</a></div><div id="loginError" class="text-danger text-center mt-3"></div><div class="text-center mt-3"><a href="#" id="openApplyModal" style="color:#ff69b4; text-decoration:none;">Вступить в семью</a></div></div></div>
 
@@ -452,6 +448,8 @@ function showMainInterface(u){
  renderProfile(u,'myProfileContent'); loadMembers(); loadAchievements(u['Ник']); loadRPGBoard(); loadEvents(); loadNews(); loadSettings();
  if(isAdmin){ addAdminTabs(); loadApplications(); loadLogs(); loadRanksManagement(); loadPlayerManagement(); loadRPGAdminPanel(); checkNewApplications(); }else removeAdminTabs();
  new bootstrap.Tab(document.getElementById('profile-tab')).show();
+const chatToggle = document.getElementById('chatToggle');
+if (chatToggle) chatToggle.style.display = 'flex';
 }
 document.getElementById('treasury-tab')?.addEventListener('shown.bs.tab',()=>loadTreasury());
 document.getElementById('activity-tab')?.addEventListener('shown.bs.tab',()=>loadFamilyActivity());
@@ -755,6 +753,8 @@ logoutBtn.addEventListener('click',()=>{ mainInterface.classList.add('hidden'); 
 async function loadTreasury(){
  const c=document.getElementById('treasuryContent'); if(!c) return;
  try{ let b=0; const s=await supabaseRequest('Настройки','GET',null,'?Параметр=eq.баланс_казны'); if(s.length) b=parseFloat(s[0]['Значение'])||0; const ops=await supabaseRequest('Казна','GET',null,'?order=Дата.desc&limit=20'); let h=`<div class="text-center mb-4"><h2 class="display-4" style="color:#ff1493;">${b.toLocaleString()} <small style="font-size:1rem;">виртов</small></h2><p class="text-secondary">Текущий баланс семьи</p></div><div class="d-flex gap-3 justify-content-center mb-4"><button class="btn btn-majestic" onclick="showTreasuryOperationModal('пополнение')"><i class="fas fa-plus-circle"></i> Пополнить</button>`; if(isAdmin) h+='<button class="btn btn-outline-majestic" onclick="showTreasuryOperationModal(\'списание\')"><i class="fas fa-minus-circle"></i> Списать</button>'; h+='</div><h5 class="mb-3">Последние операции</h5>'; if(!ops.length) h+='<p class="text-muted">Пока нет операций</p>'; else ops.forEach(o=>{ const s=o['Тип']==='пополнение'?'+':'-', col=o['Тип']==='пополнение'?'#28a745':'#dc3545'; h+=`<div class="history-item"><div class="d-flex justify-content-between"><span><strong style="color:${col};">${s}${o['Сумма']}</strong> — ${o['Описание']||''}</span><small class="text-secondary">${new Date(o['Дата']).toLocaleString()}</small></div><div><small>Игрок: ${o['Игрок']||'система'}</small></div></div>`; }); c.innerHTML=h; }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки казны</p>'; console.error(err); }
+const chatToggle = document.getElementById('chatToggle');
+if (chatToggle) chatToggle.style.display = 'none';
 }
 window.showTreasuryOperationModal=function(t){ if(t==='списание'&&!isAdmin) return showToast('Только администраторы могут списывать средства','error'); document.getElementById('treasuryModalTitle').textContent=(t==='пополнение'?'Пополнение':'Списание')+' казны'; document.getElementById('treasuryOperationType').value=t; document.getElementById('treasuryAmount').value=''; document.getElementById('treasuryDescription').value=''; new bootstrap.Modal(document.getElementById('treasuryModal')).show(); };
 document.addEventListener('DOMContentLoaded',function(){
