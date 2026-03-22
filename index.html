@@ -742,6 +742,8 @@ async function loadFamilyActivity(){
  }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки</p>'; }
 }
 particlesJS('particles-js',{particles:{number:{value:80,density:{enable:!0,value_area:800}},color:{value:'#ff1493'},shape:{type:'circle'},opacity:{value:.5,random:!1},size:{value:3,random:!0},line_linked:{enable:!0,distance:150,color:'#ff1493',opacity:.4,width:1},move:{enable:!0,speed:2,direction:'none',random:!1,straight:!1,out_mode:'out'}},interactivity:{detect_on:'canvas',events:{onhover:{enable:!0,mode:'repulse'},onclick:{enable:!0,mode:'push'},resize:!0},modes:{repulse:{distance:100,duration:.4},push:{particles_nb:4}}},retina_detect:!0});
+</script>
+
 <script>
 // ========== МИНИ-ЧАТ ==========
 let chatInterval = null;
@@ -827,8 +829,7 @@ document.addEventListener('click', (e) => {
     }
 });
 </script>
-</script>
-
+ 
 <!-- Модальные окна: профиль, казна, rpgTask -->
 <div class="modal fade" id="profileModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="profileModalLabel">Профиль игрока</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="profileModalBody"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button></div></div></div></div>
 <div class="modal fade" id="treasuryModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="treasuryModalTitle">Операция с казной</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="treasuryOperationType"><input type="number" id="treasuryAmount" class="form-control" placeholder="Сумма" min="1" step="1" required><input type="text" id="treasuryDescription" class="form-control" placeholder="Описание (необязательно)"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-majestic" id="confirmTreasuryBtn">Выполнить</button></div></div></div></div>
