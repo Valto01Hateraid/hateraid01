@@ -827,6 +827,9 @@ async function loadTreasury(){
 }
 window.showTreasuryOperationModal=function(t){ if(t==='списание'&&!isAdmin) return showToast('Только администраторы могут списывать средства','error'); document.getElementById('treasuryModalTitle').textContent=(t==='пополнение'?'Пополнение':'Списание')+' казны'; document.getElementById('treasuryOperationType').value=t; document.getElementById('treasuryAmount').value=''; document.getElementById('treasuryDescription').value=''; new bootstrap.Modal(document.getElementById('treasuryModal')).show(); };
 document.addEventListener('DOMContentLoaded',function(){
+  const btn = document.getElementById('saveRPGTaskBtn');
+    if (btn) {
+        btn.addEventListener('click', async () => {
  const btn=document.getElementById('confirmTreasuryBtn'); btn&&btn.addEventListener('click',async()=>{
   const t=document.getElementById('treasuryOperationType').value, a=parseFloat(document.getElementById('treasuryAmount').value), d=document.getElementById('treasuryDescription').value.trim()||''; if(isNaN(a)||a<=0) return showToast('Введите корректную сумму','warning'); if(t==='списание'&&!isAdmin){ showToast('Недостаточно прав','error'); bootstrap.Modal.getInstance(document.getElementById('treasuryModal')).hide(); return; }
   try{
@@ -840,7 +843,10 @@ document.addEventListener('DOMContentLoaded',function(){
  document.getElementById('confirmRemovePoints')?.addEventListener('click',async function(){ const n=document.getElementById('removePointsNick').value, a=parseFloat(document.getElementById('removePointsAmount').value); if(!n||isNaN(a)||a<=0) return showToast('Введите корректную сумму','warning'); try{ await adminRemovePoints(n,a); bootstrap.Modal.getInstance(document.getElementById('removePointsModal')).hide(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } });
  document.getElementById('confirmAddWarning')?.addEventListener('click',async function(){ const n=document.getElementById('warningNick').value, r=document.getElementById('warningReason').value.trim(); if(!n||!r) return showToast('Заполните ник и причину','warning'); try{ await adminAddWarning(n,r); bootstrap.Modal.getInstance(document.getElementById('warningModal')).hide(); currentUser=await получитьДанныеИгрока(currentUserNick); }catch(err){ showToast('Ошибка: '+err.message,'error'); } });
  document.getElementById('confirmRemoveWarning')?.addEventListener('click',async function(){ const n=document.getElementById('removeWarningNick').value; if(!n) return showToast('Ник не указан','warning'); try{ await adminRemoveWarning(n); bootstrap.Modal.getInstance(document.getElementById('removeWarningModal')).hide(); currentUser=await получитьДанныеИгрока(currentUserNick); }catch(err){ showToast('Ошибка: '+err.message,'error'); } });
-});
+    } else {
+        console.error('Кнопка saveRPGTaskBtn не найдена');
+    }
+        });
 async function loadFamilyActivity(){
  const c=document.getElementById('activityContent'); if(!c) return;
  try{
