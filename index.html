@@ -178,7 +178,7 @@ async function supabaseRequest(t,m='GET',b=null,p=''){ const u=`${SUPABASE_URL}/
 
 let currentUser=null,currentUserNick='',isAdmin=!1,adminRights='',adminMode=!1;
 const loginPage=document.getElementById('loginPage'),mainInterface=document.getElementById('mainInterface'),loginNick=document.getElementById('loginNick'),loginPassword=document.getElementById('loginPassword'),loginBtn=document.getElementById('loginBtn'),loginError=document.getElementById('loginError'),logoutBtn=document.getElementById('logoutBtn'),welcomeUser=document.getElementById('welcomeUser'),toast=document.getElementById('toast'),toastIcon=document.getElementById('toastIcon'),toastMessage=document.getElementById('toastMessage');
-const showLoginBtn=document.getElementById('showLoginBtn'),showRegisterBtn=document.getElementById('showRegisterBtn'),loginForm=document.getElementById('loginForm'),registerForm=document.getElementById('registerForm'),regNick=document.getElementById('regNick'),regPassword=document.getElementById('regPassword'),regContact=document.getElementById('regContact'),registerBtn=document.getElementById('registerBtn'),registerError=document.getElementById('registerError');
+const showLoginBtn=document.getElementById('showLoginBtn'),showRegisterBtn=document.getElementById('showRegisterBtn'),loginForm=document.getElementById('loginForm'),registerForm=document.getElementById('registerForm'),regNick=document.getElementById('regNick'),regPassword=document.getElementById('regPassword'),registerBtn=document.getElementById('registerBtn'),registerError=document.getElementById('registerError');
 
 function showLoginError(m){loginError.textContent=m;}
 function showToast(m,t='info'){
@@ -438,7 +438,7 @@ await supabaseRequest('Участники','POST',{
     Аватар:null
 });
     registerError.textContent='Заявка отправлена. После одобрения администратором вы сможете войти.';
-    regNick.value=''; regPassword.value=''; regContact.value='';
+    regNick.value=''; regPassword.value='';
  }catch(err){ registerError.textContent='Ошибка: '+err.message; }
 });
 loginBtn.addEventListener('click',async()=>{
