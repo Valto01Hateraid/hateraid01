@@ -613,7 +613,7 @@ async function loadLogs(){
 }
 async function loadRanksManagement(){
  const c=document.getElementById('admin-ranks'); if(!c) return;
- try{ const r=await получитьВсеРанги(); c.innerHTML=`<h5>Управление рангами</h5><button class="btn btn-majestic mb-3" onclick="showAddRankModal()">+ Добавить ранг</button><table class="ranks-table"><thead> <th>Название</th><th>Порядок</th><th>Требуется баллов</th><th>Тип повышения</th><th>Действия</th> </thead><tbody>${r.map(x=>`专业人员<td>${x['Название']}</td><td>${x['Порядок']}</td><td>${x['Требуется баллов']}</td><td>${x['Тип повышения']}</td><td><button class="btn btn-sm btn-outline-majestic" onclick="editRank('${x['Название']}')">✎</button><button class="btn btn-sm btn-outline-majestic" onclick="deleteRank('${x['Название']}')">🗑</button></td></tr>`).join('')}</tbody> </table>`; }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки рангов</p>'; }
+ try{ const r=await получитьВсеРанги(); c.innerHTML=`<h5>Управление рангами</h5><button class="btn btn-majestic mb-3" onclick="showAddRankModal()">+ Добавить ранг</button><table class="ranks-table"><thead> <th>Название</th><th>Порядок</th><th>Требуется баллов</th><th>Тип повышения</th><th>Действия</th> </thead><tbody>${r.map(x=>`<tr><td>${x['Название']}</td><td>${x['Порядок']}</td><td>${x['Требуется баллов']}</td><td>${x['Тип повышения']}</td><td><button class="btn btn-sm btn-outline-majestic" onclick="editRank('${x['Название']}')">✎</button><button class="btn btn-sm btn-outline-majestic" onclick="deleteRank('${x['Название']}')">🗑</button></td></tr>`).join('')}</tbody></table>`; }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки рангов</p>'; }
 }
 window.showAddRankModal=function(){
  document.getElementById('rankModalTitle').innerText='Добавление ранга'; document.getElementById('rankName').value=''; document.getElementById('rankOrder').value=''; document.getElementById('rankPoints').value=''; document.getElementById('rankType').value='авто';
@@ -654,7 +654,7 @@ window.adminDemote=async function(n){
  try{ const u=await получитьДанныеИгрока(n); if(!u) throw new Error('Игрок не найден'); const cur=u['Ранг']; const ranks=await получитьВсеРанги(); const curR=ranks.find(r=>r['Название']===cur); if(!curR) throw new Error('Ранг не найден'); const prev=ranks.find(r=>r['Порядок']===curR['Порядок']-1); if(!prev) throw new Error('Нет более низкого ранга'); await supabaseRequest('Участники','PATCH',{Ранг:prev['Название']},`?Ник=eq.${encodeURIComponent(n)}`); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'понизил',Цель:n,Подробности:`${cur} → ${prev['Название']}`}); showToast(`Понижен до ${prev['Название']}`,'info'); playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ showToast(err.message,'error'); }
 };
 async function loadRPGAdminPanel(){
- const c=document.getElementById('admin-rpg'); if(!c) return; const z=await получитьВсеРПГЗадания(); c.innerHTML=`<h5>Управление РПГ-заданиями</h5><button class="btn btn-majestic mb-3" onclick="showAddRPGTaskModal()">+ Добавить задание</button><table class="ranks-table"><thead> <th>ID</th><th>Название</th><th>Описание</th><th>Награда РПГ</th><th>Активно</th><th>Действия</th> </thead><tbody>${z.map(x=>`<tr><td>${x.id}</td><td>${x.название}</td><td>${x.описание||''}</td><td>${x.награда_рпг}</td><td>${x.активно?'Да':'Нет'}</td><td><button class="btn btn-sm btn-outline-majestic" onclick="editRPGTask(${x.id})">✎</button><button class="btn btn-sm btn-outline-majestic" onclick="toggleRPGTask(${x.id})">🔁</button></td></tr>`).join('')}</tbody> </table><hr><h5>Отчёты на проверке</h5><div id="rpgReportsList"></div>`; loadRPGReportsList();
+ const c=document.getElementById('admin-rpg'); if(!c) return; const z=await получитьВсеРПГЗадания(); c.innerHTML=`<h5>Управление РПГ-заданиями</h5><button class="btn btn-majestic mb-3" onclick="showAddRPGTaskModal()">+ Добавить задание</button><table class="ranks-table"><thead> <th>ID</th><th>Название</th><th>Описание</th><th>Награда РПГ</th><th>Активно</th><th>Действия</th> </thead><tbody>${z.map(x=>`<tr><td>${x.id}</td><td>${x.название}</td><td>${x.описание||''}</td><td>${x.награда_рпг}</td><td>${x.активно?'Да':'Нет'}</td><td><button class="btn btn-sm btn-outline-majestic" onclick="editRPGTask(${x.id})">✎</button><button class="btn btn-sm btn-outline-majestic" onclick="toggleRPGTask(${x.id})">🔁</button></td></tr>`).join('')}</tbody></table><hr><h5>Отчёты на проверке</h5><div id="rpgReportsList"></div>`; loadRPGReportsList();
 }
 async function loadRPGReportsList(){
  const d=document.getElementById('rpgReportsList'); if(!d) return; const o=await получитьОтчетыНаПроверке(); if(!o.length){ d.innerHTML='<p class="text-muted">Нет новых отчётов</p>'; return; } let h=''; o.forEach(x=>{ h+=`<div class="application-item"><div class="d-flex justify-content-between"><div><strong>${x.игрок}</strong> (задание #${x.id_задания})</div><small>${new Date(x.дата_отправки).toLocaleString()}</small></div><div class="mb-2">${x.текст_отчета}</div><div>${x.ссылки||''}</div><div class="mt-2"><button class="btn btn-sm btn-success" onclick="approveReport(${x.id})">Одобрить</button><button class="btn btn-sm btn-danger" onclick="rejectReport(${x.id})">Отклонить</button></div></div>`; }); d.innerHTML=h;
@@ -700,53 +700,55 @@ window.toggleRPGTask = async function(id) {
         showToast('Ошибка: ' + e.message, 'error');
     }
 };
-const saveRPGTaskBtn = document.getElementById('saveRPGTaskBtn');
-if (saveRPGTaskBtn) {
-    saveRPGTaskBtn.addEventListener('click', async () => {
-        console.log('saveRPGTaskBtn клик');
-        const id = document.getElementById('rpgTaskId').value;
-        const name = document.getElementById('rpgTaskName').value.trim();
-        const desc = document.getElementById('rpgTaskDesc').value.trim();
-        const reward = parseInt(document.getElementById('rpgTaskReward').value);
-        const active = document.getElementById('rpgTaskActive').checked;
+document.addEventListener('DOMContentLoaded', function() {
+    const saveBtn = document.getElementById('saveRPGTaskBtn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+            console.log('saveRPGTaskBtn клик');
+            const id = document.getElementById('rpgTaskId').value;
+            const name = document.getElementById('rpgTaskName').value.trim();
+            const desc = document.getElementById('rpgTaskDesc').value.trim();
+            const reward = parseInt(document.getElementById('rpgTaskReward').value);
+            const active = document.getElementById('rpgTaskActive').checked;
 
-        if (!name) {
-            showToast('Введите название задания', 'warning');
-            return;
-        }
-        if (isNaN(reward) || reward <= 0) {
-            showToast('Введите положительную награду (РПГ)', 'warning');
-            return;
-        }
-
-        try {
-            if (id) {
-                await supabaseRequest('РПГ_активности', 'PATCH', {
-                    название: name,
-                    описание: desc,
-                    награда_рпг: reward,
-                    активно: active
-                }, `?id=eq.${id}`);
-                showToast('Задание обновлено', 'success');
-            } else {
-                await supabaseRequest('РПГ_активности', 'POST', {
-                    название: name,
-                    описание: desc,
-                    награда_рпг: reward,
-                    активно: active
-                });
-                showToast('Задание добавлено', 'success');
+            if (!name) {
+                showToast('Введите название задания', 'warning');
+                return;
             }
-            bootstrap.Modal.getInstance(document.getElementById('rpgTaskModal')).hide();
-            loadRPGAdminPanel();
-        } catch (err) {
-            console.error(err);
-            showToast('Ошибка: ' + err.message, 'error');
-        }
-    });
-} else {
-    console.error('Элемент saveRPGTaskBtn не найден');
-}
+            if (isNaN(reward) || reward <= 0) {
+                showToast('Введите положительную награду (РПГ)', 'warning');
+                return;
+            }
+
+            try {
+                if (id) {
+                    await supabaseRequest('РПГ_активности', 'PATCH', {
+                        название: name,
+                        описание: desc,
+                        награда_рпг: reward,
+                        активно: active
+                    }, `?id=eq.${id}`);
+                    showToast('Задание обновлено', 'success');
+                } else {
+                    await supabaseRequest('РПГ_активности', 'POST', {
+                        название: name,
+                        описание: desc,
+                        награда_рпг: reward,
+                        активно: active
+                    });
+                    showToast('Задание добавлено', 'success');
+                }
+                bootstrap.Modal.getInstance(document.getElementById('rpgTaskModal')).hide();
+                loadRPGAdminPanel();
+            } catch (err) {
+                console.error(err);
+                showToast('Ошибка: ' + err.message, 'error');
+            }
+        });
+    } else {
+        console.error('Элемент saveRPGTaskBtn не найден');
+    }
+});
 window.approveReport=async function(id){
  try{
   const r=(await supabaseRequest('Отчеты_РПГ','GET',null,`?id=eq.${id}`))[0];
@@ -788,7 +790,7 @@ async function loadTreasury(){
  try{ let b=0; const s=await supabaseRequest('Настройки','GET',null,'?Параметр=eq.баланс_казны'); if(s.length) b=parseFloat(s[0]['Значение'])||0; const ops=await supabaseRequest('Казна','GET',null,'?order=Дата.desc&limit=20'); let h=`<div class="text-center mb-4"><h2 class="display-4" style="color:#ff1493;">${b.toLocaleString()} <small style="font-size:1rem;">виртов</small></h2><p class="text-secondary">Текущий баланс семьи</p></div><div class="d-flex gap-3 justify-content-center mb-4"><button class="btn btn-majestic" onclick="showTreasuryOperationModal('пополнение')"><i class="fas fa-plus-circle"></i> Пополнить</button>`; if(isAdmin) h+='<button class="btn btn-outline-majestic" onclick="showTreasuryOperationModal(\'списание\')"><i class="fas fa-minus-circle"></i> Списать</button>'; h+='</div><h5 class="mb-3">Последние операции</h5>'; if(!ops.length) h+='<p class="text-muted">Пока нет операций</p>'; else ops.forEach(o=>{ const s=o['Тип']==='пополнение'?'+':'-', col=o['Тип']==='пополнение'?'#28a745':'#dc3545'; h+=`<div class="history-item"><div class="d-flex justify-content-between"><span><strong style="color:${col};">${s}${o['Сумма']}</strong> — ${o['Описание']||''}</span><small class="text-secondary">${new Date(o['Дата']).toLocaleString()}</small></div><div><small>Игрок: ${o['Игрок']||'система'}</small></div></div>`; }); c.innerHTML=h; }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки казны</p>'; console.error(err); }
 }
 window.showTreasuryOperationModal=function(t){ if(t==='списание'&&!isAdmin) return showToast('Только администраторы могут списывать средства','error'); document.getElementById('treasuryModalTitle').textContent=(t==='пополнение'?'Пополнение':'Списание')+' казны'; document.getElementById('treasuryOperationType').value=t; document.getElementById('treasuryAmount').value=''; document.getElementById('treasuryDescription').value=''; new bootstrap.Modal(document.getElementById('treasuryModal')).show(); };
-document.addEventListener('DOMContentLoaded', async function(){
+document.addEventListener('DOMContentLoaded',function(){
  const btn=document.getElementById('confirmTreasuryBtn'); btn&&btn.addEventListener('click',async()=>{
   const t=document.getElementById('treasuryOperationType').value, a=parseFloat(document.getElementById('treasuryAmount').value), d=document.getElementById('treasuryDescription').value.trim()||''; if(isNaN(a)||a<=0) return showToast('Введите корректную сумму','warning'); if(t==='списание'&&!isAdmin){ showToast('Недостаточно прав','error'); bootstrap.Modal.getInstance(document.getElementById('treasuryModal')).hide(); return; }
   try{
