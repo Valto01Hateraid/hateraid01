@@ -660,7 +660,6 @@ async function loadRPGReportsList(){
  const d=document.getElementById('rpgReportsList'); if(!d) return; const o=await получитьОтчетыНаПроверке(); if(!o.length){ d.innerHTML='<p class="text-muted">Нет новых отчётов</p>'; return; } let h=''; o.forEach(x=>{ h+=`<div class="application-item"><div class="d-flex justify-content-between"><div><strong>${x.игрок}</strong> (задание #${x.id_задания})</div><small>${new Date(x.дата_отправки).toLocaleString()}</small></div><div class="mb-2">${x.текст_отчета}</div><div>${x.ссылки||''}</div><div class="mt-2"><button class="btn btn-sm btn-success" onclick="approveReport(${x.id})">Одобрить</button><button class="btn btn-sm btn-danger" onclick="rejectReport(${x.id})">Отклонить</button></div></div>`; }); d.innerHTML=h;
 }
 window.showAddRPGTaskModal = function() {
-    console.log('showAddRPGTaskModal вызвана');
     document.getElementById('rpgTaskId').value = '';
     document.getElementById('rpgTaskName').value = '';
     document.getElementById('rpgTaskDesc').value = '';
@@ -670,7 +669,6 @@ window.showAddRPGTaskModal = function() {
     new bootstrap.Modal(document.getElementById('rpgTaskModal')).show();
 };
 window.editRPGTask = async function(id) {
-    console.log('editRPGTask вызвана для id', id);
     try {
         const tasks = await supabaseRequest('РПГ_активности', 'GET', null, `?id=eq.${id}`);
         if (tasks.length === 0) return;
@@ -688,7 +686,6 @@ window.editRPGTask = async function(id) {
     }
 };
 window.toggleRPGTask = async function(id) {
-    console.log('toggleRPGTask вызвана для id', id);
     try {
         const tasks = await supabaseRequest('РПГ_активности', 'GET', null, `?id=eq.${id}`);
         if (tasks.length === 0) return;
@@ -703,7 +700,6 @@ window.toggleRPGTask = async function(id) {
 const saveRPGTaskBtn = document.getElementById('saveRPGTaskBtn');
 if (saveRPGTaskBtn) {
     saveRPGTaskBtn.addEventListener('click', async () => {
-        console.log('saveRPGTaskBtn клик');
         const id = document.getElementById('rpgTaskId').value;
         const name = document.getElementById('rpgTaskName').value.trim();
         const desc = document.getElementById('rpgTaskDesc').value.trim();
@@ -788,7 +784,7 @@ async function loadTreasury(){
  try{ let b=0; const s=await supabaseRequest('Настройки','GET',null,'?Параметр=eq.баланс_казны'); if(s.length) b=parseFloat(s[0]['Значение'])||0; const ops=await supabaseRequest('Казна','GET',null,'?order=Дата.desc&limit=20'); let h=`<div class="text-center mb-4"><h2 class="display-4" style="color:#ff1493;">${b.toLocaleString()} <small style="font-size:1rem;">виртов</small></h2><p class="text-secondary">Текущий баланс семьи</p></div><div class="d-flex gap-3 justify-content-center mb-4"><button class="btn btn-majestic" onclick="showTreasuryOperationModal('пополнение')"><i class="fas fa-plus-circle"></i> Пополнить</button>`; if(isAdmin) h+='<button class="btn btn-outline-majestic" onclick="showTreasuryOperationModal(\'списание\')"><i class="fas fa-minus-circle"></i> Списать</button>'; h+='</div><h5 class="mb-3">Последние операции</h5>'; if(!ops.length) h+='<p class="text-muted">Пока нет операций</p>'; else ops.forEach(o=>{ const s=o['Тип']==='пополнение'?'+':'-', col=o['Тип']==='пополнение'?'#28a745':'#dc3545'; h+=`<div class="history-item"><div class="d-flex justify-content-between"><span><strong style="color:${col};">${s}${o['Сумма']}</strong> — ${o['Описание']||''}</span><small class="text-secondary">${new Date(o['Дата']).toLocaleString()}</small></div><div><small>Игрок: ${o['Игрок']||'система'}</small></div></div>`; }); c.innerHTML=h; }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки казны</p>'; console.error(err); }
 }
 window.showTreasuryOperationModal=function(t){ if(t==='списание'&&!isAdmin) return showToast('Только администраторы могут списывать средства','error'); document.getElementById('treasuryModalTitle').textContent=(t==='пополнение'?'Пополнение':'Списание')+' казны'; document.getElementById('treasuryOperationType').value=t; document.getElementById('treasuryAmount').value=''; document.getElementById('treasuryDescription').value=''; new bootstrap.Modal(document.getElementById('treasuryModal')).show(); };
-document.addEventListener('DOMContentLoaded',function(){
+document.addEventListener('DOMContentLoaded',async function(){
  const btn=document.getElementById('confirmTreasuryBtn'); btn&&btn.addEventListener('click',async()=>{
   const t=document.getElementById('treasuryOperationType').value, a=parseFloat(document.getElementById('treasuryAmount').value), d=document.getElementById('treasuryDescription').value.trim()||''; if(isNaN(a)||a<=0) return showToast('Введите корректную сумму','warning'); if(t==='списание'&&!isAdmin){ showToast('Недостаточно прав','error'); bootstrap.Modal.getInstance(document.getElementById('treasuryModal')).hide(); return; }
   try{
@@ -805,19 +801,17 @@ document.addEventListener('DOMContentLoaded',function(){
  // Проверяем сохранённую сессию
  const saved = localStorage.getItem('hateraid_user');
  if (saved) {
-     (async () => {
-         try {
-             const data = JSON.parse(saved);
-             const u = await получитьДанныеИгрока(data.nick);
-             if (u) {
-                 isAdmin = data.isAdmin;
-                 adminRights = data.adminRights || '';
-                 currentUserNick = u['Ник'];
-                 currentUser = u;
-                 showMainInterface(u);
-             }
-         } catch (e) {}
-     })();
+     try {
+         const data = JSON.parse(saved);
+         const u = await получитьДанныеИгрока(data.nick);
+         if (u) {
+             isAdmin = data.isAdmin;
+             adminRights = data.adminRights || '';
+             currentUserNick = u['Ник'];
+             currentUser = u;
+             showMainInterface(u);
+         }
+     } catch (e) {}
  }
 });
 async function loadFamilyActivity(){
@@ -825,7 +819,7 @@ async function loadFamilyActivity(){
  try{
   const players=await получитьВсехУчастников(), sorted=players.sort((a,b)=>(b['Баллы всего']||0)-(a['Баллы всего']||0));
   const weekAgo=new Date(Date.now()-7*24*60*60*1000).toISOString().split('T')[0];
-  const activities=await supabaseRequest('Активность','GET',null,`?Дата>=${weekAgo}&order=Дата.desc`);
+  const activities=await supabaseRequest('Активность','GET',null,`?Дата=gte.${weekAgo}&order=Дата.desc`);
   const totalWeekly=activities.reduce((s,a)=>s+(a['Баллы']||0),0);
   let html='<div class="d-flex justify-content-between mb-3"><h5>Топ 10 по общим баллам</h5><select id="activityFilter" class="form-control-majestic w-auto"><option value="all">Всего</option><option value="week">За неделю</option></select></div><div id="rankingContainer"></div>';
   c.innerHTML=html;
