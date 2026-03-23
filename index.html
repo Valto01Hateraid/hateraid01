@@ -168,11 +168,14 @@ select.form-control,select.form-control-majestic,.modal select,.admin-select{-we
 <script>
 const SUPABASE_URL='https://oatmjnbayxtukogkgnid.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hdG1qbmJheXh0dWtvZ2tnbmlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MDMwNzksImV4cCI6MjA4OTE3OTA3OX0.x-UE4MRx3N-vii3rI5_EGxW-8C1UjlGe-VRXIemAEw0';
+
 let playersCache=null,lastFetch=0,ranksCache=null,ranksLastFetch=0,settingsCache=null,settingsLastFetch=0;
 const CACHE_TTL=6e4;
 async function supabaseRequest(t,m='GET',b=null,p=''){ const u=`${SUPABASE_URL}/rest/v1/${t}${p}`, h={'apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${SUPABASE_ANON_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'}, o={method:m,headers:h}; if(b) o.body=JSON.stringify(b); try{ const r=await fetch(u,o); if(!r.ok) throw new Error(`Ошибка Supabase (${r.status}): ${await r.text()}`); return await r.json(); }catch(e){ throw (console.error('Supabase error:',e),e); } }
+
 let currentUser=null,currentUserNick='',isAdmin=!1,adminRights='',adminMode=!1;
 const loginPage=document.getElementById('loginPage'),mainInterface=document.getElementById('mainInterface'),loginNick=document.getElementById('loginNickInput'),loginPass=document.getElementById('loginPasswordInput'),adminPassField=document.getElementById('adminPasswordField'),toggleAdmin=document.getElementById('toggleAdminMode'),loginBtn=document.getElementById('loginBtn'),loginError=document.getElementById('loginError'),logoutBtn=document.getElementById('logoutBtn'),welcomeUser=document.getElementById('welcomeUser'),toast=document.getElementById('toast'),toastIcon=document.getElementById('toastIcon'),toastMessage=document.getElementById('toastMessage');
+
 function showLoginError(m){loginError.textContent=m;}
 function showToast(m,t='info'){
  toast.classList.remove('hidden'); toastMessage.textContent=m;
@@ -181,12 +184,28 @@ function showToast(m,t='info'){
  else if(t==='error'){ toastIcon.className='fas fa-times-circle'; toast.style.background='#dc3545'; }
  else{ toastIcon.className='fas fa-info-circle'; toast.style.background='#ff1493'; }
  setTimeout(()=>toast.classList.add('hidden'),3000);
-if (chatToggle) chatToggle.style.display = 'flex';
 }
 function playSound(t){ const s=document.getElementById(t==='promote'?'soundPromote':'soundDemote'); if(s) s.play().catch(()=>{}); }
-async function sendTelegramNotification(telegramId, message) { if(!telegramId) return; const TELEPUSH_TOKEN='3a8386'; try{ await fetch(`https://telepush.dev/api/inlets/${TELEPUSH_TOKEN}/messages`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({recipient:telegramId,text:message})}); }catch(e){ console.error('Ошибка отправки в Telegram:',e); } }
-async function получитьДанныеИгрока(ник){ try{ const d=await supabaseRequest('Участники','GET',null,`?Ник=eq.${encodeURIComponent(ник)}`); return d.length?d[0]:null; } catch(e){ showToast('Ошибка получения данных игрока','error'); return null; } }
-async function войтиКакАдмин(ник,пароль){ try{ const d=await supabaseRequest('Участники','GET',null,`?Ник=eq.${encodeURIComponent(ник)}`); if(!d.length) return{успех:!1,причина:'Пользователь не найден'}; const игрок=d[0], права=игрок['Права']||'участник'; if(права.toLowerCase()==='участник') return{успех:!1,причина:'У вас нет прав администратора'}; return игрок['Пароль']===пароль?{успех:!0,игрок}:{успех:!1,причина:'Неверный пароль'}; }catch(e){ return{успех:!1,причина:'Ошибка соединения'}; } }
+
+async function sendTelegramNotification(telegramId, message) {
+    if (!telegramId) return;
+    const TELEPUSH_TOKEN = '3a8386';
+    try {
+        await fetch(`https://telepush.dev/api/inlets/${TELEPUSH_TOKEN}/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ recipient: telegramId, text: message })
+        });
+    } catch (e) { console.error('Ошибка отправки в Telegram:', e); }
+}
+
+async function получитьДанныеИгрока(ник){
+ try{ const d=await supabaseRequest('Участники','GET',null,`?Ник=eq.${encodeURIComponent(ник)}`); return d.length?d[0]:null; }
+ catch(e){ showToast('Ошибка получения данных игрока','error'); return null; }
+}
+async function войтиКакАдмин(ник,пароль){
+ try{ const d=await supabaseRequest('Участники','GET',null,`?Ник=eq.${encodeURIComponent(ник)}`); if(!d.length) return{успех:!1,причина:'Пользователь не найден'}; const игрок=d[0], права=игрок['Права']||'участник'; if(права.toLowerCase()==='участник') return{успех:!1,причина:'У вас нет прав администратора'}; return игрок['Пароль']===пароль?{успех:!0,игрок}:{успех:!1,причина:'Неверный пароль'}; }catch(e){ return{успех:!1,причина:'Ошибка соединения'}; }
+}
 async function получитьВсехУчастников(f=!1){ const n=Date.now(); if(!f&&playersCache&&n-lastFetch<CACHE_TTL) return playersCache; try{ const d=await supabaseRequest('Участники','GET'); playersCache=d; lastFetch=n; return d; }catch(e){ return[]; } }
 async function получитьВсеРанги(f=!1){ const n=Date.now(); if(!f&&ranksCache&&n-ranksLastFetch<CACHE_TTL) return ranksCache; try{ const d=await supabaseRequest('Ранги','GET'); ranksCache=d.sort((a,b)=>(a['Порядок']||0)-(b['Порядок']||0)); ranksLastFetch=n; return ranksCache; }catch(e){ return[]; } }
 async function получитьНастройки(f=!1){ const n=Date.now(); if(!f&&settingsCache&&n-settingsLastFetch<CACHE_TTL) return settingsCache; try{ const d=await supabaseRequest('Настройки','GET'); settingsCache=d; settingsLastFetch=n; return d; }catch(e){ return[]; } }
@@ -203,61 +222,417 @@ async function получитьОтчетыИгрока(игрок){ try{ return
 async function получитьОтчетыНаПроверке(){ try{ return await supabaseRequest('Отчеты_РПГ','GET',null,'?статус=eq.на проверке&order=дата_отправки.asc'); }catch(e){ return[]; } }
 async function получитьЗаявки(){ try{ return await supabaseRequest('Заявки на вступление','GET',null,'?Статус=eq.новая'); }catch(e){ return[]; } }
 async function получитьЛоги(){ try{ const b=await supabaseRequest('Логи баллов','GET',null,'?order=Дата.desc&limit=20'), p=await supabaseRequest('Логи предупреждений','GET',null,'?order=Дата.desc&limit=20'), a=await supabaseRequest('Логи действий админов','GET',null,'?order=Дата.desc&limit=20'); return{баллы:b,преды:p,админЛоги:a}; }catch(e){ return{баллы:[],преды:[],админЛоги:[]}; } }
-async function checkAndApplyAchievementRewards(nick, adminNick='система'){ try{ const user=await получитьДанныеИгрока(nick); if(!user) return; const allAch=await получитьВсеДостижения(), userAch=await получитьДостиженияИгрока(nick), obtainedNames=userAch.map(a=>a['Достижение']); const баллы=user['Баллы всего']||0, предупреждения=user['Предупреждения']||0; for(let a of allAch){ if(obtainedNames.includes(a['Название'])) continue; let achieved=!1; if(a['Условие тип']==='баллы' && баллы>=a['Условие значение']) achieved=!0; else if(a['Условие тип']==='предупреждения' && предупреждения>=a['Условие значение']) achieved=!0; if(achieved){ await supabaseRequest('Достижения игроков','POST',{Игрок:nick,Достижение:a['Название'],'Дата получения':new Date().toISOString(),'Кем выдано':adminNick}); if((a['Награда баллы']||0)>0 || (a['Награда вирты']||0)>0){ const upd={}; if(a['Награда баллы']) upd['Баллы всего']=(user['Баллы всего']||0)+a['Награда баллы']; if(a['Награда вирты']) upd['вирты']=(user['вирты']||0)+a['Награда вирты']; await supabaseRequest('Участники','PATCH',upd,`?Ник=eq.${encodeURIComponent(nick)}`); let msg=`Получено достижение "${a['Название']}"`; if(a['Награда баллы']) msg+=`, +${a['Награда баллы']} баллов`; if(a['Награда вирты']) msg+=`, +${a['Награда вирты']} виртов`; showToast(msg,'success'); confetti({particleCount:80,spread:60,origin:{y:.5}}); playersCache=null; } } } }catch(err){ console.error('checkAchievementRewards error:',err); } }
-async function loadSettings(){ const c=document.getElementById('settingsContent'); if(!c) return; const user=currentUser; let html=`<h5>Настройки профиля</h5><div class="mb-3"><label>Ник</label><input type="text" class="form-control" value="${user['Ник']}" disabled></div><div class="mb-3"><label>Новый пароль (оставьте пустым, если не меняете)</label><input type="password" id="newPass" class="form-control" placeholder="Новый пароль"></div><div class="mb-3"><label>Telegram ID (для уведомлений)</label><input type="text" id="telegramId" class="form-control" placeholder="@username или ID" value="${user['Telegram ID']||''}"></div><div class="mb-3"><label>Тема оформления</label><select id="themeSelect" class="form-control"><option value="dark" ${user['Тема']==='dark'?'selected':''}>Тёмная</option><option value="light" ${user['Тема']==='light'?'selected':''}>Светлая</option></select></div><div class="mb-3"><label>Уведомления в Telegram</label><input type="checkbox" id="notifyTelegram" ${user['Уведомления Telegram']?'checked':''}> <label for="notifyTelegram">включить</label></div><button class="btn btn-majestic" id="saveSettingsBtn">Сохранить настройки</button><div id="settingsMessage" class="mt-3"></div>`; c.innerHTML=html; document.getElementById('saveSettingsBtn').onclick=async()=>{ const newPass=document.getElementById('newPass').value.trim(), tg=document.getElementById('telegramId').value.trim(), theme=document.getElementById('themeSelect').value, notify=document.getElementById('notifyTelegram').checked; const updates={}; if(newPass) updates['Пароль']=newPass; if(tg!==(user['Telegram ID']||'')) updates['Telegram ID']=tg||null; if(theme!==(user['Тема']||'dark')) updates['Тема']=theme; if(notify!==(user['Уведомления Telegram']||!1)) updates['Уведомления Telegram']=notify; if(Object.keys(updates).length){ try{ await supabaseRequest('Участники','PATCH',updates,`?Ник=eq.${encodeURIComponent(currentUserNick)}`); showToast('Настройки сохранены','success'); if(updates.Тема) document.body.className=theme==='light'?'theme-light':''; currentUser=await получитьДанныеИгрока(currentUserNick); }catch(err){ showToast('Ошибка: '+err.message,'error'); } }else showToast('Нет изменений','info'); }; }
-async function loadReferral(){ const c=document.getElementById('referralContent'); if(!c) return; const user=currentUser; let code=user['Реферальный код']; if(!code){ code=Math.random().toString(36).substring(2,10); await supabaseRequest('Участники','PATCH',{'Реферальный код':code},`?Ник=eq.${encodeURIComponent(currentUserNick)}`); user['Реферальный код']=code; } const referals=await supabaseRequest('Рефералы','GET',null,`?Пригласивший=eq.${encodeURIComponent(currentUserNick)}`); let html=`<h5>Реферальная система</h5><p>Приглашайте друзей и получайте бонусы!</p><div class="mb-3"><label>Ваша реферальная ссылка:</label><input type="text" class="form-control" readonly value="${window.location.origin}${window.location.pathname}?ref=${code}"></div><p>Вы пригласили: ${referals.length} человек. Бонусов получено: ${user['Баллы за рефералов']||0}</p><div class="mt-3"><h6>Приглашённые:</h6>${referals.map(r=>`<div>${r['Приглашённый']} — ${new Date(r['Дата']).toLocaleDateString()}</div>`).join('')||'<div>Пока никого</div>'}</div>`; c.innerHTML=html; }
-async function processReferral(refCode){ if(!refCode || currentUser) return; try{ const refUser=await supabaseRequest('Участники','GET',null,`?Реферальный код=eq.${refCode}`); if(refUser.length){ sessionStorage.setItem('ref',refCode); } }catch(e){} }
-async function applyReferralBonus(nick){ const refCode=sessionStorage.getItem('ref'); if(!refCode) return; const refUser=await supabaseRequest('Участники','GET',null,`?Реферальный код=eq.${refCode}`); if(refUser.length){ const inviter=refUser[0]['Ник']; if(inviter===nick) return; const existing=await supabaseRequest('Рефералы','GET',null,`?Приглашённый=eq.${nick}`); if(existing.length) return; await supabaseRequest('Рефералы','POST',{Пригласивший:inviter,Приглашённый:nick,Дата:new Date().toISOString(),'Бонус выплачен':false}); const bonus=10; const inviterUser=await получитьДанныеИгрока(inviter); await supabaseRequest('Участники','PATCH',{'Баллы всего':(inviterUser['Баллы всего']||0)+bonus,'Баллы за рефералов':(inviterUser['Баллы за рефералов']||0)+bonus},`?Ник=eq.${inviter}`); showToast(`Вы получили бонус ${bonus} баллов за приглашение ${nick}!`,'success'); sessionStorage.removeItem('ref'); } }
-async function adminAddPoints(nick,activity,points){ if(!isAdmin) return; try{ const user=await получитьДанныеИгрока(nick); if(!user) throw new Error('Игрок не найден'); const сегодня=new Date().toISOString().split('T')[0]; let баллыСегодня=user['Баллы сегодня']||0, датаПоследних=user['Дата последних баллов']||''; if(датаПоследних!==сегодня){ баллыСегодня=0; await supabaseRequest('Участники','PATCH',{'Баллы сегодня':0,'Дата последних баллов':сегодня},`?Ник=eq.${encodeURIComponent(nick)}`); } const настройки=await получитьНастройки(), лимит=parseInt(настройки.find(n=>n['Параметр']==='лимит_баллов_в_день')?.['Значение'])||10; if(баллыСегодня+points>лимит) throw new Error(`Лимит баллов на сегодня (${лимит}) будет превышен. Осталось: ${лимит-баллыСегодня}`); const новыеВсего=(user['Баллы всего']||0)+points, новыеСегодня=баллыСегодня+points; await supabaseRequest('Участники','PATCH',{'Баллы всего':новыеВсего,'Баллы сегодня':новыеСегодня,'Дата последних баллов':сегодня},`?Ник=eq.${encodeURIComponent(nick)}`); await checkAndApplyAutoPromotion(nick,currentUserNick); await checkAndApplyAchievementRewards(nick,currentUserNick); await supabaseRequest('Логи баллов','POST',{Дата:new Date().toISOString(),Игрок:nick,Активность:activity,Баллы:points,Начислил:currentUserNick,Статус:'одобрено'}); await supabaseRequest('Активность','POST',{Игрок:nick,Дата:сегодня,Баллы:points},"?on_conflict=(Игрок,Дата) DO UPDATE SET Баллы=Активность.Баллы+excluded.Баллы"); showToast(`Начислено! Всего: ${новыеВсего}`,'success'); playersCache=null; confetti({particleCount:100,spread:70,origin:{y:.6}}); if (user && user['Уведомления Telegram'] && user['Telegram ID']) sendTelegramNotification(user['Telegram ID'], `Вам начислено ${points} баллов за ${activity}.`); nick===currentUserNick?renderProfile(await получитьДанныеИгрока(nick),'myProfileContent'):loadMembers(); }catch(err){ showToast(err.message,'error'); } }
-async function adminRemovePoints(nick,amount){ if(!isAdmin){ showToast('Недостаточно прав','error'); return; } try{ const user=await получитьДанныеИгрока(nick); if(!user) throw new Error('Игрок не найден'); const новыеВсего=(user['Баллы всего']||0)-amount; if(новыеВсего<0){ showToast('Нельзя снять больше, чем есть у игрока','warning'); return; } await supabaseRequest('Участники','PATCH',{'Баллы всего':новыеВсего},`?Ник=eq.${encodeURIComponent(nick)}`); await supabaseRequest('Логи баллов','POST',{Дата:new Date().toISOString(),Игрок:nick,Активность:'Списание',Баллы:-amount,Начислил:currentUserNick,Статус:'одобрено'}); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'снятие баллов',Цель:nick,Подробности:`Снято ${amount} баллов`}); showToast(`Снято ${amount} баллов у игрока ${nick}`,'info'); playersCache=null; nick===currentUserNick?renderProfile(await получитьДанныеИгрока(nick),'myProfileContent'):loadMembers(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } }
-async function adminAddWarning(nick,reason){ if(!isAdmin){ showToast('Недостаточно прав','error'); return; } try{ const user=await получитьДанныеИгрока(nick); if(!user) throw new Error('Игрок не найден'); const новыеПредупреждения=(user['Предупреждения']||0)+1; await supabaseRequest('Участники','PATCH',{Предупреждения:новыеПредупреждения},`?Ник=eq.${encodeURIComponent(nick)}`); await supabaseRequest('Логи предупреждений','POST',{Дата:new Date().toISOString(),Игрок:nick,Причина:reason,Выдал:currentUserNick}); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'выдача предупреждения',Цель:nick,Подробности:reason}); showToast(`Предупреждение выдано игроку ${nick}`,'warning'); playersCache=null; await checkAndApplyAchievementRewards(nick,currentUserNick); nick===currentUserNick?renderProfile(await получитьДанныеИгрока(nick),'myProfileContent'):loadMembers(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } }
-async function adminRemoveWarning(nick){ if(!isAdmin){ showToast('Недостаточно прав','error'); return; } try{ const user=await получитьДанныеИгрока(nick); if(!user) throw new Error('Игрок не найден'); const текущие=user['Предупреждения']||0; if(текущие<=0){ showToast('У игрока нет предупреждений','warning'); return; } const новыеПредупреждения=текущие-1; await supabaseRequest('Участники','PATCH',{Предупреждения:новыеПредупреждения},`?Ник=eq.${encodeURIComponent(nick)}`); await supabaseRequest('Логи предупреждений','POST',{Дата:new Date().toISOString(),Игрок:nick,Причина:'Снятие предупреждения',Выдал:currentUserNick}); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'снятие предупреждения',Цель:nick,Подробности:'Снято одно предупреждение'}); showToast(`Предупреждение снято у игрока ${nick}`,'info'); playersCache=null; nick===currentUserNick?renderProfile(await получитьДанныеИгрока(nick),'myProfileContent'):loadMembers(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } }
-async function checkAndApplyAutoPromotion(nick,adminNick){ try{ const user=await получитьДанныеИгрока(nick); if(!user) return; const allRanks=await получитьВсеРанги(); if(!allRanks||!allRanks.length) return; const currentRank=allRanks.find(r=>r['Название']===user['Ранг']); if(!currentRank) return; const currentPoints=user['Баллы всего']||0; const higherRanks=allRanks.filter(r=>r['Порядок']>currentRank['Порядок']&&r['Тип повышения']==='авто').sort((a,b)=>a['Порядок']-b['Порядок']); let targetRank=null; for(let r of higherRanks){ if(currentPoints>=r['Требуется баллов']) targetRank=r; else break; } if(targetRank&&targetRank['Название']!==user['Ранг']){ await supabaseRequest('Участники','PATCH',{Ранг:targetRank['Название']},`?Ник=eq.${encodeURIComponent(nick)}`); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:adminNick||'система',Действие:'авто-повышение',Цель:nick,Подробности:`${user['Ранг']} → ${targetRank['Название']} (по достижению ${targetRank['Требуется баллов']} баллов)`}); playSound('promote'); showToast(`${nick} автоматически повышен до ${targetRank['Название']}!`,'success'); playersCache=null; if (user && user['Уведомления Telegram'] && user['Telegram ID']) sendTelegramNotification(user['Telegram ID'], `Вы повышены до ранга ${targetRank['Название']}!`); if(nick===currentUserNick) renderProfile(await получитьДанныеИгрока(nick),'myProfileContent'); } }catch(err){ console.error('Ошибка при авто-повышении:',err); } }
+
+async function checkAndApplyAchievementRewards(nick, adminNick='система'){
+ try{
+  const user=await получитьДанныеИгрока(nick); if(!user) return;
+  const allAch=await получитьВсеДостижения(), userAch=await получитьДостиженияИгрока(nick), obtainedNames=userAch.map(a=>a['Достижение']);
+  const баллы=user['Баллы всего']||0, предупреждения=user['Предупреждения']||0;
+  for(let a of allAch){
+   if(obtainedNames.includes(a['Название'])) continue;
+   let achieved=!1;
+   if(a['Условие тип']==='баллы' && баллы>=a['Условие значение']) achieved=!0;
+   else if(a['Условие тип']==='предупреждения' && предупреждения>=a['Условие значение']) achieved=!0;
+   if(achieved){
+    await supabaseRequest('Достижения игроков','POST',{Игрок:nick,Достижение:a['Название'],'Дата получения':new Date().toISOString(),'Кем выдано':adminNick});
+    if((a['Награда баллы']||0)>0 || (a['Награда вирты']||0)>0){
+     const upd={}; if(a['Награда баллы']) upd['Баллы всего']=(user['Баллы всего']||0)+a['Награда баллы'];
+     if(a['Награда вирты']) upd['вирты']=(user['вирты']||0)+a['Награда вирты'];
+     await supabaseRequest('Участники','PATCH',upd,`?Ник=eq.${encodeURIComponent(nick)}`);
+     let msg=`Получено достижение "${a['Название']}"`;
+     if(a['Награда баллы']) msg+=`, +${a['Награда баллы']} баллов`;
+     if(a['Награда вирты']) msg+=`, +${a['Награда вирты']} виртов`;
+     showToast(msg,'success'); confetti({particleCount:80,spread:60,origin:{y:.5}});
+     playersCache=null;
+    }
+   }
+  }
+ }catch(err){ console.error('checkAchievementRewards error:',err); }
+}
+
+async function loadSettings(){
+ const c=document.getElementById('settingsContent'); if(!c) return;
+ const user=currentUser;
+ let html=`
+  <h5>Настройки профиля</h5>
+  <div class="mb-3"><label>Ник</label><input type="text" class="form-control" value="${user['Ник']}" disabled></div>
+  <div class="mb-3"><label>Новый пароль (оставьте пустым, если не меняете)</label><input type="password" id="newPass" class="form-control" placeholder="Новый пароль"></div>
+  <div class="mb-3"><label>Telegram ID (для уведомлений)</label><input type="text" id="telegramId" class="form-control" placeholder="@username или ID" value="${user['Telegram ID']||''}"></div>
+  <div class="mb-3"><label>Тема оформления</label><select id="themeSelect" class="form-control"><option value="dark" ${user['Тема']==='dark'?'selected':''}>Тёмная</option><option value="light" ${user['Тема']==='light'?'selected':''}>Светлая</option></select></div>
+  <div class="mb-3"><label>Уведомления в Telegram</label><input type="checkbox" id="notifyTelegram" ${user['Уведомления Telegram']?'checked':''}> <label for="notifyTelegram">включить</label></div>
+  <button class="btn btn-majestic" id="saveSettingsBtn">Сохранить настройки</button>
+  <div id="settingsMessage" class="mt-3"></div>
+ `;
+ c.innerHTML=html;
+ document.getElementById('saveSettingsBtn').onclick=async()=>{
+  const newPass=document.getElementById('newPass').value.trim(), tg=document.getElementById('telegramId').value.trim(), theme=document.getElementById('themeSelect').value, notify=document.getElementById('notifyTelegram').checked;
+  const updates={};
+  if(newPass) updates['Пароль']=newPass;
+  if(tg!==(user['Telegram ID']||'')) updates['Telegram ID']=tg||null;
+  if(theme!==(user['Тема']||'dark')) updates['Тема']=theme;
+  if(notify!==(user['Уведомления Telegram']||!1)) updates['Уведомления Telegram']=notify;
+  if(Object.keys(updates).length){
+   try{ await supabaseRequest('Участники','PATCH',updates,`?Ник=eq.${encodeURIComponent(currentUserNick)}`); showToast('Настройки сохранены','success'); if(updates.Тема) document.body.className=theme==='light'?'theme-light':''; currentUser=await получитьДанныеИгрока(currentUserNick); }catch(err){ showToast('Ошибка: '+err.message,'error'); }
+  }else showToast('Нет изменений','info');
+ };
+}
+
+async function loadReferral(){
+ const c=document.getElementById('referralContent'); if(!c) return;
+ const user=currentUser;
+ let code=user['Реферальный код'];
+ if(!code){
+    code=Math.random().toString(36).substring(2,10);
+    await supabaseRequest('Участники','PATCH',{'Реферальный код':code},`?Ник=eq.${encodeURIComponent(currentUserNick)}`);
+    user['Реферальный код']=code;
+ }
+ const referals=await supabaseRequest('Рефералы','GET',null,`?Пригласивший=eq.${encodeURIComponent(currentUserNick)}`);
+ let html=`
+  <h5>Реферальная система</h5>
+  <p>Приглашайте друзей и получайте бонусы!</p>
+  <div class="mb-3"><label>Ваша реферальная ссылка:</label><input type="text" class="form-control" readonly value="${window.location.origin}${window.location.pathname}?ref=${code}"></div>
+  <p>Вы пригласили: ${referals.length} человек. Бонусов получено: ${user['Баллы за рефералов']||0}</p>
+  <div class="mt-3"><h6>Приглашённые:</h6>${referals.map(r=>`<div>${r['Приглашённый']} — ${new Date(r['Дата']).toLocaleDateString()}</div>`).join('')||'<div>Пока никого</div>'}</div>
+ `;
+ c.innerHTML=html;
+}
+async function processReferral(refCode){
+ if(!refCode || currentUser) return;
+ try{
+    const refUser=await supabaseRequest('Участники','GET',null,`?Реферальный код=eq.${refCode}`);
+    if(refUser.length){
+        sessionStorage.setItem('ref',refCode);
+    }
+ }catch(e){}
+}
+async function applyReferralBonus(nick){
+ const refCode=sessionStorage.getItem('ref');
+ if(!refCode) return;
+ const refUser=await supabaseRequest('Участники','GET',null,`?Реферальный код=eq.${refCode}`);
+ if(refUser.length){
+    const inviter=refUser[0]['Ник'];
+    if(inviter===nick) return;
+    const existing=await supabaseRequest('Рефералы','GET',null,`?Приглашённый=eq.${nick}`);
+    if(existing.length) return;
+    await supabaseRequest('Рефералы','POST',{Пригласивший:inviter,Приглашённый:nick,Дата:new Date().toISOString(),'Бонус выплачен':false});
+    const bonus=10;
+    const inviterUser=await получитьДанныеИгрока(inviter);
+    await supabaseRequest('Участники','PATCH',{'Баллы всего':(inviterUser['Баллы всего']||0)+bonus,'Баллы за рефералов':(inviterUser['Баллы за рефералов']||0)+bonus},`?Ник=eq.${inviter}`);
+    showToast(`Вы получили бонус ${bonus} баллов за приглашение ${nick}!`,'success');
+    sessionStorage.removeItem('ref');
+ }
+}
+
+async function adminAddPoints(nick,activity,points){
+ if(!isAdmin) return;
+ try{
+  const user=await получитьДанныеИгрока(nick); if(!user) throw new Error('Игрок не найден');
+  const сегодня=new Date().toISOString().split('T')[0];
+  let баллыСегодня=user['Баллы сегодня']||0, датаПоследних=user['Дата последних баллов']||'';
+  if(датаПоследних!==сегодня){ баллыСегодня=0; await supabaseRequest('Участники','PATCH',{'Баллы сегодня':0,'Дата последних баллов':сегодня},`?Ник=eq.${encodeURIComponent(nick)}`); }
+  const настройки=await получитьНастройки(), лимит=parseInt(настройки.find(n=>n['Параметр']==='лимит_баллов_в_день')?.['Значение'])||10;
+  if(баллыСегодня+points>лимит) throw new Error(`Лимит баллов на сегодня (${лимит}) будет превышен. Осталось: ${лимит-баллыСегодня}`);
+  const новыеВсего=(user['Баллы всего']||0)+points, новыеСегодня=баллыСегодня+points;
+  await supabaseRequest('Участники','PATCH',{'Баллы всего':новыеВсего,'Баллы сегодня':новыеСегодня,'Дата последних баллов':сегодня},`?Ник=eq.${encodeURIComponent(nick)}`);
+  await checkAndApplyAutoPromotion(nick,currentUserNick);
+  await checkAndApplyAchievementRewards(nick,currentUserNick);
+  await supabaseRequest('Логи баллов','POST',{Дата:new Date().toISOString(),Игрок:nick,Активность:activity,Баллы:points,Начислил:currentUserNick,Статус:'одобрено'});
+  await supabaseRequest('Активность','POST',{Игрок:nick,Дата:сегодня,Баллы:points},"?on_conflict=(Игрок,Дата) DO UPDATE SET Баллы=Активность.Баллы+excluded.Баллы");
+  showToast(`Начислено! Всего: ${новыеВсего}`,'success'); playersCache=null; confetti({particleCount:100,spread:70,origin:{y:.6}});
+  if (user && user['Уведомления Telegram'] && user['Telegram ID']) sendTelegramNotification(user['Telegram ID'], `Вам начислено ${points} баллов за ${activity}.`);
+  nick===currentUserNick?renderProfile(await получитьДанныеИгрока(nick),'myProfileContent'):loadMembers();
+ }catch(err){ showToast(err.message,'error'); }
+}
+async function adminRemovePoints(nick,amount){
+ if(!isAdmin){ showToast('Недостаточно прав','error'); return; }
+ try{
+  const user=await получитьДанныеИгрока(nick); if(!user) throw new Error('Игрок не найден');
+  const новыеВсего=(user['Баллы всего']||0)-amount; if(новыеВсего<0){ showToast('Нельзя снять больше, чем есть у игрока','warning'); return; }
+  await supabaseRequest('Участники','PATCH',{'Баллы всего':новыеВсего},`?Ник=eq.${encodeURIComponent(nick)}`);
+  await supabaseRequest('Логи баллов','POST',{Дата:new Date().toISOString(),Игрок:nick,Активность:'Списание',Баллы:-amount,Начислил:currentUserNick,Статус:'одобрено'});
+  await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'снятие баллов',Цель:nick,Подробности:`Снято ${amount} баллов`});
+  showToast(`Снято ${amount} баллов у игрока ${nick}`,'info'); playersCache=null;
+  nick===currentUserNick?renderProfile(await получитьДанныеИгрока(nick),'myProfileContent'):loadMembers();
+ }catch(err){ showToast('Ошибка: '+err.message,'error'); }
+}
+async function adminAddWarning(nick,reason){
+ if(!isAdmin){ showToast('Недостаточно прав','error'); return; }
+ try{
+  const user=await получитьДанныеИгрока(nick); if(!user) throw new Error('Игрок не найден');
+  const новыеПредупреждения=(user['Предупреждения']||0)+1;
+  await supabaseRequest('Участники','PATCH',{Предупреждения:новыеПредупреждения},`?Ник=eq.${encodeURIComponent(nick)}`);
+  await supabaseRequest('Логи предупреждений','POST',{Дата:new Date().toISOString(),Игрок:nick,Причина:reason,Выдал:currentUserNick});
+  await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'выдача предупреждения',Цель:nick,Подробности:reason});
+  showToast(`Предупреждение выдано игроку ${nick}`,'warning'); playersCache=null;
+  await checkAndApplyAchievementRewards(nick,currentUserNick);
+  nick===currentUserNick?renderProfile(await получитьДанныеИгрока(nick),'myProfileContent'):loadMembers();
+ }catch(err){ showToast('Ошибка: '+err.message,'error'); }
+}
+async function adminRemoveWarning(nick){
+ if(!isAdmin){ showToast('Недостаточно прав','error'); return; }
+ try{
+  const user=await получитьДанныеИгрока(nick); if(!user) throw new Error('Игрок не найден');
+  const текущие=user['Предупреждения']||0; if(текущие<=0){ showToast('У игрока нет предупреждений','warning'); return; }
+  const новыеПредупреждения=текущие-1;
+  await supabaseRequest('Участники','PATCH',{Предупреждения:новыеПредупреждения},`?Ник=eq.${encodeURIComponent(nick)}`);
+  await supabaseRequest('Логи предупреждений','POST',{Дата:new Date().toISOString(),Игрок:nick,Причина:'Снятие предупреждения',Выдал:currentUserNick});
+  await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'снятие предупреждения',Цель:nick,Подробности:'Снято одно предупреждение'});
+  showToast(`Предупреждение снято у игрока ${nick}`,'info'); playersCache=null;
+  nick===currentUserNick?renderProfile(await получитьДанныеИгрока(nick),'myProfileContent'):loadMembers();
+ }catch(err){ showToast('Ошибка: '+err.message,'error'); }
+}
+async function checkAndApplyAutoPromotion(nick,adminNick){
+ try{
+  const user=await получитьДанныеИгрока(nick); if(!user) return;
+  const allRanks=await получитьВсеРанги(); if(!allRanks||!allRanks.length) return;
+  const currentRank=allRanks.find(r=>r['Название']===user['Ранг']); if(!currentRank) return;
+  const currentPoints=user['Баллы всего']||0;
+  const higherRanks=allRanks.filter(r=>r['Порядок']>currentRank['Порядок']&&r['Тип повышения']==='авто').sort((a,b)=>a['Порядок']-b['Порядок']);
+  let targetRank=null;
+  for(let r of higherRanks){ if(currentPoints>=r['Требуется баллов']) targetRank=r; else break; }
+  if(targetRank&&targetRank['Название']!==user['Ранг']){
+   await supabaseRequest('Участники','PATCH',{Ранг:targetRank['Название']},`?Ник=eq.${encodeURIComponent(nick)}`);
+   await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:adminNick||'система',Действие:'авто-повышение',Цель:nick,Подробности:`${user['Ранг']} → ${targetRank['Название']} (по достижению ${targetRank['Требуется баллов']} баллов)`});
+   playSound('promote'); showToast(`${nick} автоматически повышен до ${targetRank['Название']}!`,'success'); playersCache=null;
+   if (user && user['Уведомления Telegram'] && user['Telegram ID']) sendTelegramNotification(user['Telegram ID'], `Вы повышены до ранга ${targetRank['Название']}!`);
+   if(nick===currentUserNick) renderProfile(await получитьДанныеИгрока(nick),'myProfileContent');
+  }
+ }catch(err){ console.error('Ошибка при авто-повышении:',err); }
+}
 function openAddPointsModal(n){ document.getElementById('pointsNick').value=n; document.getElementById('pointsAmount').value=''; new bootstrap.Modal(document.getElementById('pointsModal')).show(); }
 function openRemovePointsModal(n){ document.getElementById('removePointsNick').value=n; document.getElementById('removePointsAmount').value=''; new bootstrap.Modal(document.getElementById('removePointsModal')).show(); }
 function openAddWarningModal(n){ document.getElementById('warningNick').value=n; document.getElementById('warningReason').value=''; new bootstrap.Modal(document.getElementById('warningModal')).show(); }
 function openRemoveWarningModal(n){ document.getElementById('removeWarningNick').value=n; new bootstrap.Modal(document.getElementById('removeWarningModal')).show(); }
+
 document.getElementById('openApplyModal').addEventListener('click',e=>{ e.preventDefault(); new bootstrap.Modal(document.getElementById('applyModal')).show(); });
-document.getElementById('applyBtn').addEventListener('click',async()=>{ const n=document.getElementById('applyNick').value.trim(),c=document.getElementById('applyContact').value.trim(); if(!n||!c) return showToast('Заполните все поля','warning'); try{ await supabaseRequest('Заявки на вступление','POST',{'Дата подачи':new Date().toISOString(),'Желаемый ник':n,Контакт:c,Статус:'новая'}); showToast('✓ Заявка отправлена!','success'); document.getElementById('applyNick').value=''; document.getElementById('applyContact').value=''; bootstrap.Modal.getInstance(document.getElementById('applyModal')).hide(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } if (currentUser && currentUser['Уведомления Telegram'] && currentUser['Telegram ID']) sendTelegramNotification(currentUser['Telegram ID'], 'Ваша заявка на вступление отправлена!'); });
+document.getElementById('applyBtn').addEventListener('click',async()=>{
+ const n=document.getElementById('applyNick').value.trim(),c=document.getElementById('applyContact').value.trim(); if(!n||!c) return showToast('Заполните все поля','warning');
+ try{
+    await supabaseRequest('Заявки на вступление','POST',{'Дата подачи':new Date().toISOString(),'Желаемый ник':n,Контакт:c,Статус:'новая'});
+    showToast('✓ Заявка отправлена!','success'); document.getElementById('applyNick').value=''; document.getElementById('applyContact').value=''; bootstrap.Modal.getInstance(document.getElementById('applyModal')).hide();
+ }catch(err){ showToast('Ошибка: '+err.message,'error'); }
+});
 toggleAdmin.addEventListener('click',e=>{ e.preventDefault(); adminMode=!adminMode; adminMode?(adminPassField.classList.remove('hidden'),toggleAdmin.textContent='👤 Обычный вход'):(adminPassField.classList.add('hidden'),toggleAdmin.textContent='🔐 Я администратор'); });
-loginBtn.addEventListener('click',async()=>{ const n=loginNick.value.trim(); if(!n) return showLoginError('Введите ник'); if(adminMode){ const p=loginPass.value.trim(); if(!p) return showLoginError('Введите пароль'); const r=await войтиКакАдмин(n,p); if(r.успех){ isAdmin=!0; adminRights=r.игрок['Права']||''; currentUserNick=r.игрок['Ник']; currentUser=r.игрок; showMainInterface(r.игрок); }else showLoginError(r.причина); } else{ const u=await получитьДанныеИгрока(n); u?(isAdmin=!1,adminRights='',currentUserNick=u['Ник'],currentUser=u,showMainInterface(u)):showLoginError('Игрок с таким ником не найден'); } });
-function showMainInterface(u){ loginPage.classList.add('hidden'); mainInterface.classList.remove('hidden'); let icon=''; icon=adminRights.toLowerCase()==='овнер'?'<i class="fas fa-crown gold-crown"></i>':isAdmin?'<i class="fas fa-crown silver-crown"></i>':'<i class="fas fa-user user-icon"></i>'; welcomeUser.innerHTML=`${icon} ${u['Ник']}`; renderProfile(u,'myProfileContent'); loadMembers(); loadAchievements(u['Ник']); loadRPGBoard(); loadEvents(); loadNews(); loadSettings(); loadReferral(); if(isAdmin){ addAdminTabs(); loadApplications(); loadLogs(); loadRanksManagement(); loadPlayerManagement(); loadRPGAdminPanel(); checkNewApplications(); }else removeAdminTabs(); new bootstrap.Tab(document.getElementById('profile-tab')).show(); const chatToggleElem = document.getElementById('chatToggle'); if (chatToggleElem) chatToggleElem.style.display = 'flex'; }
+loginBtn.addEventListener('click',async()=>{
+ const n=loginNick.value.trim(); if(!n) return showLoginError('Введите ник');
+ if(adminMode){ const p=loginPass.value.trim(); if(!p) return showLoginError('Введите пароль'); const r=await войтиКакАдмин(n,p); if(r.успех){ isAdmin=!0; adminRights=r.игрок['Права']||''; currentUserNick=r.игрок['Ник']; currentUser=r.игрок; showMainInterface(r.игрок); localStorage.setItem('hateraid_user',JSON.stringify({nick:currentUserNick,isAdmin,adminRights})); }else showLoginError(r.причина); }
+ else{ const u=await получитьДанныеИгрока(n); u?(isAdmin=!1,adminRights='',currentUserNick=u['Ник'],currentUser=u,showMainInterface(u),localStorage.setItem('hateraid_user',JSON.stringify({nick:currentUserNick,isAdmin,adminRights}))):showLoginError('Игрок с таким ником не найден'); }
+});
+function showMainInterface(u){
+ loginPage.classList.add('hidden'); mainInterface.classList.remove('hidden'); let icon='';
+ icon=adminRights.toLowerCase()==='овнер'?'<i class="fas fa-crown gold-crown"></i>':isAdmin?'<i class="fas fa-crown silver-crown"></i>':'<i class="fas fa-user user-icon"></i>';
+ welcomeUser.innerHTML=`${icon} ${u['Ник']}`;
+ renderProfile(u,'myProfileContent'); loadMembers(); loadAchievements(u['Ник']); loadRPGBoard(); loadEvents(); loadNews(); loadSettings(); loadReferral();
+ if(isAdmin){ addAdminTabs(); loadApplications(); loadLogs(); loadRanksManagement(); loadPlayerManagement(); loadRPGAdminPanel(); checkNewApplications(); }else removeAdminTabs();
+ new bootstrap.Tab(document.getElementById('profile-tab')).show();
+ const chatToggle = document.getElementById('chatToggle');
+ if (chatToggle) chatToggle.style.display = 'flex';
+}
 document.getElementById('treasury-tab')?.addEventListener('shown.bs.tab',()=>loadTreasury());
 document.getElementById('activity-tab')?.addEventListener('shown.bs.tab',()=>loadFamilyActivity());
 document.getElementById('settings-tab')?.addEventListener('shown.bs.tab',loadSettings);
 document.getElementById('referral-tab')?.addEventListener('shown.bs.tab',loadReferral);
-async function renderProfile(u,containerId){ const c=document.getElementById(containerId); if(!c) return; if(!u){ c.innerHTML='<p class="text-danger">Ошибка загрузки профиля</p>'; return; } const w=u['Предупреждения']||0, a=u['Аватар']||'https://picsum.photos/150/150?random='+u['Ник']; c.innerHTML=`<div class="text-center mb-4 position-relative"><img src="${a}" class="profile-avatar" id="profileAvatar" onerror="this.onerror=null; this.src='https://picsum.photos/150/150?random=1';">${isAdmin?`<button class="btn btn-sm btn-outline-majestic position-absolute top-0 end-0" onclick="openAvatarModal('${u['Ник']}')"><i class="fas fa-camera"></i></button>`:''}</div><h2 class="text-center mb-2 display-6">${u['Ник']}</h2><div class="text-center mb-3"><span class="rank-badge">${u['Ранг']||'---'}</span></div><div class="warning-icons"><i class="fas fa-times-circle warning-icon ${w>=1?'active':''}"></i><i class="fas fa-times-circle warning-icon ${w>=2?'active':''}"></i><i class="fas fa-times-circle warning-icon ${w>=3?'active':''}"></i></div><div class="row g-3 mb-4"><div class="col-6 col-md-3"><div class="stat-card"><div class="stat-number">${u['Баллы всего']||0}</div><div class="text-secondary">Всего баллов</div></div></div><div class="col-6 col-md-3"><div class="stat-card"><div class="stat-number">${u['Баллы сегодня']||0}</div><div class="text-secondary">Сегодня</div></div></div><div class="col-6 col-md-3"><div class="stat-card"><div class="stat-number">${u['рпг_баллы']||0}</div><div class="text-secondary">РПГ-баллы</div></div></div><div class="col-6 col-md-3"><div class="stat-card"><div class="stat-number">${u['вирты']||0}</div><div class="text-secondary">Вирты</div></div></div></div><h5 class="mt-4 mb-3"><i class="fas fa-chart-line me-2" style="color:#ff1493;"></i>Активности и баллы</h5><div id="activitiesStats" class="row g-2 mb-4"></div><hr style="border-color:#333;"><h5 class="mb-3"><i class="fas fa-history me-2" style="color:#ff1493;"></i>Последние действия</h5><div id="profileHistory"></div>`; const stats=await получитьСтатистикуАктивностей(u['Ник']); let htmlStats=''; const emoji={Контракты:'📦',Угонки:'🚗',Закладки:'🌿',Капт:'👑',МП:'🎮'}; for(let a in stats){ const e=emoji[a]||'⭐'; htmlStats+=`<div class="col-6 col-md-4"><div class="activity-stat-card" onclick="showActivityDetails('${u['Ник']}','${a}')"><div><span class="activity-emoji">${e}</span> <span class="fw-bold" style="color:#ff1493;">${a}</span></div><div>${stats[a]} баллов</div></div></div>`; } document.getElementById('activitiesStats').innerHTML=htmlStats||'<p class="text-muted">Нет данных об активностях</p>'; const hist=await получитьИсториюИгрока(u['Ник']); let hh=''; if(hist.length===0) hh='<p class="text-muted">Пока нет записей</p>'; else hist.slice(0,7).forEach(i=>{ hh+=`<div class="history-item"><small class="text-secondary">${new Date(i.дата).toLocaleString()}</small><div><strong>${i.тип}:</strong> ${i.описание}</div><small>${i.кем}</small></div>`; }); document.getElementById('profileHistory').innerHTML=hh; }
-window.showActivityDetails=async function(n,a){ const d=await получитьДеталиАктивностей(n), f=d.filter(d=>d['Активность']===a).map(d=>`<div class="history-item"><small>${new Date(d['Дата']).toLocaleString()}</small><div><strong>+${d['Баллы']}</strong> баллов</div><small>Начислил: ${d['Начислил']}</small></div>`).join(''); showToast(f||'Нет записей','info'); }
-window.openAvatarModal=function(n){ document.getElementById('avatarUrl').value=''; document.getElementById('saveAvatarBtn').onclick=async()=>{ const u=document.getElementById('avatarUrl').value.trim(); if(!u) return showToast('Введите ссылку','warning'); try{ await supabaseRequest('Участники','PATCH',{Аватар:u},`?Ник=eq.${encodeURIComponent(n)}`); showToast('Аватар обновлён','success'); bootstrap.Modal.getInstance(document.getElementById('avatarModal')).hide(); if(n===currentUserNick){ currentUser['Аватар']=u; renderProfile(currentUser,'myProfileContent'); }else loadMembers(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } }; new bootstrap.Modal(document.getElementById('avatarModal')).show(); };
-async function loadMembers(){ const c=document.getElementById('membersContent'); if(!c) return; const players=await получитьВсехУчастников(), ranks=await получитьВсеРанги(), total=players.length, admins=players.filter(p=>p['Права']?.toLowerCase()!=='участник').length; let html=`<div class="row mb-4 text-center"><div class="col-3"><div class="glass-panel p-2"><div class="stat-number">0</div><div>Игроков в сети</div></div></div><div class="col-3"><div class="glass-panel p-2"><div class="stat-number">0</div><div>Админы в сети</div></div></div><div class="col-3"><div class="glass-panel p-2"><div class="stat-number">${total}</div><div>Всего игроков</div></div></div><div class="col-3"><div class="glass-panel p-2"><div class="stat-number">${admins}</div><div>Администраторы</div></div></div><div class="mb-3"><input type="text" id="memberSearch" class="form-control-majestic" placeholder="Поиск по нику..."></div><div class="mb-3"><select id="memberRankFilter" class="form-control-majestic"><option value="">Все ранги</option>${ranks.map(r=>`<option value="${r['Название']}">${r['Название']}</option>`).join('')}</select></div><div class="row" id="memberCards"></div>`; c.innerHTML=html; const s=document.getElementById('memberSearch'), f=document.getElementById('memberRankFilter'), cards=document.getElementById('memberCards'); function render(){ const search=s.value.toLowerCase(), rank=f.value, filtered=players.filter(p=>(p['Ник']||'').toLowerCase().includes(search)&&(rank===''||p['Ранг']===rank)); cards.innerHTML=filtered.map(p=>{ let icon=''; icon=p['Права']?.toLowerCase()==='овнер'?'<i class="fas fa-crown gold-crown"></i>':p['Права']?.toLowerCase()==='админ'?'<i class="fas fa-crown silver-crown"></i>':'<i class="fas fa-user user-icon"></i>'; return`<div class="col-md-4 col-sm-6"><div class="member-card" onclick="openProfileModal('${p['Ник']}')"><img src="${p['Аватар']||'https://picsum.photos/100/100?random='+p['Ник']}" class="member-avatar" onerror="this.onerror=null; this.src='https://picsum.photos/100/100?random=1';"><div class="member-name">${icon} ${p['Ник']}</div><div class="member-rank">${p['Ранг']}</div><div class="member-stats"><span><i class="fas fa-star" style="color:#ff1493;"></i> ${p['Баллы всего']||0}</span><span><i class="fas fa-exclamation-triangle" style="color:#ff851b;"></i> ${p['Предупреждения']||0}/3</span></div></div></div>`; }).join(''); } s.addEventListener('input',render); f.addEventListener('change',render); render(); }
-window.openProfileModal=async function(n){ try{ const u=await получитьДанныеИгрока(n); if(!u) return showToast('Игрок не найден','error'); const w=u['Предупреждения']||0, hist=await получитьИсториюИгрока(n), hh=hist.slice(0,5).map(i=>`<div class="history-item small"><small>${new Date(i.дата).toLocaleString()}</small><div><strong>${i.тип}:</strong> ${i.описание}</div><small>${i.кем}</small></div>`).join(''); document.getElementById('profileModalLabel').innerHTML=`Профиль ${n}`; document.getElementById('profileModalBody').innerHTML=`<div class="text-center mb-4"><img src="${u['Аватар']||'https://picsum.photos/150/150?random='+u['Ник']}" class="profile-avatar" style="width:120px;height:120px;" onerror="this.onerror=null; this.src='https://picsum.photos/150/150?random=1';"></div><h4 class="text-center">${u['Ник']}</h4><div class="text-center mb-2"><span class="rank-badge" style="padding:8px 20px;">${u['Ранг']}</span></div><div class="warning-icons"><i class="fas fa-times-circle warning-icon ${w>=1?'active':''}"></i><i class="fas fa-times-circle warning-icon ${w>=2?'active':''}"></i><i class="fas fa-times-circle warning-icon ${w>=3?'active':''}"></i></div><p><strong>Баллы всего:</strong> ${u['Баллы всего']||0}</p><p><strong>РПГ-баллы:</strong> ${u['рпг_баллы']||0}</p><p><strong>Вирты:</strong> ${u['вирты']||0}</p><p><strong>Дата вступления:</strong> ${new Date(u['Дата вступления']).toLocaleDateString()}</p><hr><h6>Последние действия</h6>${hh||'<p class="text-muted">Нет записей</p>'}`; new bootstrap.Modal(document.getElementById('profileModal')).show(); }catch(err){ showToast('Ошибка загрузки профиля','error'); } };
-async function loadAchievements(userNick){ const c=document.getElementById('achievementsContent'); if(!c) return; try{ const all=await получитьВсеДостижения(), userA=await получитьДостиженияИгрока(userNick), obtainedNames=userA.map(a=>a['Достижение']), user=await получитьДанныеИгрока(userNick), баллы=user['Баллы всего']||0, предупреждения=user['Предупреждения']||0; let html='<div class="achievement-filter"><button class="filter-btn active" data-filter="all">Все</button><button class="filter-btn" data-filter="obtained">Полученные</button><button class="filter-btn" data-filter="not">Неполученные</button></div><div class="row" id="achievementCards"></div>'; c.innerHTML=html; const cards=document.getElementById('achievementCards'), btns=document.querySelectorAll('.filter-btn'); function renderAchievements(filter='all'){ let filtered=all; if(filter==='obtained') filtered=all.filter(a=>obtainedNames.includes(a['Название'])); else if(filter==='not') filtered=all.filter(a=>!obtainedNames.includes(a['Название'])); cards.innerHTML=filtered.map(a=>{ const obtained=obtainedNames.includes(a['Название']); let progress=0, max=a['Условие значение']; if(a['Условие тип']==='баллы') progress=Math.min(баллы/max*100,100); else if(a['Условие тип']==='предупреждения') progress=Math.min(предупреждения/max*100,100); const iconHtml=a['Иконка']||'⭐'; const rewardParts=[]; if(a['Награда баллы'] && a['Награда баллы']>0) rewardParts.push(`🎯 +${a['Награда баллы']} баллов`); if(a['Награда вирты'] && a['Награда вирты']>0) rewardParts.push(`💰 +${a['Награда вирты']} виртов`); const rewardText=rewardParts.length?`<div class="achievement-reward">${rewardParts.join(' ')}</div>`:''; return `<div class="col-md-4"><div class="achievement-card"><div class="achievement-icon">${iconHtml}</div><div class="achievement-title">${a['Название']}</div><div class="achievement-desc">${a['Описание']}</div>${rewardText}${obtained?'<div class="achievement-obtained"><i class="fas fa-check-circle"></i></div>':'<div class="achievement-progress"><div class="achievement-progress-bar" style="width:'+progress+'%;"></div></div><div>'+Math.round(progress)+'%</div>'}</div></div>`; }).join(''); } btns.forEach(b=>{ b.addEventListener('click',()=>{ btns.forEach(bb=>bb.classList.remove('active')); b.classList.add('active'); renderAchievements(b.dataset.filter); }); }); renderAchievements('all'); }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки достижений</p>'; } }
-async function loadRPGBoard(){ const c=document.getElementById('rpgContent'); if(!c) return; try{ const user=await получитьДанныеИгрока(currentUserNick); if(!user){ c.innerHTML='<p class="text-danger">Не удалось загрузить данные игрока</p>'; return; } const задания=await получитьВсеРПГЗадания(), отчеты=await получитьОтчетыИгрока(currentUserNick); let html=`<div class="d-flex justify-content-between align-items-center mb-4"><h3>РПГ-система</h3><div><button class="btn btn-majestic me-2" onclick="получитьБонус('${currentUserNick}')">🎁 Ежедневный бонус</button><button class="btn btn-outline-majestic me-2" onclick="обменятьРПГнаБаллы('${currentUserNick}')">🔄 Обменять 1000 РПГ → 1 балл</button><button class="btn btn-outline-majestic" onclick="обменятьВиртыНаБаллы('${currentUserNick}')">🔄 Обменять 20000 виртов → 1 балл</button></div></div><div class="row mb-4"><div class="col-md-6"><div class="glass-panel p-3 text-center"><div class="stat-number">${user['рпг_баллы']||0}</div><div>РПГ-баллы</div></div></div><div class="col-md-6"><div class="glass-panel p-3 text-center"><div class="stat-number">${user['вирты']||0}</div><div>Вирты</div></div></div></div><h5>Активные задания</h5>`; if(!задания||!задания.length) html+='<p class="text-muted">Нет доступных заданий</p>'; else for(let z of задания){ const уже=отчеты.find(o=>o.id_задания===z.id&&o.статус==='на проверке'); html+=`<div class="event-card"><div class="d-flex justify-content-between"><div><h5>${z.название}</h5><p>${z.описание||''}</p><p><strong>Награда:</strong> ${z.награда_рпг} РПГ</p></div><div>${уже?'<span class="badge-majestic">Отчёт на проверке</span>':'<button class="btn btn-majestic" onclick="openReportModal('+z.id+',\''+z.название+'\')">Отправить отчёт</button>'}</div></div></div>`; } html+='<h5 class="mt-4">Мои отчёты</h5>'; if(!отчеты||!отчеты.length) html+='<p class="text-muted">Вы ещё не отправляли отчёты</p>'; else отчеты.slice(0,5).forEach(o=>{ html+=`<div class="history-item"><small>${new Date(o.дата_отправки).toLocaleString()}</small><div><strong>Задание:</strong> ${o.id_задания} (статус: ${o.статус})</div><div>${o.текст_отчета.substring(0,50)}${o.текст_отчета.length>50?'...':''}</div></div>`; }); c.innerHTML=html; }catch(e){ console.error('loadRPGBoard error',e); c.innerHTML='<p class="text-danger">Ошибка загрузки РПГ-данных</p>'; } }
+
+async function renderProfile(u,containerId){
+ const c=document.getElementById(containerId); if(!c) return; if(!u){ c.innerHTML='<p class="text-danger">Ошибка загрузки профиля</p>'; return; }
+ const w=u['Предупреждения']||0, a=u['Аватар']||'https://picsum.photos/150/150?random='+u['Ник'];
+ c.innerHTML=`
+ <div class="text-center mb-4 position-relative"><img src="${a}" class="profile-avatar" id="profileAvatar" onerror="this.onerror=null; this.src='https://picsum.photos/150/150?random=1';">${isAdmin?`<button class="btn btn-sm btn-outline-majestic position-absolute top-0 end-0" onclick="openAvatarModal('${u['Ник']}')"><i class="fas fa-camera"></i></button>`:''}</div>
+ <h2 class="text-center mb-2 display-6">${u['Ник']}</h2><div class="text-center mb-3"><span class="rank-badge">${u['Ранг']||'---'}</span></div>
+ <div class="warning-icons"><i class="fas fa-times-circle warning-icon ${w>=1?'active':''}"></i><i class="fas fa-times-circle warning-icon ${w>=2?'active':''}"></i><i class="fas fa-times-circle warning-icon ${w>=3?'active':''}"></i></div>
+ <div class="row g-3 mb-4"><div class="col-6 col-md-3"><div class="stat-card"><div class="stat-number">${u['Баллы всего']||0}</div><div class="text-secondary">Всего баллов</div></div></div><div class="col-6 col-md-3"><div class="stat-card"><div class="stat-number">${u['Баллы сегодня']||0}</div><div class="text-secondary">Сегодня</div></div></div><div class="col-6 col-md-3"><div class="stat-card"><div class="stat-number">${u['рпг_баллы']||0}</div><div class="text-secondary">РПГ-баллы</div></div></div><div class="col-6 col-md-3"><div class="stat-card"><div class="stat-number">${u['вирты']||0}</div><div class="text-secondary">Вирты</div></div></div></div>
+ <h5 class="mt-4 mb-3"><i class="fas fa-chart-line me-2" style="color:#ff1493;"></i>Активности и баллы</h5><div id="activitiesStats" class="row g-2 mb-4"></div><hr style="border-color:#333;"><h5 class="mb-3"><i class="fas fa-history me-2" style="color:#ff1493;"></i>Последние действия</h5><div id="profileHistory"></div>`;
+ const stats=await получитьСтатистикуАктивностей(u['Ник']); let htmlStats=''; const emoji={Контракты:'📦',Угонки:'🚗',Закладки:'🌿',Капт:'👑',МП:'🎮'};
+ for(let a in stats){ const e=emoji[a]||'⭐'; htmlStats+=`<div class="col-6 col-md-4"><div class="activity-stat-card" onclick="showActivityDetails('${u['Ник']}','${a}')"><div><span class="activity-emoji">${e}</span> <span class="fw-bold" style="color:#ff1493;">${a}</span></div><div>${stats[a]} баллов</div></div></div>`; }
+ document.getElementById('activitiesStats').innerHTML=htmlStats||'<p class="text-muted">Нет данных об активностях</p>';
+ const hist=await получитьИсториюИгрока(u['Ник']); let hh='';
+ if(hist.length===0) hh='<p class="text-muted">Пока нет записей</p>';
+ else hist.slice(0,7).forEach(i=>{ hh+=`<div class="history-item"><small class="text-secondary">${new Date(i.дата).toLocaleString()}</small><div><strong>${i.тип}:</strong> ${i.описание}</div><small>${i.кем}</small></div>`; });
+ document.getElementById('profileHistory').innerHTML=hh;
+}
+window.showActivityDetails=async function(n,a){
+ const d=await получитьДеталиАктивностей(n), f=d.filter(d=>d['Активность']===a).map(d=>`<div class="history-item"><small>${new Date(d['Дата']).toLocaleString()}</small><div><strong>+${d['Баллы']}</strong> баллов</div><small>Начислил: ${d['Начислил']}</small></div>`).join('');
+ showToast(f||'Нет записей','info');
+}
+window.openAvatarModal=function(n){
+ document.getElementById('avatarUrl').value=''; document.getElementById('saveAvatarBtn').onclick=async()=>{ const u=document.getElementById('avatarUrl').value.trim(); if(!u) return showToast('Введите ссылку','warning'); try{ await supabaseRequest('Участники','PATCH',{Аватар:u},`?Ник=eq.${encodeURIComponent(n)}`); showToast('Аватар обновлён','success'); bootstrap.Modal.getInstance(document.getElementById('avatarModal')).hide(); if(n===currentUserNick){ currentUser['Аватар']=u; renderProfile(currentUser,'myProfileContent'); }else loadMembers(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } };
+ new bootstrap.Modal(document.getElementById('avatarModal')).show();
+};
+async function loadMembers(){
+ const c=document.getElementById('membersContent'); if(!c) return;
+ const players=await получитьВсехУчастников(), ranks=await получитьВсеРанги(), total=players.length, admins=players.filter(p=>p['Права']?.toLowerCase()!=='участник').length;
+ let html=`<div class="row mb-4 text-center"><div class="col-3"><div class="glass-panel p-2"><div class="stat-number">0</div><div>Игроков в сети</div></div></div><div class="col-3"><div class="glass-panel p-2"><div class="stat-number">0</div><div>Админы в сети</div></div></div><div class="col-3"><div class="glass-panel p-2"><div class="stat-number">${total}</div><div>Всего игроков</div></div></div><div class="col-3"><div class="glass-panel p-2"><div class="stat-number">${admins}</div><div>Администраторы</div></div></div><div class="mb-3"><input type="text" id="memberSearch" class="form-control-majestic" placeholder="Поиск по нику..."></div><div class="mb-3"><select id="memberRankFilter" class="form-control-majestic"><option value="">Все ранги</option>${ranks.map(r=>`<option value="${r['Название']}">${r['Название']}</option>`).join('')}</select></div><div class="row" id="memberCards"></div>`;
+ c.innerHTML=html;
+ const s=document.getElementById('memberSearch'), f=document.getElementById('memberRankFilter'), cards=document.getElementById('memberCards');
+ function render(){
+  const search=s.value.toLowerCase(), rank=f.value, filtered=players.filter(p=>(p['Ник']||'').toLowerCase().includes(search)&&(rank===''||p['Ранг']===rank));
+  cards.innerHTML=filtered.map(p=>{ let icon=''; icon=p['Права']?.toLowerCase()==='овнер'?'<i class="fas fa-crown gold-crown"></i>':p['Права']?.toLowerCase()==='админ'?'<i class="fas fa-crown silver-crown"></i>':'<i class="fas fa-user user-icon"></i>'; return`<div class="col-md-4 col-sm-6"><div class="member-card" onclick="openProfileModal('${p['Ник']}')"><img src="${p['Аватар']||'https://picsum.photos/100/100?random='+p['Ник']}" class="member-avatar" onerror="this.onerror=null; this.src='https://picsum.photos/100/100?random=1';"><div class="member-name">${icon} ${p['Ник']}</div><div class="member-rank">${p['Ранг']}</div><div class="member-stats"><span><i class="fas fa-star" style="color:#ff1493;"></i> ${p['Баллы всего']||0}</span><span><i class="fas fa-exclamation-triangle" style="color:#ff851b;"></i> ${p['Предупреждения']||0}/3</span></div></div></div>`; }).join('');
+ }
+ s.addEventListener('input',render); f.addEventListener('change',render); render();
+}
+window.openProfileModal=async function(n){
+ try{ const u=await получитьДанныеИгрока(n); if(!u) return showToast('Игрок не найден','error');
+ const w=u['Предупреждения']||0, hist=await получитьИсториюИгрока(n), hh=hist.slice(0,5).map(i=>`<div class="history-item small"><small>${new Date(i.дата).toLocaleString()}</small><div><strong>${i.тип}:</strong> ${i.описание}</div><small>${i.кем}</small></div>`).join('');
+ document.getElementById('profileModalLabel').innerHTML=`Профиль ${n}`; document.getElementById('profileModalBody').innerHTML=`
+ <div class="text-center mb-4"><img src="${u['Аватар']||'https://picsum.photos/150/150?random='+u['Ник']}" class="profile-avatar" style="width:120px;height:120px;" onerror="this.onerror=null; this.src='https://picsum.photos/150/150?random=1';"></div>
+ <h4 class="text-center">${u['Ник']}</h4><div class="text-center mb-2"><span class="rank-badge" style="padding:8px 20px;">${u['Ранг']}</span></div>
+ <div class="warning-icons"><i class="fas fa-times-circle warning-icon ${w>=1?'active':''}"></i><i class="fas fa-times-circle warning-icon ${w>=2?'active':''}"></i><i class="fas fa-times-circle warning-icon ${w>=3?'active':''}"></i></div>
+ <p><strong>Баллы всего:</strong> ${u['Баллы всего']||0}</p><p><strong>РПГ-баллы:</strong> ${u['рпг_баллы']||0}</p><p><strong>Вирты:</strong> ${u['вирты']||0}</p><p><strong>Дата вступления:</strong> ${new Date(u['Дата вступления']).toLocaleDateString()}</p><hr><h6>Последние действия</h6>${hh||'<p class="text-muted">Нет записей</p>'}`;
+ new bootstrap.Modal(document.getElementById('profileModal')).show();
+ }catch(err){ showToast('Ошибка загрузки профиля','error'); }
+};
+async function loadAchievements(userNick){
+ const c=document.getElementById('achievementsContent'); if(!c) return;
+ try{
+  const all=await получитьВсеДостижения(), userA=await получитьДостиженияИгрока(userNick), obtainedNames=userA.map(a=>a['Достижение']), user=await получитьДанныеИгрока(userNick), баллы=user['Баллы всего']||0, предупреждения=user['Предупреждения']||0;
+  let html='<div class="achievement-filter"><button class="filter-btn active" data-filter="all">Все</button><button class="filter-btn" data-filter="obtained">Полученные</button><button class="filter-btn" data-filter="not">Неполученные</button></div><div class="row" id="achievementCards"></div>';
+  c.innerHTML=html; const cards=document.getElementById('achievementCards'), btns=document.querySelectorAll('.filter-btn');
+  function renderAchievements(filter='all'){
+    let filtered=all;
+    if(filter==='obtained') filtered=all.filter(a=>obtainedNames.includes(a['Название']));
+    else if(filter==='not') filtered=all.filter(a=>!obtainedNames.includes(a['Название']));
+    cards.innerHTML=filtered.map(a=>{
+        const obtained=obtainedNames.includes(a['Название']);
+        let progress=0, max=a['Условие значение'];
+        if(a['Условие тип']==='баллы') progress=Math.min(баллы/max*100,100);
+        else if(a['Условие тип']==='предупреждения') progress=Math.min(предупреждения/max*100,100);
+        const iconHtml=a['Иконка']||'⭐';
+        const rewardParts=[];
+        if(a['Награда баллы'] && a['Награда баллы']>0) rewardParts.push(`🎯 +${a['Награда баллы']} баллов`);
+        if(a['Награда вирты'] && a['Награда вирты']>0) rewardParts.push(`💰 +${a['Награда вирты']} виртов`);
+        const rewardText=rewardParts.length?`<div class="achievement-reward">${rewardParts.join(' ')}</div>`:'';
+        return `<div class="col-md-4"><div class="achievement-card"><div class="achievement-icon">${iconHtml}</div><div class="achievement-title">${a['Название']}</div><div class="achievement-desc">${a['Описание']}</div>${rewardText}${obtained?'<div class="achievement-obtained"><i class="fas fa-check-circle"></i></div>':'<div class="achievement-progress"><div class="achievement-progress-bar" style="width:'+progress+'%;"></div></div><div>'+Math.round(progress)+'%</div>'}</div></div>`;
+    }).join('');
+  }
+  btns.forEach(b=>{ b.addEventListener('click',()=>{ btns.forEach(bb=>bb.classList.remove('active')); b.classList.add('active'); renderAchievements(b.dataset.filter); }); }); renderAchievements('all');
+ }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки достижений</p>'; }
+}
+async function loadRPGBoard(){
+ const c=document.getElementById('rpgContent'); if(!c) return;
+ try{
+  const user=await получитьДанныеИгрока(currentUserNick); if(!user){ c.innerHTML='<p class="text-danger">Не удалось загрузить данные игрока</p>'; return; }
+  const задания=await получитьВсеРПГЗадания(), отчеты=await получитьОтчетыИгрока(currentUserNick);
+  let html=`<div class="d-flex justify-content-between align-items-center mb-4"><h3>РПГ-система</h3><div><button class="btn btn-majestic me-2" onclick="получитьБонус('${currentUserNick}')">🎁 Ежедневный бонус</button><button class="btn btn-outline-majestic me-2" onclick="обменятьРПГнаБаллы('${currentUserNick}')">🔄 Обменять 1000 РПГ → 1 балл</button><button class="btn btn-outline-majestic" onclick="обменятьВиртыНаБаллы('${currentUserNick}')">🔄 Обменять 20000 виртов → 1 балл</button></div></div><div class="row mb-4"><div class="col-md-6"><div class="glass-panel p-3 text-center"><div class="stat-number">${user['рпг_баллы']||0}</div><div>РПГ-баллы</div></div></div><div class="col-md-6"><div class="glass-panel p-3 text-center"><div class="stat-number">${user['вирты']||0}</div><div>Вирты</div></div></div></div><h5>Активные задания</h5>`;
+  if(!задания||!задания.length) html+='<p class="text-muted">Нет доступных заданий</p>';
+  else for(let z of задания){ const уже=отчеты.find(o=>o.id_задания===z.id&&o.статус==='на проверке'); html+=`<div class="event-card"><div class="d-flex justify-content-between"><div><h5>${z.название}</h5><p>${z.описание||''}</p><p><strong>Награда:</strong> ${z.награда_рпг} РПГ</p></div><div>${уже?'<span class="badge-majestic">Отчёт на проверке</span>':'<button class="btn btn-majestic" onclick="openReportModal('+z.id+',\''+z.название+'\')">Отправить отчёт</button>'}</div></div></div>`; }
+  html+='<h5 class="mt-4">Мои отчёты</h5>';
+  if(!отчеты||!отчеты.length) html+='<p class="text-muted">Вы ещё не отправляли отчёты</p>';
+  else отчеты.slice(0,5).forEach(o=>{ html+=`<div class="history-item"><small>${new Date(o.дата_отправки).toLocaleString()}</small><div><strong>Задание:</strong> ${o.id_задания} (статус: ${o.статус})</div><div>${o.текст_отчета.substring(0,50)}${o.текст_отчета.length>50?'...':''}</div></div>`; });
+  c.innerHTML=html;
+ }catch(e){ console.error('loadRPGBoard error',e); c.innerHTML='<p class="text-danger">Ошибка загрузки РПГ-данных</p>'; }
+}
 window.openReportModal=function(id,name){ document.getElementById('reportTaskId').value=id; document.getElementById('reportTaskName').value=name; document.getElementById('reportText').value=''; document.getElementById('reportLinks').value=''; new bootstrap.Modal(document.getElementById('rpgReportModal')).show(); };
-document.getElementById('submitReportBtn').addEventListener('click',async()=>{ const id=document.getElementById('reportTaskId').value, text=document.getElementById('reportText').value.trim(), links=document.getElementById('reportLinks').value.trim(); if(!text) return showToast('Введите текст отчёта','warning'); try{ await supabaseRequest('Отчеты_РПГ','POST',{id_задания:id,игрок:currentUserNick,текст_отчета:text,ссылки:links,статус:'на проверке'}); showToast('Отчёт отправлен','success'); bootstrap.Modal.getInstance(document.getElementById('rpgReportModal')).hide(); loadRPGBoard(); }catch(e){ showToast('Ошибка отправки','error'); } });
-window.получитьБонус=async function(игрок){ try{ const user=await получитьДанныеИгрока(игрок); if(!user) throw new Error('Игрок не найден'); const сегодня=new Date().toISOString().split('T')[0]; if(user['последний_бонус']===сегодня){ showToast('Вы уже получили бонус сегодня','warning'); playSound('promote'); return; } let серия=1; if(user['последний_бонус']){ const посл=new Date(user['последний_бонус']), вчера=new Date(); вчера.setDate(вчера.getDate()-1); if(посл.toDateString()===вчера.toDateString()) серия=(user['серия_бонусов']||0)+1; } let рпгНаграда=Math.floor(Math.random()*20)+5, виртыНаграда=Math.floor(Math.random()*1500)+500; if(серия===7){ рпгНаграда=Math.floor(Math.random()*50)+50; виртыНаграда=Math.floor(Math.random()*3000)+2000; } await supabaseRequest('Участники','PATCH',{рпг_баллы:(user['рпг_баллы']||0)+рпгНаграда,вирты:(user['вирты']||0)+виртыНаграда,последний_бонус:сегодня,серия_бонусов:серия},`?Ник=eq.${encodeURIComponent(игрок)}`); await supabaseRequest('Логи_РПГ','POST',{игрок:игрок,активность:'Ежедневный бонус',награда_рпг:рпгНаграда,кем_выдано:'система'}); showToast(`Бонус получен! +${рпгНаграда} РПГ, +${виртыНаграда} виртов`,'success'); renderProfile(await получитьДанныеИгрока(игрок),'myProfileContent'); loadRPGBoard(); }catch(e){ showToast('Ошибка при получении бонуса','error'); } };
-window.обменятьРПГнаБаллы=async function(игрок){ try{ const user=await получитьДанныеИгрока(игрок); if(!user) throw new Error('Игрок не найден'); const рпг=user['рпг_баллы']||0; if(рпг<1000) return showToast('Недостаточно РПГ-баллов','warning'); const обменов=Math.floor(рпг/1000), потрачено=обменов*1000; await supabaseRequest('Участники','PATCH',{рпг_баллы:рпг-потрачено,'Баллы всего':(user['Баллы всего']||0)+обменов},`?Ник=eq.${encodeURIComponent(игрок)}`); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:'система',Действие:'обмен РПГ',Цель:игрок,Подробности:`${потрачено} РПГ → ${обменов} баллов`}); showToast(`Обмен успешен! +${обменов} баллов`,'success'); renderProfile(await получитьДанныеИгрока(игрок),'myProfileContent'); loadRPGBoard(); }catch(e){ showToast('Ошибка обмена','error'); } };
-window.обменятьВиртыНаБаллы=async function(игрок){ try{ const user=await получитьДанныеИгрока(игрок); if(!user) throw new Error('Игрок не найден'); const вирты=user['вирты']||0; if(вирты<20000) return showToast('Недостаточно виртов','warning'); const обменов=Math.floor(вирты/20000), потрачено=обменов*20000; await supabaseRequest('Участники','PATCH',{вирты:вирты-потрачено,'Баллы всего':(user['Баллы всего']||0)+обменов},`?Ник=eq.${encodeURIComponent(игрок)}`); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:'система',Действие:'обмен виртов',Цель:игрок,Подробности:`${потрачено} виртов → ${обменов} баллов`}); showToast(`Обмен успешен! +${обменов} баллов`,'success'); renderProfile(await получитьДанныеИгрока(игрок),'myProfileContent'); loadRPGBoard(); }catch(e){ showToast('Ошибка обмена','error'); } };
-async function loadEvents(){ const c=document.getElementById('eventsContent'); if(!c) return; try{ const events=await получитьВсеСобытия(), userNick=currentUserNick; let html=''; if(isAdmin) html+='<button class="btn btn-majestic mb-3" onclick="showAddEventModal()">+ Создать событие</button>'; if(!events.length) html+='<p class="text-muted">Событий пока нет</p>'; else for(let e of events){ const p=await получитьУчастниковСобытия(e.id), going=p.filter(x=>x['Статус']==='пойду').length, us=p.find(x=>x['Игрок']===userNick)?.Статус||''; html+=`<div class="event-card" id="event-${e.id}"><div class="event-title">${e['Название']}</div><div class="event-date">${new Date(e['Дата']).toLocaleString()}</div><div class="event-stats"><span><i class="fas fa-users"></i> Идут: ${going}</span>${e['Максимум участников']?`<span>/ ${e['Максимум участников']}</span>`:''}</div><p>${e['Описание']||''}</p>${e['Место']?`<p><i class="fas fa-map-marker-alt"></i> ${e['Место']}</p>`:''}<div><button class="attend-btn ${us==='пойду'?'active':''}" onclick="setAttendance(${e.id}, 'пойду')">Пойду</button><button class="attend-btn ${us==='не пойду'?'active':''}" onclick="setAttendance(${e.id}, 'не пойду')">Не пойду</button>${isAdmin?`<button class="btn btn-sm btn-outline-majestic" onclick="deleteEvent(${e.id})">Удалить</button>`:''}</div></div>`; } c.innerHTML=html; }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки событий</p>'; } }
+document.getElementById('submitReportBtn').addEventListener('click',async()=>{
+ const id=document.getElementById('reportTaskId').value, text=document.getElementById('reportText').value.trim(), links=document.getElementById('reportLinks').value.trim(); if(!text) return showToast('Введите текст отчёта','warning');
+ try{ await supabaseRequest('Отчеты_РПГ','POST',{id_задания:id,игрок:currentUserNick,текст_отчета:text,ссылки:links,статус:'на проверке'}); showToast('Отчёт отправлен','success'); bootstrap.Modal.getInstance(document.getElementById('rpgReportModal')).hide(); loadRPGBoard(); }catch(e){ showToast('Ошибка отправки','error'); }
+});
+window.получитьБонус=async function(игрок){
+ try{
+  const user=await получитьДанныеИгрока(игрок); if(!user) throw new Error('Игрок не найден');
+  const сегодня=new Date().toISOString().split('T')[0];
+  if(user['последний_бонус']===сегодня){ showToast('Вы уже получили бонус сегодня','warning'); playSound('promote'); return; }
+  let серия=1; if(user['последний_бонус']){ const посл=new Date(user['последний_бонус']), вчера=new Date(); вчера.setDate(вчера.getDate()-1); if(посл.toDateString()===вчера.toDateString()) серия=(user['серия_бонусов']||0)+1; }
+  let рпгНаграда=Math.floor(Math.random()*20)+5, виртыНаграда=Math.floor(Math.random()*1500)+500;
+  if(серия===7){ рпгНаграда=Math.floor(Math.random()*50)+50; виртыНаграда=Math.floor(Math.random()*3000)+2000; }
+  await supabaseRequest('Участники','PATCH',{рпг_баллы:(user['рпг_баллы']||0)+рпгНаграда,вирты:(user['вирты']||0)+виртыНаграда,последний_бонус:сегодня,серия_бонусов:серия},`?Ник=eq.${encodeURIComponent(игрок)}`);
+  await supabaseRequest('Логи_РПГ','POST',{игрок:игрок,активность:'Ежедневный бонус',награда_рпг:рпгНаграда,кем_выдано:'система'});
+  showToast(`Бонус получен! +${рпгНаграда} РПГ, +${виртыНаграда} виртов`,'success'); renderProfile(await получитьДанныеИгрока(игрок),'myProfileContent'); loadRPGBoard();
+ }catch(e){ showToast('Ошибка при получении бонуса','error'); }
+};
+window.обменятьРПГнаБаллы=async function(игрок){
+ try{
+  const user=await получитьДанныеИгрока(игрок); if(!user) throw new Error('Игрок не найден');
+  const рпг=user['рпг_баллы']||0; if(рпг<1000) return showToast('Недостаточно РПГ-баллов','warning');
+  const обменов=Math.floor(рпг/1000), потрачено=обменов*1000;
+  await supabaseRequest('Участники','PATCH',{рпг_баллы:рпг-потрачено,'Баллы всего':(user['Баллы всего']||0)+обменов},`?Ник=eq.${encodeURIComponent(игрок)}`);
+  await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:'система',Действие:'обмен РПГ',Цель:игрок,Подробности:`${потрачено} РПГ → ${обменов} баллов`});
+  showToast(`Обмен успешен! +${обменов} баллов`,'success'); renderProfile(await получитьДанныеИгрока(игрок),'myProfileContent'); loadRPGBoard();
+ }catch(e){ showToast('Ошибка обмена','error'); }
+};
+window.обменятьВиртыНаБаллы=async function(игрок){
+ try{
+  const user=await получитьДанныеИгрока(игрок); if(!user) throw new Error('Игрок не найден');
+  const вирты=user['вирты']||0; if(вирты<20000) return showToast('Недостаточно виртов','warning');
+  const обменов=Math.floor(вирты/20000), потрачено=обменов*20000;
+  await supabaseRequest('Участники','PATCH',{вирты:вирты-потрачено,'Баллы всего':(user['Баллы всего']||0)+обменов},`?Ник=eq.${encodeURIComponent(игрок)}`);
+  await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:'система',Действие:'обмен виртов',Цель:игрок,Подробности:`${потрачено} виртов → ${обменов} баллов`});
+  showToast(`Обмен успешен! +${обменов} баллов`,'success'); renderProfile(await получитьДанныеИгрока(игрок),'myProfileContent'); loadRPGBoard();
+ }catch(e){ showToast('Ошибка обмена','error'); }
+};
+async function loadEvents(){
+ const c=document.getElementById('eventsContent'); if(!c) return;
+ try{
+  const events=await получитьВсеСобытия(), userNick=currentUserNick; let html='';
+  if(isAdmin) html+='<button class="btn btn-majestic mb-3" onclick="showAddEventModal()">+ Создать событие</button>';
+  if(!events.length) html+='<p class="text-muted">Событий пока нет</p>';
+  else for(let e of events){ const p=await получитьУчастниковСобытия(e.id), going=p.filter(x=>x['Статус']==='пойду').length, us=p.find(x=>x['Игрок']===userNick)?.Статус||''; html+=`<div class="event-card" id="event-${e.id}"><div class="event-title">${e['Название']}</div><div class="event-date">${new Date(e['Дата']).toLocaleString()}</div><div class="event-stats"><span><i class="fas fa-users"></i> Идут: ${going}</span>${e['Максимум участников']?`<span>/ ${e['Максимум участников']}</span>`:''}</div><p>${e['Описание']||''}</p>${e['Место']?`<p><i class="fas fa-map-marker-alt"></i> ${e['Место']}</p>`:''}<div><button class="attend-btn ${us==='пойду'?'active':''}" onclick="setAttendance(${e.id}, 'пойду')">Пойду</button><button class="attend-btn ${us==='не пойду'?'active':''}" onclick="setAttendance(${e.id}, 'не пойду')">Не пойду</button>${isAdmin?`<button class="btn btn-sm btn-outline-majestic" onclick="deleteEvent(${e.id})">Удалить</button>`:''}</div></div>`; }
+  c.innerHTML=html;
+ }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки событий</p>'; }
+}
 window.showAddEventModal=function(){ new bootstrap.Modal(document.getElementById('addEventModal')).show(); };
-document.getElementById('confirmAddEvent').addEventListener('click',async()=>{ const t=document.getElementById('eventTitle').value.trim(), d=document.getElementById('eventDesc').value.trim(), date=document.getElementById('eventDate').value, p=document.getElementById('eventPlace').value.trim(), m=parseInt(document.getElementById('eventMax').value)||0; if(!t||!d||!date) return showToast('Заполните название, описание и дату','warning'); try{ await supabaseRequest('События','POST',{Название:t,Описание:d,Дата:new Date(date).toISOString(),Место:p||null,'Максимум участников':m||null,Организатор:currentUserNick,'Дата создания':new Date().toISOString()}); showToast('Событие создано','success'); bootstrap.Modal.getInstance(document.getElementById('addEventModal')).hide(); loadEvents(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } });
-window.setAttendance=async function(id,st){ try{ const e=await supabaseRequest('Участники событий','GET',null,`?id_события=eq.${id}&Игрок=eq.${encodeURIComponent(currentUserNick)}`); e.length?await supabaseRequest('Участники событий','PATCH',{Статус:st},`?id=eq.${e[0].id}`):await supabaseRequest('Участники событий','POST',{id_события:id,Игрок:currentUserNick,Статус:st,'Дата отметки':new Date().toISOString()}); showToast('Статус обновлён','success'); loadEvents(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } };
+document.getElementById('confirmAddEvent').addEventListener('click',async()=>{
+ const t=document.getElementById('eventTitle').value.trim(), d=document.getElementById('eventDesc').value.trim(), date=document.getElementById('eventDate').value, p=document.getElementById('eventPlace').value.trim(), m=parseInt(document.getElementById('eventMax').value)||0;
+ if(!t||!d||!date) return showToast('Заполните название, описание и дату','warning');
+ try{ await supabaseRequest('События','POST',{Название:t,Описание:d,Дата:new Date(date).toISOString(),Место:p||null,'Максимум участников':m||null,Организатор:currentUserNick,'Дата создания':new Date().toISOString()}); showToast('Событие создано','success'); bootstrap.Modal.getInstance(document.getElementById('addEventModal')).hide(); loadEvents(); }catch(err){ showToast('Ошибка: '+err.message,'error'); }
+});
+window.setAttendance=async function(id,st){
+ try{ const e=await supabaseRequest('Участники событий','GET',null,`?id_события=eq.${id}&Игрок=eq.${encodeURIComponent(currentUserNick)}`); e.length?await supabaseRequest('Участники событий','PATCH',{Статус:st},`?id=eq.${e[0].id}`):await supabaseRequest('Участники событий','POST',{id_события:id,Игрок:currentUserNick,Статус:st,'Дата отметки':new Date().toISOString()}); showToast('Статус обновлён','success'); loadEvents(); }catch(err){ showToast('Ошибка: '+err.message,'error'); }
+};
 window.deleteEvent=async function(id){ if(!confirm('Удалить событие?')) return; try{ await supabaseRequest('Участники событий','DELETE',null,`?id_события=eq.${id}`); await supabaseRequest('События','DELETE',null,`?id=eq.${id}`); showToast('Событие удалено','info'); loadEvents(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } };
-async function loadNews(){ const l=document.getElementById('newsList'), f=document.getElementById('addNewsForm'); try{ const n=await получитьНовости(); if(!n.length) l.innerHTML='<p class="text-muted">Новостей пока нет</p>'; else{ let h=''; n.forEach(x=>{ h+=`<div class="news-item" id="news-${x.id}"><div class="d-flex justify-content-between align-items-start"><h5>${x['Заголовок']} ${x['Важная']?'<span class="badge-majestic">Важно</span>':''}</h5>${isAdmin?`<div><button class="btn btn-sm btn-outline-majestic me-1" onclick="editNews(${x.id}, '${x['Заголовок']}', '${x['Текст']}')"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline-majestic" onclick="deleteNews(${x.id})"><i class="fas fa-trash"></i></button></div>`:''}</div><p>${x['Текст']}</p><small class="text-secondary">${new Date(x['Дата']).toLocaleString()} | Автор: ${x['Автор']}</small></div>`; }); l.innerHTML=h; } isAdmin?f.classList.remove('hidden'):f.classList.add('hidden'); }catch(err){ l.innerHTML='<p class="text-danger">Ошибка загрузки новостей</p>'; } }
+async function loadNews(){
+ const l=document.getElementById('newsList'), f=document.getElementById('addNewsForm'); try{ const n=await получитьНовости(); if(!n.length) l.innerHTML='<p class="text-muted">Новостей пока нет</p>'; else{ let h=''; n.forEach(x=>{ h+=`<div class="news-item" id="news-${x.id}"><div class="d-flex justify-content-between align-items-start"><h5>${x['Заголовок']} ${x['Важная']?'<span class="badge-majestic">Важно</span>':''}</h5>${isAdmin?`<div><button class="btn btn-sm btn-outline-majestic me-1" onclick="editNews(${x.id}, '${x['Заголовок']}', '${x['Текст']}')"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline-majestic" onclick="deleteNews(${x.id})"><i class="fas fa-trash"></i></button></div>`:''}</div><p>${x['Текст']}</p><small class="text-secondary">${new Date(x['Дата']).toLocaleString()} | Автор: ${x['Автор']}</small></div>`; }); l.innerHTML=h; } isAdmin?f.classList.remove('hidden'):f.classList.add('hidden'); }catch(err){ l.innerHTML='<p class="text-danger">Ошибка загрузки новостей</p>'; }
+}
 document.getElementById('addNewsBtn')?.addEventListener('click',async()=>{ const t=document.getElementById('newsTitle').value.trim(), x=document.getElementById('newsText').value.trim(); if(!t||!x) return; try{ await supabaseRequest('Новости','POST',{Дата:new Date().toISOString(),Заголовок:t,Текст:x,Автор:currentUserNick,Важная:!1}); showToast('Новость добавлена','success'); document.getElementById('newsTitle').value=''; document.getElementById('newsText').value=''; loadNews(); }catch(err){ showToast(err.message,'error'); } });
 window.deleteNews=async function(id){ if(!confirm('Удалить новость?')) return; try{ await supabaseRequest('Новости','DELETE',null,`?id=eq.${id}`); showToast('Новость удалена','info'); loadNews(); }catch(err){ showToast('Ошибка удаления: '+err.message,'error'); } };
 window.editNews=async function(id,oldT,oldX){ const nt=prompt('Введите новый заголовок:',oldT); if(nt===null) return; const nx=prompt('Введите новый текст:',oldX); if(nx===null) return; try{ await supabaseRequest('Новости','PATCH',{Заголовок:nt.trim(),Текст:nx.trim()},`?id=eq.${id}`); showToast('Новость обновлена','success'); loadNews(); }catch(err){ showToast('Ошибка редактирования: '+err.message,'error'); } };
-function addAdminTabs(){ if(document.getElementById('admin-tab')) return; const tabs=document.getElementById('mainTabs'), li=document.createElement('li'); li.className='nav-item'; li.innerHTML='<button class="nav-link" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin" type="button"><i class="fas fa-cog me-2"></i>Админка</button>'; tabs.appendChild(li); const tabContent=document.querySelector('.tab-content'), pane=document.createElement('div'); pane.className='tab-pane fade'; pane.id='admin'; pane.innerHTML=`<div class="glass-panel p-4"><div class="admin-subtabs"><span class="admin-subtab active" data-sub="applications">Заявки</span><span class="admin-subtab" data-sub="logs">Логи</span><span class="admin-subtab" data-sub="ranks">Управление рангами</span><span class="admin-subtab" data-sub="players">Управление игроками</span><span class="admin-subtab" data-sub="rpg">РПГ-задания</span>${adminRights.toLowerCase()==='овнер'?'<span class="admin-subtab" data-sub="owner">Овнер</span>':''}</div><div class="admin-subcontent active" id="admin-applications"></div><div class="admin-subcontent" id="admin-logs"></div><div class="admin-subcontent" id="admin-ranks"></div><div class="admin-subcontent" id="admin-players"></div><div class="admin-subcontent" id="admin-rpg"></div>${adminRights.toLowerCase()==='овнер'?'<div class="admin-subcontent" id="admin-owner"></div>':''}</div>`; tabContent.appendChild(pane); pane.querySelectorAll('.admin-subtab').forEach(t=>{ t.addEventListener('click',()=>{ pane.querySelectorAll('.admin-subtab').forEach(tt=>tt.classList.remove('active')); pane.querySelectorAll('.admin-subcontent').forEach(cc=>cc.classList.remove('active')); t.classList.add('active'); document.getElementById(`admin-${t.dataset.sub}`).classList.add('active'); }); }); if(adminRights.toLowerCase()==='овнер') loadOwnerPanel(); }
-async function loadApplications(){ const c=document.getElementById('admin-applications'); if(!c) return; try{ const z=await получитьЗаявки(); if(!z.length){ c.innerHTML='<p class="text-muted">Нет новых заявок</p>'; return; } let h=''; z.forEach(a=>{ h+=`<div class="application-item"><div class="d-flex justify-content-between align-items-start"><div><strong>${a['Желаемый ник']}</strong> <span class="badge-majestic ms-2">Новая</span></div><small>${new Date(a['Дата подачи']).toLocaleString()}</small></div><div class="mb-2">📞 ${a['Контакт']||''}</div><div><button class="btn btn-majestic btn-sm me-2" onclick="processApplication('${a['Желаемый ник']}', 'принята')"><i class="fas fa-check"></i> Принять</button><button class="btn btn-outline-majestic btn-sm" onclick="processApplication('${a['Желаемый ник']}', 'отклонена')"><i class="fas fa-times"></i> Отклонить</button></div></div>`; }); c.innerHTML=h; }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки заявок</p>'; } }
-window.processApplication=async function(nick,dec){ try{ const z=await supabaseRequest('Заявки на вступление','GET',null,`?Желаемый ник=eq.${encodeURIComponent(nick)}&Статус=eq.новая`); if(!z.length) throw new Error('Заявка не найдена'); const id=z[0].id; await supabaseRequest('Заявки на вступление','PATCH',{Статус:dec,Обработал:currentUserNick,'Дата обработки':new Date().toISOString()},`?id=eq.${id}`); if(dec==='принята'){ const r=await получитьВсеРанги(), r1=r.find(x=>x['Порядок']===1)['Название']; await supabaseRequest('Участники','POST',{Ник:nick,Ранг:r1,Предупреждения:0,'Баллы всего':0,'Баллы сегодня':0,'Дата вступления':new Date().toISOString().split('T')[0],Пароль:'',Права:'участник','Кем принят':currentUserNick}); await applyReferralBonus(nick); } showToast(`Заявка ${dec}`,'info'); playersCache=null; loadApplications(); loadMembers(); }catch(err){ showToast(err.message,'error'); } };
+
+function addAdminTabs(){
+ if(document.getElementById('admin-tab')) return;
+ const tabs=document.getElementById('mainTabs'), li=document.createElement('li'); li.className='nav-item'; li.innerHTML='<button class="nav-link" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin" type="button"><i class="fas fa-cog me-2"></i>Админка</button>'; tabs.appendChild(li);
+ const tabContent=document.querySelector('.tab-content'), pane=document.createElement('div'); pane.className='tab-pane fade'; pane.id='admin';
+ pane.innerHTML=`<div class="glass-panel p-4"><div class="admin-subtabs"><span class="admin-subtab active" data-sub="applications">Заявки</span><span class="admin-subtab" data-sub="logs">Логи</span><span class="admin-subtab" data-sub="ranks">Управление рангами</span><span class="admin-subtab" data-sub="players">Управление игроками</span><span class="admin-subtab" data-sub="rpg">РПГ-задания</span>${adminRights.toLowerCase()==='овнер'?'<span class="admin-subtab" data-sub="owner">Овнер</span>':''}</div><div class="admin-subcontent active" id="admin-applications"></div><div class="admin-subcontent" id="admin-logs"></div><div class="admin-subcontent" id="admin-ranks"></div><div class="admin-subcontent" id="admin-players"></div><div class="admin-subcontent" id="admin-rpg"></div>${adminRights.toLowerCase()==='овнер'?'<div class="admin-subcontent" id="admin-owner"></div>':''}</div>`;
+ tabContent.appendChild(pane);
+ pane.querySelectorAll('.admin-subtab').forEach(t=>{ t.addEventListener('click',()=>{ pane.querySelectorAll('.admin-subtab').forEach(tt=>tt.classList.remove('active')); pane.querySelectorAll('.admin-subcontent').forEach(cc=>cc.classList.remove('active')); t.classList.add('active'); document.getElementById(`admin-${t.dataset.sub}`).classList.add('active'); }); });
+ if(adminRights.toLowerCase()==='овнер') loadOwnerPanel();
+}
+async function loadApplications(){
+ const c=document.getElementById('admin-applications'); if(!c) return;
+ try{ const z=await получитьЗаявки(); if(!z.length){ c.innerHTML='<p class="text-muted">Нет новых заявок</p>'; return; } let h=''; z.forEach(a=>{ h+=`<div class="application-item"><div class="d-flex justify-content-between align-items-start"><div><strong>${a['Желаемый ник']}</strong> <span class="badge-majestic ms-2">Новая</span></div><small>${new Date(a['Дата подачи']).toLocaleString()}</small></div><div class="mb-2">📞 ${a['Контакт']||''}</div><div><button class="btn btn-majestic btn-sm me-2" onclick="processApplication('${a['Желаемый ник']}', 'принята')"><i class="fas fa-check"></i> Принять</button><button class="btn btn-outline-majestic btn-sm" onclick="processApplication('${a['Желаемый ник']}', 'отклонена')"><i class="fas fa-times"></i> Отклонить</button></div></div>`; }); c.innerHTML=h; }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки заявок</p>'; }
+}
+window.processApplication=async function(nick,dec){
+ try{ const z=await supabaseRequest('Заявки на вступление','GET',null,`?Желаемый ник=eq.${encodeURIComponent(nick)}&Статус=eq.новая`); if(!z.length) throw new Error('Заявка не найдена'); const id=z[0].id; await supabaseRequest('Заявки на вступление','PATCH',{Статус:dec,Обработал:currentUserNick,'Дата обработки':new Date().toISOString()},`?id=eq.${id}`); if(dec==='принята'){ const r=await получитьВсеРанги(), r1=r.find(x=>x['Порядок']===1)['Название']; await supabaseRequest('Участники','POST',{Ник:nick,Ранг:r1,Предупреждения:0,'Баллы всего':0,'Баллы сегодня':0,'Дата вступления':new Date().toISOString().split('T')[0],Пароль:'',Права:'участник','Кем принят':currentUserNick}); await applyReferralBonus(nick); } showToast(`Заявка ${dec}`,'info'); playersCache=null; loadApplications(); loadMembers(); }catch(err){ showToast(err.message,'error'); }
+};
 let lastApplicationCount=0;
 async function checkNewApplications(){ try{ const z=await получитьЗаявки(); if(z.length>lastApplicationCount) showToast(`📬 Новых заявок: ${z.length-lastApplicationCount}`,'info'); lastApplicationCount=z.length; }catch(err){} }
-async function loadLogs(){ const c=document.getElementById('admin-logs'); if(!c) return; try{ const {баллы,преды,админЛоги}=await получитьЛоги(); let h='<h5>Последние логи</h5><div class="mb-3"><select id="logFilter" class="form-control-majestic"><option value="all">Все</option><option value="points">Баллы</option><option value="warns">Предупреждения</option><option value="admin">Действия админов</option></select></div><div id="logList"></div>'; c.innerHTML=h; const list=document.getElementById('logList'), filter=document.getElementById('logFilter'); function render(){ let items=[]; const t=filter.value; if(t==='all'||t==='points') items=items.concat(баллы.map(l=>({дата:l['Дата'],текст:`+${l['Баллы']} за ${l['Активность']} игроку ${l['Игрок']} (начислил: ${l['Начислил']})`}))); if(t==='all'||t==='warns') items=items.concat(преды.map(l=>({дата:l['Дата'],текст:`Предупреждение игроку ${l['Игрок']}: ${l['Причина']} (выдал: ${l['Выдал']})`}))); if(t==='all'||t==='admin') items=items.concat(админЛоги.map(l=>({дата:l['Дата'],текст:`${l['Админ']} ${l['Действие']} для ${l['Цель']}: ${l['Подробности']}`}))); items.sort((a,b)=>new Date(b.дата)-new Date(a.дата)); list.innerHTML=items.map(i=>`<div class="history-item small">${new Date(i.дата).toLocaleString()}: ${i.текст}</div>`).join(''); } filter.addEventListener('change',render); render(); }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки логов</p>'; } }
-async function loadRanksManagement(){ const c=document.getElementById('admin-ranks'); if(!c) return; try{ const r=await получитьВсеРанги(); c.innerHTML=`<h5>Управление рангами</h5><button class="btn btn-majestic mb-3" onclick="showAddRankModal()">+ Добавить ранг</button><table class="ranks-table"><thead> <th>Название</th><th>Порядок</th><th>Требуется баллов</th><th>Тип повышения</th><th>Действия</th> </thead><tbody>${r.map(x=>`<tr><td>${x['Название']}</td><td>${x['Порядок']}</td><td>${x['Требуется баллов']}</td><td>${x['Тип повышения']}</td><td><button class="btn btn-sm btn-outline-majestic" onclick="editRank('${x['Название']}')">✎</button><button class="btn btn-sm btn-outline-majestic" onclick="deleteRank('${x['Название']}')">🗑</button></td></tr>`).join('')}</tbody></table>`; }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки рангов</p>'; } }
-window.showAddRankModal=function(){ document.getElementById('rankModalTitle').innerText='Добавление ранга'; document.getElementById('rankName').value=''; document.getElementById('rankOrder').value=''; document.getElementById('rankPoints').value=''; document.getElementById('rankType').value='авто'; document.getElementById('saveRankBtn').onclick=async()=>{ const n=document.getElementById('rankName').value.trim(), o=parseInt(document.getElementById('rankOrder').value), p=parseInt(document.getElementById('rankPoints').value), t=document.getElementById('rankType').value; if(!n||isNaN(o)||isNaN(p)) return showToast('Заполните все поля','warning'); try{ await supabaseRequest('Ранги','POST',{Название:n,Порядок:o,'Требуется баллов':p,'Тип повышения':t}); showToast('Ранг добавлен','success'); bootstrap.Modal.getInstance(document.getElementById('rankModal')).hide(); loadRanksManagement(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } }; new bootstrap.Modal(document.getElementById('rankModal')).show(); };
-window.editRank=async function(name){ const r=await получитьВсеРанги(), rank=r.find(x=>x['Название']===name); if(!rank) return; document.getElementById('rankModalTitle').innerText='Редактирование ранга'; document.getElementById('rankName').value=rank['Название']; document.getElementById('rankOrder').value=rank['Порядок']; document.getElementById('rankPoints').value=rank['Требуется баллов']; document.getElementById('rankType').value=rank['Тип повышения']; document.getElementById('saveRankBtn').onclick=async()=>{ const n=document.getElementById('rankName').value.trim(), o=parseInt(document.getElementById('rankOrder').value), p=parseInt(document.getElementById('rankPoints').value), t=document.getElementById('rankType').value; if(!n||isNaN(o)||isNaN(p)) return showToast('Заполните все поля','warning'); try{ await supabaseRequest('Ранги','PATCH',{Название:n,Порядок:o,'Требуется баллов':p,'Тип повышения':t},`?Название=eq.${encodeURIComponent(name)}`); showToast('Ранг обновлён','success'); bootstrap.Modal.getInstance(document.getElementById('rankModal')).hide(); loadRanksManagement(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } }; new bootstrap.Modal(document.getElementById('rankModal')).show(); };
+async function loadLogs(){
+ const c=document.getElementById('admin-logs'); if(!c) return;
+ try{ const {баллы,преды,админЛоги}=await получитьЛоги(); let h='<h5>Последние логи</h5><div class="mb-3"><select id="logFilter" class="form-control-majestic"><option value="all">Все</option><option value="points">Баллы</option><option value="warns">Предупреждения</option><option value="admin">Действия админов</option></select></div><div id="logList"></div>'; c.innerHTML=h;
+ const list=document.getElementById('logList'), filter=document.getElementById('logFilter'); function render(){ let items=[]; const t=filter.value; if(t==='all'||t==='points') items=items.concat(баллы.map(l=>({дата:l['Дата'],текст:`+${l['Баллы']} за ${l['Активность']} игроку ${l['Игрок']} (начислил: ${l['Начислил']})`}))); if(t==='all'||t==='warns') items=items.concat(преды.map(l=>({дата:l['Дата'],текст:`Предупреждение игроку ${l['Игрок']}: ${l['Причина']} (выдал: ${l['Выдал']})`}))); if(t==='all'||t==='admin') items=items.concat(админЛоги.map(l=>({дата:l['Дата'],текст:`${l['Админ']} ${l['Действие']} для ${l['Цель']}: ${l['Подробности']}`}))); items.sort((a,b)=>new Date(b.дата)-new Date(a.дата)); list.innerHTML=items.map(i=>`<div class="history-item small">${new Date(i.дата).toLocaleString()}: ${i.текст}</div>`).join(''); }
+ filter.addEventListener('change',render); render();
+ }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки логов</p>'; }
+}
+async function loadRanksManagement(){
+ const c=document.getElementById('admin-ranks'); if(!c) return;
+ try{ const r=await получитьВсеРанги(); c.innerHTML=`<h5>Управление рангами</h5><button class="btn btn-majestic mb-3" onclick="showAddRankModal()">+ Добавить ранг</button><table class="ranks-table"><thead> <th>Название</th><th>Порядок</th><th>Требуется баллов</th><th>Тип повышения</th><th>Действия</th> </thead><tbody>${r.map(x=>`专业人员<td>${x['Название']}</td><td>${x['Порядок']}</td><td>${x['Требуется баллов']}</td><td>${x['Тип повышения']}</td><td><button class="btn btn-sm btn-outline-majestic" onclick="editRank('${x['Название']}')">✎</button><button class="btn btn-sm btn-outline-majestic" onclick="deleteRank('${x['Название']}')">🗑</button></td></tr>`).join('')}</tbody> </table>`; }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки рангов</p>'; }
+}
+window.showAddRankModal=function(){
+ document.getElementById('rankModalTitle').innerText='Добавление ранга'; document.getElementById('rankName').value=''; document.getElementById('rankOrder').value=''; document.getElementById('rankPoints').value=''; document.getElementById('rankType').value='авто';
+ document.getElementById('saveRankBtn').onclick=async()=>{ const n=document.getElementById('rankName').value.trim(), o=parseInt(document.getElementById('rankOrder').value), p=parseInt(document.getElementById('rankPoints').value), t=document.getElementById('rankType').value; if(!n||isNaN(o)||isNaN(p)) return showToast('Заполните все поля','warning'); try{ await supabaseRequest('Ранги','POST',{Название:n,Порядок:o,'Требуется баллов':p,'Тип повышения':t}); showToast('Ранг добавлен','success'); bootstrap.Modal.getInstance(document.getElementById('rankModal')).hide(); loadRanksManagement(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } };
+ new bootstrap.Modal(document.getElementById('rankModal')).show();
+};
+window.editRank=async function(name){
+ const r=await получитьВсеРанги(), rank=r.find(x=>x['Название']===name); if(!rank) return;
+ document.getElementById('rankModalTitle').innerText='Редактирование ранга'; document.getElementById('rankName').value=rank['Название']; document.getElementById('rankOrder').value=rank['Порядок']; document.getElementById('rankPoints').value=rank['Требуется баллов']; document.getElementById('rankType').value=rank['Тип повышения'];
+ document.getElementById('saveRankBtn').onclick=async()=>{ const n=document.getElementById('rankName').value.trim(), o=parseInt(document.getElementById('rankOrder').value), p=parseInt(document.getElementById('rankPoints').value), t=document.getElementById('rankType').value; if(!n||isNaN(o)||isNaN(p)) return showToast('Заполните все поля','warning'); try{ await supabaseRequest('Ранги','PATCH',{Название:n,Порядок:o,'Требуется баллов':p,'Тип повышения':t},`?Название=eq.${encodeURIComponent(name)}`); showToast('Ранг обновлён','success'); bootstrap.Modal.getInstance(document.getElementById('rankModal')).hide(); loadRanksManagement(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } };
+ new bootstrap.Modal(document.getElementById('rankModal')).show();
+};
 window.deleteRank=async function(name){ if(!confirm(`Удалить ранг ${name}?`)) return; try{ await supabaseRequest('Ранги','DELETE',null,`?Название=eq.${encodeURIComponent(name)}`); showToast('Ранг удалён','info'); loadRanksManagement(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } };
-async function loadPlayerManagement(){ const c=document.getElementById('admin-players'); if(!c) return; try{ const p=await получитьВсехУчастников(), r=await получитьВсеРанги(); let html=`<h5>Управление игроками</h5><div class="row mb-3"><div class="col-md-6"><select id="adminPlayerSelect" class="form-control-majestic"><option value="">-- Выберите игрока --</option>${p.map(x=>`<option value="${x['Ник']}">${x['Ник']} (${x['Ранг']})</option>`).join('')}</select></div><div class="col-md-6"><input type="text" id="adminNickInput" class="form-control-majestic" placeholder="Или введите ник"></div></div><div class="admin-action-buttons"><div class="admin-action-btn promote" onclick="adminPromoteFromPanel()" title="Повысить ранг"><i class="fas fa-arrow-up"></i><span>Повысить</span></div><div class="admin-action-btn demote" onclick="adminDemoteFromPanel()" title="Понизить ранг"><i class="fas fa-arrow-down"></i><span>Понизить</span></div><div class="admin-action-btn points" onclick="openAddPointsModalFromPanel()" title="Начислить баллы"><i class="fas fa-plus-circle"></i><span>+ Баллы</span></div><div class="admin-action-btn minus-points" onclick="openRemovePointsModalFromPanel()" title="Снять баллы"><i class="fas fa-minus-circle"></i><span>- Баллы</span></div><div class="admin-action-btn warn" onclick="openAddWarningModalFromPanel()" title="Выдать предупреждение"><i class="fas fa-exclamation-triangle"></i><span>+ Варн</span></div><div class="admin-action-btn unwarn" onclick="openRemoveWarningModalFromPanel()" title="Снять предупреждение"><i class="fas fa-times-circle"></i><span>- Варн</span></div></div><div class="mt-3"><button class="btn btn-majestic" onclick="showAddMemberModal()">+ Добавить нового игрока</button></div><div id="adminPanelMessage" class="mt-3"></div>`; c.innerHTML=html; const rankSel=document.getElementById('newMemberRank'); if(rankSel) rankSel.innerHTML=r.map(x=>`<option value="${x['Название']}">${x['Название']}</option>`).join(''); }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки</p>'; } }
+async function loadPlayerManagement(){
+ const c=document.getElementById('admin-players'); if(!c) return;
+ try{ const p=await получитьВсехУчастников(), r=await получитьВсеРанги(); let html=`<h5>Управление игроками</h5><div class="row mb-3"><div class="col-md-6"><select id="adminPlayerSelect" class="form-control-majestic"><option value="">-- Выберите игрока --</option>${p.map(x=>`<option value="${x['Ник']}">${x['Ник']} (${x['Ранг']})</option>`).join('')}</select></div><div class="col-md-6"><input type="text" id="adminNickInput" class="form-control-majestic" placeholder="Или введите ник"></div></div><div class="admin-action-buttons"><div class="admin-action-btn promote" onclick="adminPromoteFromPanel()" title="Повысить ранг"><i class="fas fa-arrow-up"></i><span>Повысить</span></div><div class="admin-action-btn demote" onclick="adminDemoteFromPanel()" title="Понизить ранг"><i class="fas fa-arrow-down"></i><span>Понизить</span></div><div class="admin-action-btn points" onclick="openAddPointsModalFromPanel()" title="Начислить баллы"><i class="fas fa-plus-circle"></i><span>+ Баллы</span></div><div class="admin-action-btn minus-points" onclick="openRemovePointsModalFromPanel()" title="Снять баллы"><i class="fas fa-minus-circle"></i><span>- Баллы</span></div><div class="admin-action-btn warn" onclick="openAddWarningModalFromPanel()" title="Выдать предупреждение"><i class="fas fa-exclamation-triangle"></i><span>+ Варн</span></div><div class="admin-action-btn unwarn" onclick="openRemoveWarningModalFromPanel()" title="Снять предупреждение"><i class="fas fa-times-circle"></i><span>- Варн</span></div></div><div class="mt-3"><button class="btn btn-majestic" onclick="showAddMemberModal()">+ Добавить нового игрока</button></div><div id="adminPanelMessage" class="mt-3"></div>`;
+  c.innerHTML=html; const rankSel=document.getElementById('newMemberRank'); if(rankSel) rankSel.innerHTML=r.map(x=>`<option value="${x['Название']}">${x['Название']}</option>`).join('');
+ }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки</p>'; }
+}
 function getTargetNickFromPanel(){ const s=document.getElementById('adminPlayerSelect'), i=document.getElementById('adminNickInput'); return i.value.trim()||(s?s.value:''); }
 window.adminPromoteFromPanel=function(){ const n=getTargetNickFromPanel(); n?adminPromote(n):showToast('Введите ник или выберите игрока','warning'); };
 window.adminDemoteFromPanel=function(){ const n=getTargetNickFromPanel(); n?adminDemote(n):showToast('Введите ник или выберите игрока','warning'); };
@@ -266,44 +641,69 @@ function openRemovePointsModalFromPanel(){ const n=getTargetNickFromPanel(); n?o
 function openAddWarningModalFromPanel(){ const n=getTargetNickFromPanel(); n?openAddWarningModal(n):showToast('Введите ник или выберите игрока','warning'); }
 function openRemoveWarningModalFromPanel(){ const n=getTargetNickFromPanel(); n?openRemoveWarningModal(n):showToast('Введите ник или выберите игрока','warning'); }
 window.showAddMemberModal=async function(){ const r=await получитьВсеРанги(); document.getElementById('newMemberRank').innerHTML=r.map(x=>`<option value="${x['Название']}">${x['Название']}</option>`).join(''); new bootstrap.Modal(document.getElementById('addMemberModal')).show(); };
-document.getElementById('confirmAddMember').addEventListener('click',async()=>{ const n=document.getElementById('newMemberNick').value.trim(), r=document.getElementById('newMemberRank').value, p=document.getElementById('newMemberPassword').value.trim(), a=document.getElementById('newMemberAvatar').value.trim(); if(!n||!r) return showToast('Заполните ник и ранг','warning'); try{ await supabaseRequest('Участники','POST',{Ник:n,Ранг:r,Предупреждения:0,'Баллы всего':0,'Баллы сегодня':0,'Дата вступления':new Date().toISOString().split('T')[0],Пароль:p||'',Права:'участник',Аватар:a||null}); showToast('Игрок добавлен','success'); bootstrap.Modal.getInstance(document.getElementById('addMemberModal')).hide(); playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } });
-window.adminPromote=async function(n){ if(!isAdmin) return; playSound('promote'); try{ const u=await получитьДанныеИгрока(n); if(!u) throw new Error('Игрок не найден'); const cur=u['Ранг']; const ranks=await получитьВсеРанги(); const curR=ranks.find(r=>r['Название']===cur); if(!curR) throw new Error('Ранг не найден'); const next=ranks.find(r=>r['Порядок']===curR['Порядок']+1); if(!next) throw new Error('Нет более высокого ранга'); await supabaseRequest('Участники','PATCH',{Ранг:next['Название']},`?Ник=eq.${encodeURIComponent(n)}`); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'повысил',Цель:n,Подробности:`${cur} → ${next['Название']}`}); showToast(`Повышен до ${next['Название']}`,'success'); playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ showToast(err.message,'error'); } };
-window.adminDemote=async function(n){ if(!isAdmin) return; playSound('demote'); try{ const u=await получитьДанныеИгрока(n); if(!u) throw new Error('Игрок не найден'); const cur=u['Ранг']; const ranks=await получитьВсеРанги(); const curR=ranks.find(r=>r['Название']===cur); if(!curR) throw new Error('Ранг не найден'); const prev=ranks.find(r=>r['Порядок']===curR['Порядок']-1); if(!prev) throw new Error('Нет более низкого ранга'); await supabaseRequest('Участники','PATCH',{Ранг:prev['Название']},`?Ник=eq.${encodeURIComponent(n)}`); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'понизил',Цель:n,Подробности:`${cur} → ${prev['Название']}`}); showToast(`Понижен до ${prev['Название']}`,'info'); playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ showToast(err.message,'error'); } };
-async function loadRPGAdminPanel(){ const c=document.getElementById('admin-rpg'); if(!c) return; const z=await получитьВсеРПГЗадания(); c.innerHTML=`<h5>Управление РПГ-заданиями</h5><button class="btn btn-majestic mb-3" onclick="showAddRPGTaskModal()">+ Добавить задание</button><table class="ranks-table"><thead> <th>ID</th><th>Название</th><th>Описание</th><th>Награда РПГ</th><th>Активно</th><th>Действия</th> </thead><tbody>${z.map(x=>`<tr><td>${x.id}</td><td>${x.название}</td><td>${x.описание||''}</td><td>${x.награда_рпг}</td><td>${x.активно?'Да':'Нет'}</td><td><button class="btn btn-sm btn-outline-majestic" onclick="editRPGTask(${x.id})">✎</button><button class="btn btn-sm btn-outline-majestic" onclick="toggleRPGTask(${x.id})">🔁</button></td></tr>`).join('')}</tbody></table><hr><h5>Отчёты на проверке</h5><div id="rpgReportsList"></div>`; loadRPGReportsList(); }
-async function loadRPGReportsList(){ const d=document.getElementById('rpgReportsList'); if(!d) return; const o=await получитьОтчетыНаПроверке(); if(!o.length){ d.innerHTML='<p class="text-muted">Нет новых отчётов</p>'; return; } let h=''; o.forEach(x=>{ h+=`<div class="application-item"><div class="d-flex justify-content-between"><div><strong>${x.игрок}</strong> (задание #${x.id_задания})</div><small>${new Date(x.дата_отправки).toLocaleString()}</small></div><div class="mb-2">${x.текст_отчета}</div><div>${x.ссылки||''}</div><div class="mt-2"><button class="btn btn-sm btn-success" onclick="approveReport(${x.id})">Одобрить</button><button class="btn btn-sm btn-danger" onclick="rejectReport(${x.id})">Отклонить</button></div></div>`; }); d.innerHTML=h; }
-window.showAddRPGTaskModal=function(){ document.getElementById('rpgTaskId').value=''; document.getElementById('rpgTaskName').value=''; document.getElementById('rpgTaskDesc').value=''; document.getElementById('rpgTaskReward').value=''; document.getElementById('rpgTaskActive').checked=true; document.getElementById('rpgTaskModalTitle').textContent='Добавление задания'; new bootstrap.Modal(document.getElementById('rpgTaskModal')).show(); };
-window.editRPGTask=async function(id){ const tasks=await supabaseRequest('РПГ_активности','GET',null,`?id=eq.${id}`); if(tasks.length===0) return; const t=tasks[0]; document.getElementById('rpgTaskId').value=t.id; document.getElementById('rpgTaskName').value=t.название; document.getElementById('rpgTaskDesc').value=t.описание||''; document.getElementById('rpgTaskReward').value=t.награда_рпг; document.getElementById('rpgTaskActive').checked=t.активно; document.getElementById('rpgTaskModalTitle').textContent='Редактирование задания'; new bootstrap.Modal(document.getElementById('rpgTaskModal')).show(); };
-window.toggleRPGTask=async function(id){ const tasks=await supabaseRequest('РПГ_активности','GET',null,`?id=eq.${id}`); if(tasks.length===0) return; const newActive=!tasks[0].активно; await supabaseRequest('РПГ_активности','PATCH',{активно:newActive},`?id=eq.${id}`); showToast(`Задание ${newActive?'активировано':'деактивировано'}`,'info'); loadRPGAdminPanel(); };
-// ===== РПГ МОДАЛКА (ИСПРАВЛЕНО) =====
-
-// открытие модалки (исправлено)
-window.showAddRPGTaskModal = function () {
+document.getElementById('confirmAddMember').addEventListener('click',async()=>{
+ const n=document.getElementById('newMemberNick').value.trim(), r=document.getElementById('newMemberRank').value, p=document.getElementById('newMemberPassword').value.trim(), a=document.getElementById('newMemberAvatar').value.trim(); if(!n||!r) return showToast('Заполните ник и ранг','warning');
+ try{ await supabaseRequest('Участники','POST',{Ник:n,Ранг:r,Предупреждения:0,'Баллы всего':0,'Баллы сегодня':0,'Дата вступления':new Date().toISOString().split('T')[0],Пароль:p||'',Права:'участник',Аватар:a||null}); showToast('Игрок добавлен','success'); bootstrap.Modal.getInstance(document.getElementById('addMemberModal')).hide(); playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ showToast('Ошибка: '+err.message,'error'); }
+});
+window.adminPromote=async function(n){
+ if(!isAdmin) return; playSound('promote');
+ try{ const u=await получитьДанныеИгрока(n); if(!u) throw new Error('Игрок не найден'); const cur=u['Ранг']; const ranks=await получитьВсеРанги(); const curR=ranks.find(r=>r['Название']===cur); if(!curR) throw new Error('Ранг не найден'); const next=ranks.find(r=>r['Порядок']===curR['Порядок']+1); if(!next) throw new Error('Нет более высокого ранга'); await supabaseRequest('Участники','PATCH',{Ранг:next['Название']},`?Ник=eq.${encodeURIComponent(n)}`); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'повысил',Цель:n,Подробности:`${cur} → ${next['Название']}`}); showToast(`Повышен до ${next['Название']}`,'success'); playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ showToast(err.message,'error'); }
+};
+window.adminDemote=async function(n){
+ if(!isAdmin) return; playSound('demote');
+ try{ const u=await получитьДанныеИгрока(n); if(!u) throw new Error('Игрок не найден'); const cur=u['Ранг']; const ranks=await получитьВсеРанги(); const curR=ranks.find(r=>r['Название']===cur); if(!curR) throw new Error('Ранг не найден'); const prev=ranks.find(r=>r['Порядок']===curR['Порядок']-1); if(!prev) throw new Error('Нет более низкого ранга'); await supabaseRequest('Участники','PATCH',{Ранг:prev['Название']},`?Ник=eq.${encodeURIComponent(n)}`); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'понизил',Цель:n,Подробности:`${cur} → ${prev['Название']}`}); showToast(`Понижен до ${prev['Название']}`,'info'); playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ showToast(err.message,'error'); }
+};
+async function loadRPGAdminPanel(){
+ const c=document.getElementById('admin-rpg'); if(!c) return; const z=await получитьВсеРПГЗадания(); c.innerHTML=`<h5>Управление РПГ-заданиями</h5><button class="btn btn-majestic mb-3" onclick="showAddRPGTaskModal()">+ Добавить задание</button><table class="ranks-table"><thead> <th>ID</th><th>Название</th><th>Описание</th><th>Награда РПГ</th><th>Активно</th><th>Действия</th> </thead><tbody>${z.map(x=>`<tr><td>${x.id}</td><td>${x.название}</td><td>${x.описание||''}</td><td>${x.награда_рпг}</td><td>${x.активно?'Да':'Нет'}</td><td><button class="btn btn-sm btn-outline-majestic" onclick="editRPGTask(${x.id})">✎</button><button class="btn btn-sm btn-outline-majestic" onclick="toggleRPGTask(${x.id})">🔁</button></td></tr>`).join('')}</tbody> </table><hr><h5>Отчёты на проверке</h5><div id="rpgReportsList"></div>`; loadRPGReportsList();
+}
+async function loadRPGReportsList(){
+ const d=document.getElementById('rpgReportsList'); if(!d) return; const o=await получитьОтчетыНаПроверке(); if(!o.length){ d.innerHTML='<p class="text-muted">Нет новых отчётов</p>'; return; } let h=''; o.forEach(x=>{ h+=`<div class="application-item"><div class="d-flex justify-content-between"><div><strong>${x.игрок}</strong> (задание #${x.id_задания})</div><small>${new Date(x.дата_отправки).toLocaleString()}</small></div><div class="mb-2">${x.текст_отчета}</div><div>${x.ссылки||''}</div><div class="mt-2"><button class="btn btn-sm btn-success" onclick="approveReport(${x.id})">Одобрить</button><button class="btn btn-sm btn-danger" onclick="rejectReport(${x.id})">Отклонить</button></div></div>`; }); d.innerHTML=h;
+}
+window.showAddRPGTaskModal = function() {
+    console.log('showAddRPGTaskModal вызвана');
     document.getElementById('rpgTaskId').value = '';
     document.getElementById('rpgTaskName').value = '';
     document.getElementById('rpgTaskDesc').value = '';
     document.getElementById('rpgTaskReward').value = '';
     document.getElementById('rpgTaskActive').checked = true;
-
     document.getElementById('rpgTaskModalTitle').textContent = 'Добавление задания';
-
-    const modalEl = document.getElementById('rpgTaskModal');
-    let modal = bootstrap.Modal.getInstance(modalEl);
-    if (!modal) modal = new bootstrap.Modal(modalEl);
-
-    modal.show();
+    new bootstrap.Modal(document.getElementById('rpgTaskModal')).show();
 };
-
-// защита от двойного клика
-let isSavingRPG = false;
-
-// сохранение задания (ИСПРАВЛЕНО)
+window.editRPGTask = async function(id) {
+    console.log('editRPGTask вызвана для id', id);
+    try {
+        const tasks = await supabaseRequest('РПГ_активности', 'GET', null, `?id=eq.${id}`);
+        if (tasks.length === 0) return;
+        const t = tasks[0];
+        document.getElementById('rpgTaskId').value = t.id;
+        document.getElementById('rpgTaskName').value = t.название;
+        document.getElementById('rpgTaskDesc').value = t.описание || '';
+        document.getElementById('rpgTaskReward').value = t.награда_рпг;
+        document.getElementById('rpgTaskActive').checked = t.активно;
+        document.getElementById('rpgTaskModalTitle').textContent = 'Редактирование задания';
+        new bootstrap.Modal(document.getElementById('rpgTaskModal')).show();
+    } catch (e) {
+        console.error(e);
+        showToast('Ошибка загрузки задания: ' + e.message, 'error');
+    }
+};
+window.toggleRPGTask = async function(id) {
+    console.log('toggleRPGTask вызвана для id', id);
+    try {
+        const tasks = await supabaseRequest('РПГ_активности', 'GET', null, `?id=eq.${id}`);
+        if (tasks.length === 0) return;
+        const newActive = !tasks[0].активно;
+        await supabaseRequest('РПГ_активности', 'PATCH', { активно: newActive }, `?id=eq.${id}`);
+        showToast(`Задание ${newActive ? 'активировано' : 'деактивировано'}`, 'info');
+        loadRPGAdminPanel();
+    } catch (e) {
+        showToast('Ошибка: ' + e.message, 'error');
+    }
+};
 const saveRPGTaskBtn = document.getElementById('saveRPGTaskBtn');
-
 if (saveRPGTaskBtn) {
     saveRPGTaskBtn.addEventListener('click', async () => {
-        if (isSavingRPG) return;
-        isSavingRPG = true;
-
+        console.log('saveRPGTaskBtn клик');
         const id = document.getElementById('rpgTaskId').value;
         const name = document.getElementById('rpgTaskName').value.trim();
         const desc = document.getElementById('rpgTaskDesc').value.trim();
@@ -312,13 +712,10 @@ if (saveRPGTaskBtn) {
 
         if (!name) {
             showToast('Введите название задания', 'warning');
-            isSavingRPG = false;
             return;
         }
-
         if (isNaN(reward) || reward <= 0) {
             showToast('Введите положительную награду (РПГ)', 'warning');
-            isSavingRPG = false;
             return;
         }
 
@@ -340,32 +737,56 @@ if (saveRPGTaskBtn) {
                 });
                 showToast('Задание добавлено', 'success');
             }
-
-            // 🔥 безопасное закрытие модалки
-            const modalEl = document.getElementById('rpgTaskModal');
-            let modal = bootstrap.Modal.getInstance(modalEl);
-            if (!modal) modal = new bootstrap.Modal(modalEl);
-
-            modal.hide();
-
+            bootstrap.Modal.getInstance(document.getElementById('rpgTaskModal')).hide();
             loadRPGAdminPanel();
-
         } catch (err) {
+            console.error(err);
             showToast('Ошибка: ' + err.message, 'error');
-        } finally {
-            isSavingRPG = false;
         }
     });
+} else {
+    console.error('Элемент saveRPGTaskBtn не найден');
 }
-window.approveReport=async function(id){ try{ const r=(await supabaseRequest('Отчеты_РПГ','GET',null,`?id=eq.${id}`))[0]; if(!r) throw new Error('Отчёт не найден'); await supabaseRequest('Отчеты_РПГ','PATCH',{статус:'одобрено',дата_обработки:new Date().toISOString(),модератор:currentUserNick},`?id=eq.${id}`); const z=(await supabaseRequest('РПГ_активности','GET',null,`?id=eq.${r.id_задания}`))[0]; if(z){ await supabaseRequest('Участники','PATCH',{рпг_баллы:supabase.raw(`рпг_баллы + ${z.награда_рпг}`)},`?Ник=eq.${encodeURIComponent(r.игрок)}`); await supabaseRequest('Логи_РПГ','POST',{игрок:r.игрок,активность:z.название,награда_рпг:z.награда_рпг,кем_выдано:currentUserNick}); } showToast('Отчёт одобрен','success'); loadRPGAdminPanel(); loadRPGBoard(); }catch(e){ showToast('Ошибка одобрения','error'); } };
-window.rejectReport=async function(id){ try{ await supabaseRequest('Отчеты_РПГ','PATCH',{статус:'отклонено',дата_обработки:new Date().toISOString(),модератор:currentUserNick},`?id=eq.${id}`); showToast('Отчёт отклонён','info'); loadRPGAdminPanel(); }catch(e){ showToast('Ошибка отклонения','error'); } };
-async function loadOwnerPanel(){ const c=document.getElementById('admin-owner'); if(!c) return; c.innerHTML='<h5>Управление админами</h5><input type="text" id="targetAdminNick" class="form-control-majestic mb-2" placeholder="Ник игрока"><div class="d-flex gap-2 mb-3"><button class="btn btn-majestic" onclick="makeAdmin()">Сделать админом</button><button class="btn btn-outline-majestic" onclick="removeAdmin()">Убрать админа</button></div><h5 class="mt-4">Установить пароль админу</h5><input type="password" id="newAdminPass" class="form-control-majestic mb-2" placeholder="Новый пароль"><button class="btn btn-majestic" onclick="setAdminPassword()">Установить</button><div id="ownerMessage" class="mt-3"></div>'; }
-window.makeAdmin=async function(){ const t=document.getElementById('targetAdminNick')?.value.trim(); if(!t) return; try{ await supabaseRequest('Участники','PATCH',{Права:'админ'},`?Ник=eq.${encodeURIComponent(t)}`); showToast('Права админа назначены','success'); document.getElementById('ownerMessage').innerHTML='<span class="text-success">Готово</span>'; playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ document.getElementById('ownerMessage').innerHTML=`<span class="text-danger">${err.message}</span>`; } };
-window.removeAdmin=async function(){ const t=document.getElementById('targetAdminNick')?.value.trim(); if(!t) return; try{ await supabaseRequest('Участники','PATCH',{Права:'участник'},`?Ник=eq.${encodeURIComponent(t)}`); showToast('Права админа сняты','info'); document.getElementById('ownerMessage').innerHTML='<span class="text-success">Готово</span>'; playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ document.getElementById('ownerMessage').innerHTML=`<span class="text-danger">${err.message}</span>`; } };
-window.setAdminPassword=async function(){ const t=document.getElementById('targetAdminNick')?.value.trim(), p=document.getElementById('newAdminPass')?.value.trim(); if(!t||!p) return; try{ await supabaseRequest('Участники','PATCH',{Пароль:p},`?Ник=eq.${encodeURIComponent(t)}`); showToast('Пароль установлен','success'); document.getElementById('ownerMessage').innerHTML='<span class="text-success">Пароль обновлён</span>'; }catch(err){ document.getElementById('ownerMessage').innerHTML=`<span class="text-danger">${err.message}</span>`; } };
+window.approveReport=async function(id){
+ try{
+  const r=(await supabaseRequest('Отчеты_РПГ','GET',null,`?id=eq.${id}`))[0];
+  if(!r) throw new Error('Отчёт не найден');
+  await supabaseRequest('Отчеты_РПГ','PATCH',{статус:'одобрено',дата_обработки:new Date().toISOString(),модератор:currentUserNick},`?id=eq.${id}`);
+  const z=(await supabaseRequest('РПГ_активности','GET',null,`?id=eq.${r.id_задания}`))[0];
+  if(z){
+   await supabaseRequest('Участники','PATCH',{рпг_баллы:supabase.raw(`рпг_баллы + ${z.награда_рпг}`)},`?Ник=eq.${encodeURIComponent(r.игрок)}`);
+   await supabaseRequest('Логи_РПГ','POST',{игрок:r.игрок,активность:z.название,награда_рпг:z.награда_рпг,кем_выдано:currentUserNick});
+  }
+  showToast('Отчёт одобрен','success'); loadRPGAdminPanel(); loadRPGBoard();
+ }catch(e){ showToast('Ошибка одобрения','error'); }
+};
+window.rejectReport=async function(id){
+ try{
+  await supabaseRequest('Отчеты_РПГ','PATCH',{статус:'отклонено',дата_обработки:new Date().toISOString(),модератор:currentUserNick},`?id=eq.${id}`);
+  showToast('Отчёт отклонён','info'); loadRPGAdminPanel();
+ }catch(e){ showToast('Ошибка отклонения','error'); }
+};
+async function loadOwnerPanel(){
+ const c=document.getElementById('admin-owner'); if(!c) return; c.innerHTML='<h5>Управление админами</h5><input type="text" id="targetAdminNick" class="form-control-majestic mb-2" placeholder="Ник игрока"><div class="d-flex gap-2 mb-3"><button class="btn btn-majestic" onclick="makeAdmin()">Сделать админом</button><button class="btn btn-outline-majestic" onclick="removeAdmin()">Убрать админа</button></div><h5 class="mt-4">Установить пароль админу</h5><input type="password" id="newAdminPass" class="form-control-majestic mb-2" placeholder="Новый пароль"><button class="btn btn-majestic" onclick="setAdminPassword()">Установить</button><div id="ownerMessage" class="mt-3"></div>';
+}
+window.makeAdmin=async function(){
+ const t=document.getElementById('targetAdminNick')?.value.trim(); if(!t) return;
+ try{ await supabaseRequest('Участники','PATCH',{Права:'админ'},`?Ник=eq.${encodeURIComponent(t)}`); showToast('Права админа назначены','success'); document.getElementById('ownerMessage').innerHTML='<span class="text-success">Готово</span>'; playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ document.getElementById('ownerMessage').innerHTML=`<span class="text-danger">${err.message}</span>`; }
+};
+window.removeAdmin=async function(){
+ const t=document.getElementById('targetAdminNick')?.value.trim(); if(!t) return;
+ try{ await supabaseRequest('Участники','PATCH',{Права:'участник'},`?Ник=eq.${encodeURIComponent(t)}`); showToast('Права админа сняты','info'); document.getElementById('ownerMessage').innerHTML='<span class="text-success">Готово</span>'; playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ document.getElementById('ownerMessage').innerHTML=`<span class="text-danger">${err.message}</span>`; }
+};
+window.setAdminPassword=async function(){
+ const t=document.getElementById('targetAdminNick')?.value.trim(), p=document.getElementById('newAdminPass')?.value.trim(); if(!t||!p) return;
+ try{ await supabaseRequest('Участники','PATCH',{Пароль:p},`?Ник=eq.${encodeURIComponent(t)}`); showToast('Пароль установлен','success'); document.getElementById('ownerMessage').innerHTML='<span class="text-success">Пароль обновлён</span>'; }catch(err){ document.getElementById('ownerMessage').innerHTML=`<span class="text-danger">${err.message}</span>`; }
+};
 function removeAdminTabs(){ const t=document.getElementById('mainTabs'), tc=document.querySelector('.tab-content'), at=document.getElementById('admin-tab'); at&&at.closest('li').remove(); const ap=document.getElementById('admin'); ap&&ap.remove(); }
-logoutBtn.addEventListener('click',()=>{ mainInterface.classList.add('hidden'); loginPage.classList.remove('hidden'); loginNick.value=''; loginPass.value=''; loginError.textContent=''; adminMode=!1; adminPassField.classList.add('hidden'); toggleAdmin.textContent='🔐 Я администратор'; removeAdminTabs(); });
-async function loadTreasury(){ const c=document.getElementById('treasuryContent'); if(!c) return; try{ let b=0; const s=await supabaseRequest('Настройки','GET',null,'?Параметр=eq.баланс_казны'); if(s.length) b=parseFloat(s[0]['Значение'])||0; const ops=await supabaseRequest('Казна','GET',null,'?order=Дата.desc&limit=20'); let h=`<div class="text-center mb-4"><h2 class="display-4" style="color:#ff1493;">${b.toLocaleString()} <small style="font-size:1rem;">виртов</small></h2><p class="text-secondary">Текущий баланс семьи</p></div><div class="d-flex gap-3 justify-content-center mb-4"><button class="btn btn-majestic" onclick="showTreasuryOperationModal('пополнение')"><i class="fas fa-plus-circle"></i> Пополнить</button>`; if(isAdmin) h+='<button class="btn btn-outline-majestic" onclick="showTreasuryOperationModal(\'списание\')"><i class="fas fa-minus-circle"></i> Списать</button>'; h+='</div><h5 class="mb-3">Последние операции</h5>'; if(!ops.length) h+='<p class="text-muted">Пока нет операций</p>'; else ops.forEach(o=>{ const s=o['Тип']==='пополнение'?'+':'-', col=o['Тип']==='пополнение'?'#28a745':'#dc3545'; h+=`<div class="history-item"><div class="d-flex justify-content-between"><span><strong style="color:${col};">${s}${o['Сумма']}</strong> — ${o['Описание']||''}</span><small class="text-secondary">${new Date(o['Дата']).toLocaleString()}</small></div><div><small>Игрок: ${o['Игрок']||'система'}</small></div></div>`; }); c.innerHTML=h; }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки казны</p>'; console.error(err); } }
+logoutBtn.addEventListener('click',()=>{ mainInterface.classList.add('hidden'); loginPage.classList.remove('hidden'); loginNick.value=''; loginPass.value=''; loginError.textContent=''; adminMode=!1; adminPassField.classList.add('hidden'); toggleAdmin.textContent='🔐 Я администратор'; removeAdminTabs(); localStorage.removeItem('hateraid_user'); });
+async function loadTreasury(){
+ const c=document.getElementById('treasuryContent'); if(!c) return;
+ try{ let b=0; const s=await supabaseRequest('Настройки','GET',null,'?Параметр=eq.баланс_казны'); if(s.length) b=parseFloat(s[0]['Значение'])||0; const ops=await supabaseRequest('Казна','GET',null,'?order=Дата.desc&limit=20'); let h=`<div class="text-center mb-4"><h2 class="display-4" style="color:#ff1493;">${b.toLocaleString()} <small style="font-size:1rem;">виртов</small></h2><p class="text-secondary">Текущий баланс семьи</p></div><div class="d-flex gap-3 justify-content-center mb-4"><button class="btn btn-majestic" onclick="showTreasuryOperationModal('пополнение')"><i class="fas fa-plus-circle"></i> Пополнить</button>`; if(isAdmin) h+='<button class="btn btn-outline-majestic" onclick="showTreasuryOperationModal(\'списание\')"><i class="fas fa-minus-circle"></i> Списать</button>'; h+='</div><h5 class="mb-3">Последние операции</h5>'; if(!ops.length) h+='<p class="text-muted">Пока нет операций</p>'; else ops.forEach(o=>{ const s=o['Тип']==='пополнение'?'+':'-', col=o['Тип']==='пополнение'?'#28a745':'#dc3545'; h+=`<div class="history-item"><div class="d-flex justify-content-between"><span><strong style="color:${col};">${s}${o['Сумма']}</strong> — ${o['Описание']||''}</span><small class="text-secondary">${new Date(o['Дата']).toLocaleString()}</small></div><div><small>Игрок: ${o['Игрок']||'система'}</small></div></div>`; }); c.innerHTML=h; }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки казны</p>'; console.error(err); }
+}
 window.showTreasuryOperationModal=function(t){ if(t==='списание'&&!isAdmin) return showToast('Только администраторы могут списывать средства','error'); document.getElementById('treasuryModalTitle').textContent=(t==='пополнение'?'Пополнение':'Списание')+' казны'; document.getElementById('treasuryOperationType').value=t; document.getElementById('treasuryAmount').value=''; document.getElementById('treasuryDescription').value=''; new bootstrap.Modal(document.getElementById('treasuryModal')).show(); };
 document.addEventListener('DOMContentLoaded',function(){
  const btn=document.getElementById('confirmTreasuryBtn'); btn&&btn.addEventListener('click',async()=>{
@@ -375,36 +796,141 @@ document.addEventListener('DOMContentLoaded',function(){
    let nb; if(t==='пополнение'){ if((currentUser['вирты']||0)<a) return showToast('У вас недостаточно виртов','warning'); await supabaseRequest('Участники','PATCH',{вирты:(currentUser['вирты']||0)-a},`?Ник=eq.${encodeURIComponent(currentUserNick)}`); nb=cb+a; }else{ if(cb<a) return showToast('Недостаточно средств в казне','warning'); await supabaseRequest('Участники','PATCH',{вирты:(currentUser['вирты']||0)+a},`?Ник=eq.${encodeURIComponent(currentUserNick)}`); nb=cb-a; }
    await supabaseRequest('Настройки','PATCH',{Значение:nb.toString()},'?Параметр=eq.баланс_казны'); await supabaseRequest('Казна','POST',{Тип:t,Сумма:a,Описание:d||(t==='пополнение'?'Пополнение':'Списание'),Игрок:currentUserNick,Дата:new Date().toISOString()}); showToast(t==='пополнение'?`Казна пополнена на ${a} виртов`:`Списано ${a} виртов из казны`,t==='пополнение'?'success':'info'); bootstrap.Modal.getInstance(document.getElementById('treasuryModal')).hide(); loadTreasury(); currentUser=await получитьДанныеИгрока(currentUserNick);
    if (document.getElementById('profile-tab').classList.contains('active')) {renderProfile(currentUser, 'myProfileContent');}
-  const chatToggle = document.getElementById('chatToggle');
-if (chatToggle) chatToggle.style.display = 'none';
   }catch(err){ showToast('Ошибка операции: '+err.message,'error'); }
- if (chatToggle) chatToggle.style.display = 'none';
  });
  document.getElementById('confirmAddPoints')?.addEventListener('click', async function() {const nick = document.getElementById('pointsNick').value;const activity = document.getElementById('pointsActivity').value;const amount = parseFloat(document.getElementById('pointsAmount').value);if (!nick || isNaN(amount) || amount <= 0) {showToast('Заполните все поля', 'warning');return;}try {await adminAddPoints(nick, activity, amount);bootstrap.Modal.getInstance(document.getElementById('pointsModal')).hide();} catch (error) {showToast('Ошибка: ' + error.message, 'error');}});
  document.getElementById('confirmRemovePoints')?.addEventListener('click',async function(){ const n=document.getElementById('removePointsNick').value, a=parseFloat(document.getElementById('removePointsAmount').value); if(!n||isNaN(a)||a<=0) return showToast('Введите корректную сумму','warning'); try{ await adminRemovePoints(n,a); bootstrap.Modal.getInstance(document.getElementById('removePointsModal')).hide(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } });
  document.getElementById('confirmAddWarning')?.addEventListener('click',async function(){ const n=document.getElementById('warningNick').value, r=document.getElementById('warningReason').value.trim(); if(!n||!r) return showToast('Заполните ник и причину','warning'); try{ await adminAddWarning(n,r); bootstrap.Modal.getInstance(document.getElementById('warningModal')).hide(); currentUser=await получитьДанныеИгрока(currentUserNick); }catch(err){ showToast('Ошибка: '+err.message,'error'); } });
  document.getElementById('confirmRemoveWarning')?.addEventListener('click',async function(){ const n=document.getElementById('removeWarningNick').value; if(!n) return showToast('Ник не указан','warning'); try{ await adminRemoveWarning(n); bootstrap.Modal.getInstance(document.getElementById('removeWarningModal')).hide(); currentUser=await получитьДанныеИгрока(currentUserNick); }catch(err){ showToast('Ошибка: '+err.message,'error'); } });
+ // Проверяем сохранённую сессию
+ const saved = localStorage.getItem('hateraid_user');
+ if (saved) {
+     try {
+         const data = JSON.parse(saved);
+         const u = await получитьДанныеИгрока(data.nick);
+         if (u) {
+             isAdmin = data.isAdmin;
+             adminRights = data.adminRights || '';
+             currentUserNick = u['Ник'];
+             currentUser = u;
+             showMainInterface(u);
+         }
+     } catch (e) {}
+ }
 });
-async function loadFamilyActivity(){ const c=document.getElementById('activityContent'); if(!c) return; try{ const players=await получитьВсехУчастников(), sorted=players.sort((a,b)=>(b['Баллы всего']||0)-(a['Баллы всего']||0)); const weekAgo=new Date(Date.now()-7*24*60*60*1000).toISOString().split('T')[0]; const activities=await supabaseRequest('Активность','GET',null,`?Дата>=${weekAgo}&order=Дата.desc`); const totalWeekly=activities.reduce((s,a)=>s+(a['Баллы']||0),0); let html='<div class="d-flex justify-content-between mb-3"><h5>Топ 10 по общим баллам</h5><select id="activityFilter" class="form-control-majestic w-auto"><option value="all">Всего</option><option value="week">За неделю</option></select></div><div id="rankingContainer"></div>'; c.innerHTML=html; const container=document.getElementById('rankingContainer'); const filter=document.getElementById('activityFilter'); function renderRanking(){ let data; if(filter.value==='week'){ const map=new Map(); activities.forEach(a=>{ map.set(a['Игрок'],(map.get(a['Игрок'])||0)+a['Баллы']); }); data=Array.from(map.entries()).map(([nick,points])=>({Ник:nick,'Баллы всего':points})).sort((a,b)=>b['Баллы всего']-a['Баллы всего']); } else { data=sorted; } const top=data.slice(0,10); let h='<h5 class="mb-3">Топ 10 по '+(filter.value==='week'?'активности за неделю':'общим баллам')+'</h5>'; top.forEach((p,i)=>{ h+=`<div class="history-item">${i+1}. ${p['Ник']} — ${p['Баллы всего']||0} баллов</div>`; }); const total=filter.value==='week'?totalWeekly:players.reduce((s,p)=>s+(p['Баллы всего']||0),0); h+=`<hr><p><strong>Общий баланс ${filter.value==='week'?'за неделю':'семьи'}:</strong> ${total}</p>`; container.innerHTML=h; } filter.addEventListener('change',renderRanking); renderRanking(); }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки</p>'; } }
+async function loadFamilyActivity(){
+ const c=document.getElementById('activityContent'); if(!c) return;
+ try{
+  const players=await получитьВсехУчастников(), sorted=players.sort((a,b)=>(b['Баллы всего']||0)-(a['Баллы всего']||0));
+  const weekAgo=new Date(Date.now()-7*24*60*60*1000).toISOString().split('T')[0];
+  const activities=await supabaseRequest('Активность','GET',null,`?Дата>=${weekAgo}&order=Дата.desc`);
+  const totalWeekly=activities.reduce((s,a)=>s+(a['Баллы']||0),0);
+  let html='<div class="d-flex justify-content-between mb-3"><h5>Топ 10 по общим баллам</h5><select id="activityFilter" class="form-control-majestic w-auto"><option value="all">Всего</option><option value="week">За неделю</option></select></div><div id="rankingContainer"></div>';
+  c.innerHTML=html;
+  const container=document.getElementById('rankingContainer');
+  const filter=document.getElementById('activityFilter');
+  function renderRanking(){
+    let data;
+    if(filter.value==='week'){
+        const map=new Map();
+        activities.forEach(a=>{ map.set(a['Игрок'],(map.get(a['Игрок'])||0)+a['Баллы']); });
+        data=Array.from(map.entries()).map(([nick,points])=>({Ник:nick,'Баллы всего':points})).sort((a,b)=>b['Баллы всего']-a['Баллы всего']);
+    } else {
+        data=sorted;
+    }
+    const top=data.slice(0,10);
+    let h='<h5 class="mb-3">Топ 10 по '+(filter.value==='week'?'активности за неделю':'общим баллам')+'</h5>';
+    top.forEach((p,i)=>{ h+=`<div class="history-item">${i+1}. ${p['Ник']} — ${p['Баллы всего']||0} баллов</div>`; });
+    const total=filter.value==='week'?totalWeekly:players.reduce((s,p)=>s+(p['Баллы всего']||0),0);
+    h+=`<hr><p><strong>Общий баланс ${filter.value==='week'?'за неделю':'семьи'}:</strong> ${total}</p>`;
+    container.innerHTML=h;
+  }
+  filter.addEventListener('change',renderRanking);
+  renderRanking();
+ }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки</p>'; }
+}
 particlesJS('particles-js',{particles:{number:{value:80,density:{enable:!0,value_area:800}},color:{value:'#ff1493'},shape:{type:'circle'},opacity:{value:.5,random:!1},size:{value:3,random:!0},line_linked:{enable:!0,distance:150,color:'#ff1493',opacity:.4,width:1},move:{enable:!0,speed:2,direction:'none',random:!1,straight:!1,out_mode:'out'}},interactivity:{detect_on:'canvas',events:{onhover:{enable:!0,mode:'repulse'},onclick:{enable:!0,mode:'push'},resize:!0},modes:{repulse:{distance:100,duration:.4},push:{particles_nb:4}}},retina_detect:!0});
 </script>
+
 <script>
 let chatInterval = null;
-function loadChatMessages() { if (!currentUserNick) return; supabaseRequest('Чат', 'GET', null, '?order=Дата.desc&limit=50').then(messages => { const container = document.getElementById('chatMessages'); if (!container) return; let html = ''; messages.reverse().forEach(msg => { const isOwn = msg['Игрок'] === currentUserNick; html += `<div class="chat-message ${isOwn ? 'own' : ''}"><div class="author">${escapeHtml(msg['Игрок'])}</div><div class="text">${escapeHtml(msg['Сообщение'])}</div><div class="time">${new Date(msg['Дата']).toLocaleTimeString()}</div></div>`; }); container.innerHTML = html; container.scrollTop = container.scrollHeight; }).catch(console.error); }
+function loadChatMessages() {
+    if (!currentUserNick) return;
+    supabaseRequest('Чат', 'GET', null, '?order=Дата.desc&limit=50').then(messages => {
+        const container = document.getElementById('chatMessages');
+        if (!container) return;
+        let html = '';
+        messages.reverse().forEach(msg => {
+            const isOwn = msg['Игрок'] === currentUserNick;
+            html += `<div class="chat-message ${isOwn ? 'own' : ''}"><div class="author">${escapeHtml(msg['Игрок'])}</div><div class="text">${escapeHtml(msg['Сообщение'])}</div><div class="time">${new Date(msg['Дата']).toLocaleTimeString()}</div></div>`;
+        });
+        container.innerHTML = html;
+        container.scrollTop = container.scrollHeight;
+    }).catch(console.error);
+}
 function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-async function sendChatMessage() { const input = document.getElementById('chatInput'); const text = input.value.trim(); if (!text || !currentUserNick) return; try { await supabaseRequest('Чат', 'POST', { 'Игрок': currentUserNick, 'Сообщение': text, 'Дата': new Date().toISOString() }); input.value = ''; loadChatMessages(); playSound('demote'); } catch (err) { showToast('Ошибка отправки сообщения', 'error'); } }
+async function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text || !currentUserNick) return;
+    try {
+        await supabaseRequest('Чат', 'POST', { 'Игрок': currentUserNick, 'Сообщение': text, 'Дата': new Date().toISOString() });
+        input.value = '';
+        loadChatMessages();
+        playSound('demote');
+    } catch (err) { showToast('Ошибка отправки сообщения', 'error'); }
+}
 const chatToggle = document.getElementById('chatToggle');
 const chatPanel = document.getElementById('chatPanel');
 const chatClose = document.getElementById('chatClose');
 const chatSend = document.getElementById('chatSend');
 const chatInput = document.getElementById('chatInput');
-chatToggle.addEventListener('click', () => { if (chatPanel.classList.contains('hidden')) { chatPanel.classList.remove('hidden'); loadChatMessages(); if (chatInterval) clearInterval(chatInterval); chatInterval = setInterval(loadChatMessages, 5000); } else { chatPanel.classList.add('hidden'); if (chatInterval) clearInterval(chatInterval); } });
+chatToggle.addEventListener('click', () => {
+    if (chatPanel.classList.contains('hidden')) {
+        chatPanel.classList.remove('hidden');
+        loadChatMessages();
+        if (chatInterval) clearInterval(chatInterval);
+        chatInterval = setInterval(loadChatMessages, 5000);
+    } else {
+        chatPanel.classList.add('hidden');
+        if (chatInterval) clearInterval(chatInterval);
+    }
+});
 chatClose.addEventListener('click', () => { chatPanel.classList.add('hidden'); if (chatInterval) clearInterval(chatInterval); });
 chatSend.addEventListener('click', sendChatMessage);
 chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
-document.addEventListener('click', (e) => { if (!chatPanel.classList.contains('hidden') && !chatPanel.contains(e.target) && !chatToggle.contains(e.target)) { chatPanel.classList.add('hidden'); if (chatInterval) clearInterval(chatInterval); } });
+document.addEventListener('click', (e) => {
+    if (!chatPanel.classList.contains('hidden') && !chatPanel.contains(e.target) && !chatToggle.contains(e.target)) {
+        chatPanel.classList.add('hidden');
+        if (chatInterval) clearInterval(chatInterval);
+    }
+});
 </script>
+
 <div class="modal fade" id="profileModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="profileModalLabel">Профиль игрока</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="profileModalBody"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button></div></div></div></div>
 <div class="modal fade" id="treasuryModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="treasuryModalTitle">Операция с казной</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="treasuryOperationType"><input type="number" id="treasuryAmount" class="form-control" placeholder="Сумма" min="1" step="1" required><input type="text" id="treasuryDescription" class="form-control" placeholder="Описание (необязательно)"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-majestic" id="confirmTreasuryBtn">Выполнить</button></div></div></div></div>
-<div class="modal fade" id="rpgTaskModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="rpgTaskModalTitle">Добавление задания</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="rpgTaskId"><input type="text" id="rpgTaskName" class="form-control" placeholder="Название задания" required><textarea id="rpgTaskDesc" class="form-control" placeholder="Описание (необязательно)" rows="2"></textarea><input type="number" id="rpgTaskReward" class="form-control" placeholder="Награда (РПГ)" min="1" required><div class="form-check mt-2"><input class="form-check-input" type="checkbox" id="rpgTaskActive" checked><label class="form-check-label" for="rpgTaskActive">Активно</label></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-majestic" id="saveRPGTaskBtn">Сохранить</button></div></div></div></div>
+<div class="modal fade" id="rpgTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rpgTaskModalTitle">Добавление задания</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="rpgTaskId">
+                <input type="text" id="rpgTaskName" class="form-control" placeholder="Название задания" required>
+                <textarea id="rpgTaskDesc" class="form-control" placeholder="Описание (необязательно)" rows="2"></textarea>
+                <input type="number" id="rpgTaskReward" class="form-control" placeholder="Награда (РПГ)" min="1" required>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="rpgTaskActive" checked>
+                    <label class="form-check-label" for="rpgTaskActive">Активно</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-majestic" id="saveRPGTaskBtn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body></html>
