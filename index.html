@@ -428,7 +428,6 @@ registerBtn.addEventListener('click',async()=>{
     await supabaseRequest('Участники','POST',{
         Ник:nick,
         Пароль:pass,
-        Контакт:contact,
         Ранг:'Новичок',
         Предупреждения:0,
         'Баллы всего':0,
@@ -474,7 +473,7 @@ async function loadRegistrationRequests(){
  if(!users.length){ container.innerHTML='<p class="text-muted">Нет заявок на регистрацию</p>'; return; }
  let html='<h5>Заявки на регистрацию</h5>';
  for(let u of users){
-    html+=`<div class="application-item"><div><strong>${u['Ник']}</strong> — ${u['Контакт']||''}</div><div><button class="btn btn-sm btn-success me-2" onclick="approveRegistration('${u['Ник']}')">Одобрить</button><button class="btn btn-sm btn-danger" onclick="rejectRegistration('${u['Ник']}')">Отклонить</button></div></div>`;
+    html+=`<div class="application-item"><div><strong>${u['Ник']}</strong></div><div><button class="btn btn-sm btn-success me-2" onclick="approveRegistration('${u['Ник']}')">Одобрить</button><button class="btn btn-sm btn-danger" onclick="rejectRegistration('${u['Ник']}')">Отклонить</button></div></div>`;
  }
  container.innerHTML=html;
 }
