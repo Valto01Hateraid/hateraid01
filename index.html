@@ -420,8 +420,8 @@ document.getElementById('applyBtn').addEventListener('click',async()=>{
  }catch(err){ showToast('Ошибка: '+err.message,'error'); }
 });
 registerBtn.addEventListener('click',async()=>{
- const nick=regNick.value.trim(), pass=regPassword.value.trim(), contact=regContact.value.trim();
- if(!nick||!pass||!contact){ registerError.textContent='Заполните все поля'; return; }
+ const nick=regNick.value.trim(), pass=regPassword.value.trim();
+ if(!nick||!pass){ registerError.textContent='Заполните ник и пароль'; return; }
  const existing=await supabaseRequest('Участники','GET',null,`?Ник=eq.${encodeURIComponent(nick)}`);
  if(existing.length){ registerError.textContent='Ник уже занят'; return; }
  try{
