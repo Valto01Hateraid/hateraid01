@@ -784,7 +784,7 @@ if (saveRPGTaskBtn) {
     });
 } else {
     console.error('Элемент saveRPGTaskBtn не найден');
-});
+}
 window.approveReport=async function(id){
  try{
   const r=(await supabaseRequest('Отчеты_РПГ','GET',null,`?id=eq.${id}`))[0];
