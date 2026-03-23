@@ -162,7 +162,7 @@ select.form-control,select.form-control-majestic,.modal select,.admin-select{-we
 <div id="loginPage" class="login-screen"><div class="login-box"><div class="text-center mb-4"><span class="logo">Hateraid</span></div><p class="text-center text-secondary mb-4">Войдите в систему семьи</p>
 <div class="mb-3"><button id="showLoginBtn" class="btn btn-majestic w-100">Вход</button><button id="showRegisterBtn" class="btn btn-outline-majestic w-100 mt-2">Регистрация</button></div>
 <div id="loginForm" class="mt-3"><input type="text" id="loginNick" class="form-control-majestic" placeholder="Ваш ник"><input type="password" id="loginPassword" class="form-control-majestic" placeholder="Пароль"><button id="loginBtn" class="btn btn-majestic w-100 mb-3">Войти</button><div id="loginError" class="text-danger text-center mt-3"></div><div class="text-center mt-3"><a href="#" id="openApplyModal" style="color:#ff69b4; text-decoration:none;">Вступить в семью (заявка)</a></div></div>
-<div id="registerForm" class="mt-3 hidden"><input type="text" id="regNick" class="form-control-majestic" placeholder="Желаемый ник"><input type="password" id="regPassword" class="form-control-majestic" placeholder="Пароль"><input type="text" id="regContact" class="form-control-majestic" placeholder="Discord / Telegram"><button id="registerBtn" class="btn btn-majestic w-100 mb-3">Зарегистрироваться</button><div id="registerError" class="text-danger text-center mt-3"></div></div></div></div>
+<div id="registerForm" class="mt-3 hidden"><input type="text" id="regNick" class="form-control-majestic" placeholder="Желаемый ник"><input type="password" id="regPassword" class="form-control-majestic" placeholder="Пароль"><button id="registerBtn" class="btn btn-majestic w-100 mb-3">Зарегистрироваться</button><div id="registerError" class="text-danger text-center mt-3"></div></div></div></div>
 <div id="mainInterface" class="container py-4 hidden"><div class="d-flex flex-wrap justify-content-between align-items-center mb-4"><span class="logo">Hateraid</span><div class="d-flex align-items-center"><span id="welcomeUser" class="me-3 fs-5"></span><button id="logoutBtn" class="btn btn-outline-majestic"><i class="fas fa-sign-out-alt"></i> Выйти</button></div></div>
 <ul class="nav nav-tabs-custom" id="mainTabs" role="tablist"><li class="nav-item"><button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button"><i class="fas fa-user me-2"></i>Мой профиль</button></li><li class="nav-item"><button class="nav-link" id="members-tab" data-bs-toggle="tab" data-bs-target="#members" type="button"><i class="fas fa-users me-2"></i>Участники</button></li><li class="nav-item"><button class="nav-link" id="achievements-tab" data-bs-toggle="tab" data-bs-target="#achievements" type="button"><i class="fas fa-trophy me-2"></i>Достижения</button></li><li class="nav-item"><button class="nav-link" id="rpg-tab" data-bs-toggle="tab" data-bs-target="#rpg" type="button"><i class="fas fa-gamepad me-2"></i>РПГ</button></li><li class="nav-item"><button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events" type="button"><i class="fas fa-calendar-alt me-2"></i>События</button></li><li class="nav-item"><button class="nav-link" id="news-tab" data-bs-toggle="tab" data-bs-target="#news" type="button"><i class="fas fa-newspaper me-2"></i>Новости</button></li><li class="nav-item"><button class="nav-link" id="treasury-tab" data-bs-toggle="tab" data-bs-target="#treasury" type="button"><i class="fas fa-coins me-2"></i>Казна</button></li><li class="nav-item"><button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button"><i class="fas fa-chart-line me-2"></i>Актив семьи</button></li><li class="nav-item"><button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button"><i class="fas fa-cog me-2"></i>Настройки</button></li><li class="nav-item"><button class="nav-link" id="referral-tab" data-bs-toggle="tab" data-bs-target="#referral" type="button"><i class="fas fa-link me-2"></i>Рефералы</button></li></ul>
 <div class="tab-content mt-3"><div class="tab-pane fade show active" id="profile"><div class="glass-panel p-4"><div id="myProfileContent"></div></div></div><div class="tab-pane fade" id="members"><div class="glass-panel p-4"><div id="membersContent"></div></div></div><div class="tab-pane fade" id="achievements"><div class="glass-panel p-4"><div id="achievementsContent"></div></div></div><div class="tab-pane fade" id="rpg"><div class="glass-panel p-4"><div id="rpgContent"></div></div></div><div class="tab-pane fade" id="events"><div class="glass-panel p-4"><div id="eventsContent"></div></div></div><div class="tab-pane fade" id="news"><div class="glass-panel p-4"><div id="newsList"></div><div id="addNewsForm" class="mt-4 hidden"><h5 class="mb-3">Добавить новость</h5><input type="text" id="newsTitle" class="form-control-majestic mb-2" placeholder="Заголовок"><textarea id="newsText" class="form-control-majestic mb-2" rows="3" placeholder="Текст новости"></textarea><button id="addNewsBtn" class="btn btn-majestic">Опубликовать</button></div></div></div><div class="tab-pane fade" id="treasury"><div class="glass-panel p-4"><div id="treasuryContent"></div></div></div><div class="tab-pane fade" id="activity"><div class="glass-panel p-4"><div id="activityContent"></div></div></div><div class="tab-pane fade" id="settings"><div class="glass-panel p-4"><div id="settingsContent"></div></div></div><div class="tab-pane fade" id="referral"><div class="glass-panel p-4"><div id="referralContent"></div></div></div></div><div class="footer-text">© Семья Hateraid | Majestic RP</div></div>
@@ -425,18 +425,18 @@ registerBtn.addEventListener('click',async()=>{
  const existing=await supabaseRequest('Участники','GET',null,`?Ник=eq.${encodeURIComponent(nick)}`);
  if(existing.length){ registerError.textContent='Ник уже занят'; return; }
  try{
-    await supabaseRequest('Участники','POST',{
-        Ник:nick,
-        Пароль:pass,
-        Ранг:'Новичок',
-        Предупреждения:0,
-        'Баллы всего':0,
-        'Баллы сегодня':0,
-        'Дата вступления':new Date().toISOString().split('T')[0],
-        Права:'участник',
-        Статус:'ожидание',
-        Аватар:null
-    });
+await supabaseRequest('Участники','POST',{
+    Ник:nick,
+    Пароль:pass,
+    Ранг:'Новичок',
+    Предупреждения:0,
+    'Баллы всего':0,
+    'Баллы сегодня':0,
+    'Дата вступления':new Date().toISOString().split('T')[0],
+    Права:'участник',
+    Статус:'ожидание',
+    Аватар:null
+});
     registerError.textContent='Заявка отправлена. После одобрения администратором вы сможете войти.';
     regNick.value=''; regPassword.value=''; regContact.value='';
  }catch(err){ registerError.textContent='Ошибка: '+err.message; }
