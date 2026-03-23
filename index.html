@@ -933,5 +933,28 @@ document.addEventListener('click', (e) => {
 
 <div class="modal fade" id="profileModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="profileModalLabel">Профиль игрока</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="profileModalBody"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button></div></div></div></div>
 <div class="modal fade" id="treasuryModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="treasuryModalTitle">Операция с казной</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="treasuryOperationType"><input type="number" id="treasuryAmount" class="form-control" placeholder="Сумма" min="1" step="1" required><input type="text" id="treasuryDescription" class="form-control" placeholder="Описание (необязательно)"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-majestic" id="confirmTreasuryBtn">Выполнить</button></div></div></div></div>
-<div class="modal fade" id="rpgTaskModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="rpgTaskModalTitle">Добавление задания</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="rpgTaskId"><input type="text" id="rpgTaskName" class="form-control" placeholder="Название задания" required><textarea id="rpgTaskDesc" class="form-control" placeholder="Описание (необязательно)" rows="2"></textarea><input type="number" id="rpgTaskReward" class="form-control" placeholder="Награда (РПГ)" min="1" required><div class="form-check mt-2"><input class="form-check-input" type="checkbox" id="rpgTaskActive" checked><label class="form-check-label" for="rpgTaskActive">Активно</label></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-majestic" id="saveRPGTaskBtn">Сохранить</button></div></div></div></div>
+<div class="modal fade" id="rpgTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rpgTaskModalTitle">Добавление задания</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="rpgTaskId">
+                <input type="text" id="rpgTaskName" class="form-control" placeholder="Название задания" required>
+                <textarea id="rpgTaskDesc" class="form-control" placeholder="Описание (необязательно)" rows="2"></textarea>
+                <input type="number" id="rpgTaskReward" class="form-control" placeholder="Награда (РПГ)" min="1" required>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="rpgTaskActive" checked>
+                    <label class="form-check-label" for="rpgTaskActive">Активно</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-majestic" id="saveRPGTaskBtn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body></html>
