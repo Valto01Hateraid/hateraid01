@@ -762,7 +762,7 @@ window.toggleRPGTask = async function(id) {
         showToast('Ошибка: ' + e.message, 'error');
     }
 };
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     const saveBtn = document.getElementById('saveRPGTaskBtn');
     if (saveBtn) {
         saveBtn.addEventListener('click', async () => {
