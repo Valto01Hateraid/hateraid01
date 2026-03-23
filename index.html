@@ -181,6 +181,7 @@ function showToast(m,t='info'){
  else if(t==='error'){ toastIcon.className='fas fa-times-circle'; toast.style.background='#dc3545'; }
  else{ toastIcon.className='fas fa-info-circle'; toast.style.background='#ff1493'; }
  setTimeout(()=>toast.classList.add('hidden'),3000);
+if (chatToggle) chatToggle.style.display = 'flex';
 }
 function playSound(t){ const s=document.getElementById(t==='promote'?'soundPromote':'soundDemote'); if(s) s.play().catch(()=>{}); }
 async function sendTelegramNotification(telegramId, message) { if(!telegramId) return; const TELEPUSH_TOKEN='3a8386'; try{ await fetch(`https://telepush.dev/api/inlets/${TELEPUSH_TOKEN}/messages`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({recipient:telegramId,text:message})}); }catch(e){ console.error('Ошибка отправки в Telegram:',e); } }
@@ -273,31 +274,89 @@ async function loadRPGReportsList(){ const d=document.getElementById('rpgReports
 window.showAddRPGTaskModal=function(){ document.getElementById('rpgTaskId').value=''; document.getElementById('rpgTaskName').value=''; document.getElementById('rpgTaskDesc').value=''; document.getElementById('rpgTaskReward').value=''; document.getElementById('rpgTaskActive').checked=true; document.getElementById('rpgTaskModalTitle').textContent='Добавление задания'; new bootstrap.Modal(document.getElementById('rpgTaskModal')).show(); };
 window.editRPGTask=async function(id){ const tasks=await supabaseRequest('РПГ_активности','GET',null,`?id=eq.${id}`); if(tasks.length===0) return; const t=tasks[0]; document.getElementById('rpgTaskId').value=t.id; document.getElementById('rpgTaskName').value=t.название; document.getElementById('rpgTaskDesc').value=t.описание||''; document.getElementById('rpgTaskReward').value=t.награда_рпг; document.getElementById('rpgTaskActive').checked=t.активно; document.getElementById('rpgTaskModalTitle').textContent='Редактирование задания'; new bootstrap.Modal(document.getElementById('rpgTaskModal')).show(); };
 window.toggleRPGTask=async function(id){ const tasks=await supabaseRequest('РПГ_активности','GET',null,`?id=eq.${id}`); if(tasks.length===0) return; const newActive=!tasks[0].активно; await supabaseRequest('РПГ_активности','PATCH',{активно:newActive},`?id=eq.${id}`); showToast(`Задание ${newActive?'активировано':'деактивировано'}`,'info'); loadRPGAdminPanel(); };
+// ===== РПГ МОДАЛКА (ИСПРАВЛЕНО) =====
+
+// открытие модалки (исправлено)
+window.showAddRPGTaskModal = function () {
+    document.getElementById('rpgTaskId').value = '';
+    document.getElementById('rpgTaskName').value = '';
+    document.getElementById('rpgTaskDesc').value = '';
+    document.getElementById('rpgTaskReward').value = '';
+    document.getElementById('rpgTaskActive').checked = true;
+
+    document.getElementById('rpgTaskModalTitle').textContent = 'Добавление задания';
+
+    const modalEl = document.getElementById('rpgTaskModal');
+    let modal = bootstrap.Modal.getInstance(modalEl);
+    if (!modal) modal = new bootstrap.Modal(modalEl);
+
+    modal.show();
+};
+
+// защита от двойного клика
+let isSavingRPG = false;
+
+// сохранение задания (ИСПРАВЛЕНО)
 const saveRPGTaskBtn = document.getElementById('saveRPGTaskBtn');
+
 if (saveRPGTaskBtn) {
     saveRPGTaskBtn.addEventListener('click', async () => {
+        if (isSavingRPG) return;
+        isSavingRPG = true;
+
         const id = document.getElementById('rpgTaskId').value;
         const name = document.getElementById('rpgTaskName').value.trim();
         const desc = document.getElementById('rpgTaskDesc').value.trim();
         const reward = parseInt(document.getElementById('rpgTaskReward').value);
         const active = document.getElementById('rpgTaskActive').checked;
-        if (!name) { showToast('Введите название задания', 'warning'); return; }
-        if (isNaN(reward) || reward <= 0) { showToast('Введите положительную награду (РПГ)', 'warning'); return; }
+
+        if (!name) {
+            showToast('Введите название задания', 'warning');
+            isSavingRPG = false;
+            return;
+        }
+
+        if (isNaN(reward) || reward <= 0) {
+            showToast('Введите положительную награду (РПГ)', 'warning');
+            isSavingRPG = false;
+            return;
+        }
+
         try {
             if (id) {
-                await supabaseRequest('РПГ_активности', 'PATCH', { название: name, описание: desc, награда_рпг: reward, активно: active }, `?id=eq.${id}`);
+                await supabaseRequest('РПГ_активности', 'PATCH', {
+                    название: name,
+                    описание: desc,
+                    награда_рпг: reward,
+                    активно: active
+                }, `?id=eq.${id}`);
                 showToast('Задание обновлено', 'success');
             } else {
-                await supabaseRequest('РПГ_активности', 'POST', { название: name, описание: desc, награда_рпг: reward, активно: active });
+                await supabaseRequest('РПГ_активности', 'POST', {
+                    название: name,
+                    описание: desc,
+                    награда_рпг: reward,
+                    активно: active
+                });
                 showToast('Задание добавлено', 'success');
             }
-            bootstrap.Modal.getInstance(document.getElementById('rpgTaskModal')).hide();
+
+            // 🔥 безопасное закрытие модалки
+            const modalEl = document.getElementById('rpgTaskModal');
+            let modal = bootstrap.Modal.getInstance(modalEl);
+            if (!modal) modal = new bootstrap.Modal(modalEl);
+
+            modal.hide();
+
             loadRPGAdminPanel();
+
         } catch (err) {
             showToast('Ошибка: ' + err.message, 'error');
+        } finally {
+            isSavingRPG = false;
         }
     });
-} else { console.error('Элемент saveRPGTaskBtn не найден'); }
+}
 window.approveReport=async function(id){ try{ const r=(await supabaseRequest('Отчеты_РПГ','GET',null,`?id=eq.${id}`))[0]; if(!r) throw new Error('Отчёт не найден'); await supabaseRequest('Отчеты_РПГ','PATCH',{статус:'одобрено',дата_обработки:new Date().toISOString(),модератор:currentUserNick},`?id=eq.${id}`); const z=(await supabaseRequest('РПГ_активности','GET',null,`?id=eq.${r.id_задания}`))[0]; if(z){ await supabaseRequest('Участники','PATCH',{рпг_баллы:supabase.raw(`рпг_баллы + ${z.награда_рпг}`)},`?Ник=eq.${encodeURIComponent(r.игрок)}`); await supabaseRequest('Логи_РПГ','POST',{игрок:r.игрок,активность:z.название,награда_рпг:z.награда_рпг,кем_выдано:currentUserNick}); } showToast('Отчёт одобрен','success'); loadRPGAdminPanel(); loadRPGBoard(); }catch(e){ showToast('Ошибка одобрения','error'); } };
 window.rejectReport=async function(id){ try{ await supabaseRequest('Отчеты_РПГ','PATCH',{статус:'отклонено',дата_обработки:new Date().toISOString(),модератор:currentUserNick},`?id=eq.${id}`); showToast('Отчёт отклонён','info'); loadRPGAdminPanel(); }catch(e){ showToast('Ошибка отклонения','error'); } };
 async function loadOwnerPanel(){ const c=document.getElementById('admin-owner'); if(!c) return; c.innerHTML='<h5>Управление админами</h5><input type="text" id="targetAdminNick" class="form-control-majestic mb-2" placeholder="Ник игрока"><div class="d-flex gap-2 mb-3"><button class="btn btn-majestic" onclick="makeAdmin()">Сделать админом</button><button class="btn btn-outline-majestic" onclick="removeAdmin()">Убрать админа</button></div><h5 class="mt-4">Установить пароль админу</h5><input type="password" id="newAdminPass" class="form-control-majestic mb-2" placeholder="Новый пароль"><button class="btn btn-majestic" onclick="setAdminPassword()">Установить</button><div id="ownerMessage" class="mt-3"></div>'; }
@@ -316,7 +375,10 @@ document.addEventListener('DOMContentLoaded',function(){
    let nb; if(t==='пополнение'){ if((currentUser['вирты']||0)<a) return showToast('У вас недостаточно виртов','warning'); await supabaseRequest('Участники','PATCH',{вирты:(currentUser['вирты']||0)-a},`?Ник=eq.${encodeURIComponent(currentUserNick)}`); nb=cb+a; }else{ if(cb<a) return showToast('Недостаточно средств в казне','warning'); await supabaseRequest('Участники','PATCH',{вирты:(currentUser['вирты']||0)+a},`?Ник=eq.${encodeURIComponent(currentUserNick)}`); nb=cb-a; }
    await supabaseRequest('Настройки','PATCH',{Значение:nb.toString()},'?Параметр=eq.баланс_казны'); await supabaseRequest('Казна','POST',{Тип:t,Сумма:a,Описание:d||(t==='пополнение'?'Пополнение':'Списание'),Игрок:currentUserNick,Дата:new Date().toISOString()}); showToast(t==='пополнение'?`Казна пополнена на ${a} виртов`:`Списано ${a} виртов из казны`,t==='пополнение'?'success':'info'); bootstrap.Modal.getInstance(document.getElementById('treasuryModal')).hide(); loadTreasury(); currentUser=await получитьДанныеИгрока(currentUserNick);
    if (document.getElementById('profile-tab').classList.contains('active')) {renderProfile(currentUser, 'myProfileContent');}
+  const chatToggle = document.getElementById('chatToggle');
+if (chatToggle) chatToggle.style.display = 'none';
   }catch(err){ showToast('Ошибка операции: '+err.message,'error'); }
+ if (chatToggle) chatToggle.style.display = 'none';
  });
  document.getElementById('confirmAddPoints')?.addEventListener('click', async function() {const nick = document.getElementById('pointsNick').value;const activity = document.getElementById('pointsActivity').value;const amount = parseFloat(document.getElementById('pointsAmount').value);if (!nick || isNaN(amount) || amount <= 0) {showToast('Заполните все поля', 'warning');return;}try {await adminAddPoints(nick, activity, amount);bootstrap.Modal.getInstance(document.getElementById('pointsModal')).hide();} catch (error) {showToast('Ошибка: ' + error.message, 'error');}});
  document.getElementById('confirmRemovePoints')?.addEventListener('click',async function(){ const n=document.getElementById('removePointsNick').value, a=parseFloat(document.getElementById('removePointsAmount').value); if(!n||isNaN(a)||a<=0) return showToast('Введите корректную сумму','warning'); try{ await adminRemovePoints(n,a); bootstrap.Modal.getInstance(document.getElementById('removePointsModal')).hide(); }catch(err){ showToast('Ошибка: '+err.message,'error'); } });
