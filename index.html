@@ -996,8 +996,8 @@ async function loadFamilyActivity(){
  const c=document.getElementById('activityContent'); if(!c) return;
  try{
   const players=await получитьВсехУчастников(), sorted=players.sort((a,b)=>(b['Баллы всего']||0)-(a['Баллы всего']||0));
-  const weekAgo=new Date(Date.now()-7*24*60*60*1000).toISOString().split('T')[0];
-  const activities=await supabaseRequest('Активность','GET',null,`?Дата>=${weekAgo}&order=Дата.desc`);
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+const activities = await supabaseRequest('Активность', 'GET', null, `?Дата=gte.${weekAgo}&order=Дата.desc`);
   const totalWeekly=activities.reduce((s,a)=>s+(a['Баллы']||0),0);
   let html='<div class="d-flex justify-content-between mb-3"><h5>Топ 10 по общим баллам</h5><select id="activityFilter" class="form-control-majestic w-auto"><option value="all">Всего</option><option value="week">За неделю</option></select></div><div id="rankingContainer"></div>';
   c.innerHTML=html;
