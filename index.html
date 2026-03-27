@@ -572,19 +572,106 @@ async function loadAchievements(userNick){
   btns.forEach(b=>{ b.addEventListener('click',()=>{ btns.forEach(bb=>bb.classList.remove('active')); b.classList.add('active'); renderAchievements(b.dataset.filter); }); }); renderAchievements('all');
  }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки достижений</p>'; }
 }
-async function loadRPGBoard(){
- const c=document.getElementById('rpgContent'); if(!c) return;
- try{
-  const user=await получитьДанныеИгрока(currentUserNick); if(!user){ c.innerHTML='<p class="text-danger">Не удалось загрузить данные игрока</p>'; return; }
-  const задания=await получитьВсеРПГЗадания(), отчеты=await получитьОтчетыИгрока(currentUserNick);
-  let html=`<div class="d-flex justify-content-between align-items-center mb-4"><h3>РПГ-система</h3><div><button class="btn btn-majestic me-2" onclick="получитьБонус('${currentUserNick}')">🎁 Ежедневный бонус</button><button class="btn btn-outline-majestic me-2" onclick="обменятьРПГнаБаллы('${currentUserNick}')">🔄 Обменять 1000 РПГ → 1 балл</button><button class="btn btn-outline-majestic" onclick="обменятьВиртыНаБаллы('${currentUserNick}')">🔄 Обменять 20000 виртов → 1 балл</button></div></div><div class="row mb-4"><div class="col-md-6"><div class="glass-panel p-3 text-center"><div class="stat-number">${user['рпг_баллы']||0}</div><div>РПГ-баллы</div></div></div><div class="col-md-6"><div class="glass-panel p-3 text-center"><div class="stat-number">${user['вирты']||0}</div><div>Вирты</div></div></div></div><h5>Активные задания</h5>`;
-  if(!задания||!задания.length) html+='<p class="text-muted">Нет доступных заданий</p>';
-  else for(let z of задания){ const уже=отчеты.find(o=>o.id_задания===z.id&&o.статус==='на проверке'); html+=`<div class="event-card"><div class="d-flex justify-content-between"><div><h5>${z.название}</h5><p>${z.описание||''}</p><p><strong>Награда:</strong> ${z.награда_рпг} РПГ</p></div><div>${уже?'<span class="badge-majestic">Отчёт на проверке</span>':'<button class="btn btn-majestic" onclick="openReportModal('+z.id+',\''+z.название+'\')">Отправить отчёт</button>'}</div></div></div>`; }
-  html+='<h5 class="mt-4">Мои отчёты</h5>';
-  if(!отчеты||!отчеты.length) html+='<p class="text-muted">Вы ещё не отправляли отчёты</p>';
-  else отчеты.slice(0,5).forEach(o=>{ html+=`<div class="history-item"><small>${new Date(o.дата_отправки).toLocaleString()}</small><div><strong>Задание:</strong> ${o.id_задания} (статус: ${o.статус})</div><div>${o.текст_отчета.substring(0,50)}${o.текст_отчета.length>50?'...':''}</div></div>`; });
-  c.innerHTML=html;
- }catch(e){ console.error('loadRPGBoard error',e); c.innerHTML='<p class="text-danger">Ошибка загрузки РПГ-данных</p>'; }
+async function loadRPGBoard() {
+    const c = document.getElementById('rpgContent');
+    if (!c) return;
+    try {
+        const user = await получитьДанныеИгрока(currentUserNick);
+        if (!user) { c.innerHTML = '<p class="text-danger">Не удалось загрузить данные игрока</p>'; return; }
+
+        const задания = await получитьВсеРПГЗадания();
+        const категории = ['ежедневные', 'еженедельные', 'разовые', 'специальные'];
+        const grouped = {};
+        категории.forEach(cat => grouped[cat] = задания.filter(z => z.категория === cat));
+
+        let html = `
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>РПГ-система</h3>
+                <div>
+                    <button class="btn btn-majestic me-2" onclick="получитьБонус('${currentUserNick}')">🎁 Ежедневный бонус</button>
+                    <button class="btn btn-outline-majestic me-2" onclick="обменятьРПГнаБаллы('${currentUserNick}')">🔄 Обменять 1000 РПГ → 1 балл</button>
+                    <button class="btn btn-outline-majestic" onclick="обменятьВиртыНаБаллы('${currentUserNick}')">🔄 Обменять 20000 виртов → 1 балл</button>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-md-6"><div class="glass-panel p-3 text-center"><div class="stat-number">${user['рпг_баллы'] || 0}</div><div>РПГ-баллы</div></div></div>
+                <div class="col-md-6"><div class="glass-panel p-3 text-center"><div class="stat-number">${user['вирты'] || 0}</div><div>Вирты</div></div></div>
+            </div>
+            <div class="achievement-filter" id="rpgCategoryFilter">
+                ${категории.map(cat => `<button class="filter-btn" data-category="${cat}">${cat === 'ежедневные' ? 'Ежедневные' : cat === 'еженедельные' ? 'Еженедельные' : cat === 'разовые' ? 'Разовые' : 'Специальные'}</button>`).join('')}
+            </div>
+            <div id="rpgTasksContainer"></div>
+            <h5 class="mt-4">Мои отчёты</h5>
+            <div id="myReportsContainer"></div>
+        `;
+        c.innerHTML = html;
+
+        const отчеты = await получитьОтчетыИгрока(currentUserNick);
+        const reportsContainer = document.getElementById('myReportsContainer');
+        if (!отчеты || !отчеты.length) {
+            reportsContainer.innerHTML = '<p class="text-muted">Вы ещё не отправляли отчёты</p>';
+        } else {
+            let reportsHtml = '';
+            отчеты.slice(0, 5).forEach(o => {
+                reportsHtml += `<div class="history-item">
+                    <small>${new Date(o.дата_отправки).toLocaleString()}</small>
+                    <div><strong>Задание:</strong> ${o.id_задания} (статус: ${o.статус})</div>
+                    <div>${o.текст_отчета.substring(0, 50)}${o.текст_отчета.length > 50 ? '...' : ''}</div>
+                </div>`;
+            });
+            reportsContainer.innerHTML = reportsHtml;
+        }
+
+        const container = document.getElementById('rpgTasksContainer');
+        function renderCategory(cat) {
+            const tasks = grouped[cat] || [];
+            let tasksHtml = '<h5 class="mt-3">' + (cat === 'ежедневные' ? 'Ежедневные' : cat === 'еженедельные' ? 'Еженедельные' : cat === 'разовые' ? 'Разовые' : 'Специальные') + '</h5>';
+            if (!tasks.length) {
+                tasksHtml += '<p class="text-muted">Нет заданий в этой категории</p>';
+            } else {
+                tasksHtml += '<div class="row">';
+                for (let z of tasks) {
+                    const уже = отчеты.find(o => o.id_задания === z.id && o.статус === 'на проверке');
+                    tasksHtml += `
+                        <div class="col-md-6">
+                            <div class="event-card">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5>${z.название}</h5>
+                                        <p>${z.описание || ''}</p>
+                                        <p><strong>Награда:</strong> ${z.награда_рпг} РПГ</p>
+                                    </div>
+                                    <div>
+                                        ${уже ? '<span class="badge-majestic">Отчёт на проверке</span>' : `<button class="btn btn-majestic" onclick="openReportModal(${z.id}, '${z.название}')">Отправить отчёт</button>`}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                tasksHtml += '</div>';
+            }
+            container.innerHTML = tasksHtml;
+        }
+
+        const filterBtns = document.querySelectorAll('#rpgCategoryFilter .filter-btn');
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderCategory(btn.dataset.category);
+            });
+        });
+        if (filterBtns.length) {
+            filterBtns[0].classList.add('active');
+            renderCategory('ежедневные');
+        } else {
+            renderCategory('ежедневные');
+        }
+    } catch (e) {
+        console.error('loadRPGBoard error', e);
+        c.innerHTML = '<p class="text-danger">Ошибка загрузки РПГ-данных</p>';
+    }
 }
 window.openReportModal=function(id,name){ document.getElementById('reportTaskId').value=id; document.getElementById('reportTaskName').value=name; document.getElementById('reportText').value=''; document.getElementById('reportLinks').value=''; new bootstrap.Modal(document.getElementById('rpgReportModal')).show(); };
 document.getElementById('submitReportBtn').addEventListener('click',async()=>{
@@ -718,8 +805,37 @@ window.adminDemote=async function(n){
  if(!isAdmin) return; playSound('demote');
  try{ const u=await получитьДанныеИгрока(n); if(!u) throw new Error('Игрок не найден'); const cur=u['Ранг']; const ranks=await получитьВсеРанги(); const curR=ranks.find(r=>r['Название']===cur); if(!curR) throw new Error('Ранг не найден'); const prev=ranks.find(r=>r['Порядок']===curR['Порядок']-1); if(!prev) throw new Error('Нет более низкого ранга'); await supabaseRequest('Участники','PATCH',{Ранг:prev['Название']},`?Ник=eq.${encodeURIComponent(n)}`); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'понизил',Цель:n,Подробности:`${cur} → ${prev['Название']}`}); showToast(`Понижен до ${prev['Название']}`,'info'); playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ showToast(err.message,'error'); }
 };
-async function loadRPGAdminPanel(){
- const c=document.getElementById('admin-rpg'); if(!c) return; const z=await получитьВсеРПГЗадания(); c.innerHTML=`<h5>Управление РПГ-заданиями</h5><button class="btn btn-majestic mb-3" onclick="showAddRPGTaskModal()">+ Добавить задание</button><table class="ranks-table"><thead><th>ID</th><th>Название</th><th>Описание</th><th>Награда РПГ</th><th>Активно</th><th>Действия</th></thead><tbody>${z.map(x=>`<tr><td>${x.id}</td><td>${x.название}</td><td>${x.описание||''}</td><td>${x.награда_рпг}</td><td>${x.активно?'Да':'Нет'}</td><td><button class="btn btn-sm btn-outline-majestic" onclick="editRPGTask(${x.id})">✎</button><button class="btn btn-sm btn-outline-majestic" onclick="toggleRPGTask(${x.id})">🔁</button></td></tr>`).join('')}</tbody></table><hr><h5>Отчёты на проверке</h5><div id="rpgReportsList"></div>`; loadRPGReportsList();
+async function loadRPGAdminPanel() {
+    const c = document.getElementById('admin-rpg');
+    if (!c) return;
+    const z = await получитьВсеРПГЗадания();
+    c.innerHTML = `
+        <h5>Управление РПГ-заданиями</h5>
+        <button class="btn btn-majestic mb-3" onclick="showAddRPGTaskModal()">+ Добавить задание</button>
+        <table class="ranks-table">
+            <thead>
+                <th>ID</th><th>Название</th><th>Категория</th><th>Награда РПГ</th><th>Активно</th><th>Действия</th>
+            </thead>
+            <tbody>
+                ${z.map(x => `
+                    <tr>
+                        <td>${x.id}</td>
+                        <td>${x.название}</td>
+                        <td>${x.категория || 'ежедневные'}</td>
+                        <td>${x.награда_рпг}</td>
+                        <td>${x.активно ? 'Да' : 'Нет'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-majestic" onclick="editRPGTask(${x.id})">✎</button>
+                            <button class="btn btn-sm btn-outline-majestic" onclick="toggleRPGTask(${x.id})">🔁</button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        <hr><h5>Отчёты на проверке</h5>
+        <div id="rpgReportsList"></div>
+    `;
+    loadRPGReportsList();
 }
 async function loadRPGReportsList(){
  const d=document.getElementById('rpgReportsList'); if(!d) return; const o=await получитьОтчетыНаПроверке(); if(!o.length){ d.innerHTML='<p class="text-muted">Нет новых отчётов</p>'; return; } let h=''; o.forEach(x=>{ h+=`<div class="application-item"><div class="d-flex justify-content-between"><div><strong>${x.игрок}</strong> (задание #${x.id_задания})</div><small>${new Date(x.дата_отправки).toLocaleString()}</small></div><div class="mb-2">${x.текст_отчета}</div><div>${x.ссылки||''}</div><div class="mt-2"><button class="btn btn-sm btn-success" onclick="approveReport(${x.id})">Одобрить</button><button class="btn btn-sm btn-danger" onclick="rejectReport(${x.id})">Отклонить</button></div></div>`; }); d.innerHTML=h;
@@ -730,6 +846,7 @@ window.showAddRPGTaskModal = function() {
     document.getElementById('rpgTaskDesc').value = '';
     document.getElementById('rpgTaskReward').value = '';
     document.getElementById('rpgTaskActive').checked = true;
+    document.getElementById('rpgTaskCategory').value = 'ежедневные'; // добавить
     document.getElementById('rpgTaskModalTitle').textContent = 'Добавление задания';
     new bootstrap.Modal(document.getElementById('rpgTaskModal')).show();
 };
@@ -743,6 +860,7 @@ window.editRPGTask = async function(id) {
         document.getElementById('rpgTaskDesc').value = t.описание || '';
         document.getElementById('rpgTaskReward').value = t.награда_рпг;
         document.getElementById('rpgTaskActive').checked = t.активно;
+        document.getElementById('rpgTaskCategory').value = t.категория || 'ежедневные'; // добавить
         document.getElementById('rpgTaskModalTitle').textContent = 'Редактирование задания';
         new bootstrap.Modal(document.getElementById('rpgTaskModal')).show();
     } catch (e) {
@@ -762,30 +880,45 @@ window.toggleRPGTask = async function(id) {
     }
 };
 document.addEventListener('DOMContentLoaded', async function() {
-    const saveBtn = document.getElementById('saveRPGTaskBtn');
-    if (saveBtn) {
-        saveBtn.addEventListener('click', async () => {
-            const id = document.getElementById('rpgTaskId').value;
-            const name = document.getElementById('rpgTaskName').value.trim();
-            const desc = document.getElementById('rpgTaskDesc').value.trim();
-            const reward = parseInt(document.getElementById('rpgTaskReward').value);
-            const active = document.getElementById('rpgTaskActive').checked;
-            if (!name) { showToast('Введите название задания', 'warning'); return; }
-            if (isNaN(reward) || reward <= 0) { showToast('Введите положительную награду (РПГ)', 'warning'); return; }
-            try {
-                if (id) {
-                    await supabaseRequest('РПГ_активности', 'PATCH', { название: name, описание: desc, награда_рпг: reward, активно: active }, `?id=eq.${id}`);
-                    showToast('Задание обновлено', 'success');
-                } else {
-                    await supabaseRequest('РПГ_активности', 'POST', { название: name, описание: desc, награда_рпг: reward, активно: active });
-                    showToast('Задание добавлено', 'success');
-                }
-                bootstrap.Modal.getInstance(document.getElementById('rpgTaskModal')).hide();
-                loadRPGAdminPanel();
-            } catch (err) {
-                showToast('Ошибка: ' + err.message, 'error');
+const saveBtn = document.getElementById('saveRPGTaskBtn');
+if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+        const id = document.getElementById('rpgTaskId').value;
+        const name = document.getElementById('rpgTaskName').value.trim();
+        const desc = document.getElementById('rpgTaskDesc').value.trim();
+        const reward = parseInt(document.getElementById('rpgTaskReward').value);
+        const active = document.getElementById('rpgTaskActive').checked;
+        const category = document.getElementById('rpgTaskCategory').value;  // добавлено
+        if (!name) { showToast('Введите название задания', 'warning'); return; }
+        if (isNaN(reward) || reward <= 0) { showToast('Введите положительную награду (РПГ)', 'warning'); return; }
+        try {
+            if (id) {
+                await supabaseRequest('РПГ_активности', 'PATCH', {
+                    название: name,
+                    описание: desc,
+                    награда_рпг: reward,
+                    активно: active,
+                    категория: category
+                }, `?id=eq.${id}`);
+                showToast('Задание обновлено', 'success');
+            } else {
+                await supabaseRequest('РПГ_активности', 'POST', {
+                    название: name,
+                    описание: desc,
+                    награда_рпг: reward,
+                    активно: active,
+                    категория: category
+                });
+                showToast('Задание добавлено', 'success');
             }
-        });
+            bootstrap.Modal.getInstance(document.getElementById('rpgTaskModal')).hide();
+            loadRPGAdminPanel();
+            loadRPGBoard();
+        } catch (err) {
+            showToast('Ошибка: ' + err.message, 'error');
+        }
+    });
+}
     } else {
         console.error('Кнопка saveRPGTaskBtn не найдена');
     }
@@ -965,6 +1098,13 @@ document.addEventListener('click', (e) => {
                 <input type="text" id="rpgTaskName" class="form-control" placeholder="Название задания" required>
                 <textarea id="rpgTaskDesc" class="form-control" placeholder="Описание (необязательно)" rows="2"></textarea>
                 <input type="number" id="rpgTaskReward" class="form-control" placeholder="Награда (РПГ)" min="1" required>
+                <!-- НОВЫЙ ЭЛЕМЕНТ: выбор категории -->
+                <select id="rpgTaskCategory" class="form-control">
+                    <option value="ежедневные">Ежедневные</option>
+                    <option value="еженедельные">Еженедельные</option>
+                    <option value="разовые">Разовые</option>
+                    <option value="специальные">Специальные</option>
+                </select>
                 <div class="form-check mt-2">
                     <input class="form-check-input" type="checkbox" id="rpgTaskActive" checked>
                     <label class="form-check-label" for="rpgTaskActive">Активно</label>
