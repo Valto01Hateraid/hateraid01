@@ -269,19 +269,50 @@ async function loadSettings(){
   <div class="mb-3"><label>Уведомления в Telegram</label><input type="checkbox" id="notifyTelegram" ${user['Уведомления Telegram']?'checked':''}> <label for="notifyTelegram">включить</label></div>
   <button class="btn btn-majestic" id="saveSettingsBtn">Сохранить настройки</button>
   <div id="settingsMessage" class="mt-3"></div>
+ <div class="mb-3">
+    <label>Discord ID (цифровой идентификатор)</label>
+    <input type="text" id="discordId" class="form-control" placeholder="123456789012345678" value="${user['discord_id'] || ''}">
+</div>
  `;
  c.innerHTML=html;
  document.getElementById('saveSettingsBtn').onclick=async()=>{
+  const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+if (req.method === 'OPTIONS') {
+  return new Response('ok', { headers: corsHeaders })
+}
   const newPass=document.getElementById('newPass').value.trim(), tg=document.getElementById('telegramId').value.trim(), theme=document.getElementById('themeSelect').value, notify=document.getElementById('notifyTelegram').checked;
   const updates={};
+  const discordId = document.getElementById('discordId').value.trim();
+if (discordId !== (user['discord_id'] || '')) updates['discord_id'] = discordId || null;
   if(newPass) updates['Пароль']=newPass;
   if(tg!==(user['Telegram ID']||'')) updates['Telegram ID']=tg||null;
   if(theme!==(user['Тема']||'dark')) updates['Тема']=theme;
   if(notify!==(user['Уведомления Telegram']||!1)) updates['Уведомления Telegram']=notify;
   if(Object.keys(updates).length){
-   try{ await supabaseRequest('Участники','PATCH',updates,`?Ник=eq.${encodeURIComponent(currentUserNick)}`); showToast('Настройки сохранены','success'); if(updates.Тема) document.body.className=theme==='light'?'theme-light':''; currentUser=await получитьДанныеИгрока(currentUserNick); }catch(err){ showToast('Ошибка: '+err.message,'error'); }
+   try{ await supabaseRequest('Участники','PATCH',updates,`?Ник=eq.${encodeURIComponent(currentUserNick)}`); syncDiscordRole(nick, новый_ранг); showToast('Настройки сохранены','success'); if(updates.Тема) document.body.className=theme==='light'?'theme-light':''; currentUser=await получитьДанныеИгрока(currentUserNick); }catch(err){ showToast('Ошибка: '+err.message,'error'); }
   }else showToast('Нет изменений','info');
  };
+}
+
+ const DISCORD_FUNCTION_URL = 'https://oatmjnbayxtukogkgnid.supabase.co/functions/v1/discord-role';
+
+async function callDiscordFunction(action, data) {
+    const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}` // или используйте service role только в edge function
+    };
+    const response = await fetch(DISCORD_FUNCTION_URL, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ action, ...data })
+    });
+    if (!response.ok) throw new Error('Discord function error');
+    return await response.json();
 }
 
 async function loadReferral(){
@@ -399,6 +430,9 @@ async function checkAndApplyAutoPromotion(nick,adminNick){
   for(let r of higherRanks){ if(currentPoints>=r['Требуется баллов']) targetRank=r; else break; }
   if(targetRank&&targetRank['Название']!==user['Ранг']){
    await supabaseRequest('Участники','PATCH',{Ранг:targetRank['Название']},`?Ник=eq.${encodeURIComponent(nick)}`);
+await syncDiscordRole(nick, targetRank['Название']);
+   await supabaseRequest('Участники','PATCH',{Ранг:targetRank['Название']},`?Ник=eq.${encodeURIComponent(nick)}`);
+   syncDiscordRole(nick, targetRank['Название'])
    await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:adminNick||'система',Действие:'авто-повышение',Цель:nick,Подробности:`${user['Ранг']} → ${targetRank['Название']} (по достижению ${targetRank['Требуется баллов']} баллов)`});
    playSound('promote'); showToast(`${nick} автоматически повышен до ${targetRank['Название']}!`,'success'); playersCache=null;
    if (user && user['Уведомления Telegram'] && user['Telegram ID']) sendTelegramNotification(user['Telegram ID'], `Вы повышены до ранга ${targetRank['Название']}!`);
@@ -437,6 +471,7 @@ await supabaseRequest('Участники','POST',{
     Статус:'ожидание',      // <- эта строка
     Аватар:null
 });
+  syncDiscordRole(nick, назначенный_ранг)
     registerError.textContent='Заявка отправлена. После одобрения администратором вы сможете войти.';
     regNick.value=''; regPassword.value='';
  }catch(err){ registerError.textContent='Ошибка: '+err.message; }
@@ -752,6 +787,8 @@ async function loadApplications(){
  try{ const z=await получитьЗаявки(); if(!z.length){ c.innerHTML='<p class="text-muted">Нет новых заявок</p>'; return; } let h=''; z.forEach(a=>{ h+=`<div class="application-item"><div class="d-flex justify-content-between align-items-start"><div><strong>${a['Желаемый ник']}</strong> <span class="badge-majestic ms-2">Новая</span></div><small>${new Date(a['Дата подачи']).toLocaleString()}</small></div><div class="mb-2">📞 ${a['Контакт']||''}</div><div><button class="btn btn-majestic btn-sm me-2" onclick="processApplication('${a['Желаемый ник']}', 'принята')"><i class="fas fa-check"></i> Принять</button><button class="btn btn-outline-majestic btn-sm" onclick="processApplication('${a['Желаемый ник']}', 'отклонена')"><i class="fas fa-times"></i> Отклонить</button></div></div>`; }); c.innerHTML=h; }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки заявок</p>'; }
 }
 window.processApplication=async function(nick,dec){
+ await supabaseRequest('Участники','POST',{...,Ранг:r1,...});
+await syncDiscordRole(nick, r1);
  try{ const z=await supabaseRequest('Заявки на вступление','GET',null,`?Желаемый ник=eq.${encodeURIComponent(nick)}&Статус=eq.новая`); if(!z.length) throw new Error('Заявка не найдена'); const id=z[0].id; await supabaseRequest('Заявки на вступление','PATCH',{Статус:dec,Обработал:currentUserNick,'Дата обработки':new Date().toISOString()},`?id=eq.${id}`); if(dec==='принята'){ const r=await получитьВсеРанги(), r1=r.find(x=>x['Порядок']===1)['Название']; await supabaseRequest('Участники','POST',{Ник:nick,Ранг:r1,Предупреждения:0,'Баллы всего':0,'Баллы сегодня':0,'Дата вступления':new Date().toISOString().split('T')[0],Пароль:'',Права:'участник','Кем принят':currentUserNick,Статус:'активен'}); await applyReferralBonus(nick); } showToast(`Заявка ${dec}`,'info'); playersCache=null; loadApplications(); loadMembers(); }catch(err){ showToast(err.message,'error'); }
 };
 let lastApplicationCount=0;
@@ -798,10 +835,14 @@ document.getElementById('confirmAddMember').addEventListener('click',async()=>{
  try{ await supabaseRequest('Участники','POST',{Ник:n,Ранг:r,Предупреждения:0,'Баллы всего':0,'Баллы сегодня':0,'Дата вступления':new Date().toISOString().split('T')[0],Пароль:p||'',Права:'участник',Аватар:a||null,Статус:'активен'}); showToast('Игрок добавлен','success'); bootstrap.Modal.getInstance(document.getElementById('addMemberModal')).hide(); playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ showToast('Ошибка: '+err.message,'error'); }
 });
 window.adminPromote=async function(n){
+ await supabaseRequest('Участники','PATCH',{Ранг:next['Название']},`?Ник=eq.${encodeURIComponent(n)}`);
+await syncDiscordRole(n, next['Название']);
  if(!isAdmin) return; playSound('promote');
  try{ const u=await получитьДанныеИгрока(n); if(!u) throw new Error('Игрок не найден'); const cur=u['Ранг']; const ranks=await получитьВсеРанги(); const curR=ranks.find(r=>r['Название']===cur); if(!curR) throw new Error('Ранг не найден'); const next=ranks.find(r=>r['Порядок']===curR['Порядок']+1); if(!next) throw new Error('Нет более высокого ранга'); await supabaseRequest('Участники','PATCH',{Ранг:next['Название']},`?Ник=eq.${encodeURIComponent(n)}`); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'повысил',Цель:n,Подробности:`${cur} → ${next['Название']}`}); showToast(`Повышен до ${next['Название']}`,'success'); playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ showToast(err.message,'error'); }
 };
 window.adminDemote=async function(n){
+ await supabaseRequest('Участники','PATCH',{Ранг:prev['Название']},`?Ник=eq.${encodeURIComponent(n)}`);
+await syncDiscordRole(n, prev['Название']);
  if(!isAdmin) return; playSound('demote');
  try{ const u=await получитьДанныеИгрока(n); if(!u) throw new Error('Игрок не найден'); const cur=u['Ранг']; const ranks=await получитьВсеРанги(); const curR=ranks.find(r=>r['Название']===cur); if(!curR) throw new Error('Ранг не найден'); const prev=ranks.find(r=>r['Порядок']===curR['Порядок']-1); if(!prev) throw new Error('Нет более низкого ранга'); await supabaseRequest('Участники','PATCH',{Ранг:prev['Название']},`?Ник=eq.${encodeURIComponent(n)}`); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'понизил',Цель:n,Подробности:`${cur} → ${prev['Название']}`}); showToast(`Понижен до ${prev['Название']}`,'info'); playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ showToast(err.message,'error'); }
 };
@@ -1081,6 +1122,38 @@ document.addEventListener('click', (e) => {
         if (chatInterval) clearInterval(chatInterval);
     }
 });
+ async function syncDiscordRole(nick, roleName) {
+    if (!nick || !roleName) return;
+    try {
+        const user = await получитьДанныеИгрока(nick);
+        const discordId = user?.['discord_id'];
+        if (!discordId) {
+            console.warn(`У игрока ${nick} не указан Discord ID`);
+            return;
+        }
+        // URL вашей Edge Function (замените на реальный)
+        const functionUrl = 'https://oatmjnbayxtukogkgnid.supabase.co/functions/v1/sync-discord-role';
+        const response = await fetch(functionUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({
+                discord_id: discordId,
+                role_name: roleName
+            })
+        });
+        if (!response.ok) {
+            const error = await response.text();
+            console.error('Ошибка синхронизации роли:', error);
+        } else {
+            console.log(`Роль ${roleName} синхронизирована для ${nick}`);
+        }
+    } catch (err) {
+        console.error('Ошибка вызова syncDiscordRole:', err);
+    }
+}
 </script>
 
 <div class="modal fade" id="profileModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="profileModalLabel">Профиль игрока</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="profileModalBody"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button></div></div></div></div>
