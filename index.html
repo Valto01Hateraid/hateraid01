@@ -888,7 +888,7 @@ window.adminPromote = async function(nick) {
         loadMembers();
         if (document.getElementById('adminPlayerSelect')) loadPlayerManagement();
         // Добавляем синхронизацию с Discord
-        await syncDiscordRole(nick, next['Название']);
+        await syncDiscordRole(n, next['Название']);
     } catch (err) {
         showToast(err.message, 'error');
     }
@@ -917,7 +917,7 @@ window.adminDemote = async function(nick) {
         playersCache = null;
         loadMembers();
         if (document.getElementById('adminPlayerSelect')) loadPlayerManagement();
-        await syncDiscordRole(nick, prev['Название']);
+        await syncDiscordRole(n, prev['Название']);
     } catch (err) {
         showToast(err.message, 'error');
     }
