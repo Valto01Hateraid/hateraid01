@@ -867,17 +867,64 @@ document.getElementById('confirmAddMember').addEventListener('click',async()=>{
  const n=document.getElementById('newMemberNick').value.trim(), r=document.getElementById('newMemberRank').value, p=document.getElementById('newMemberPassword').value.trim(), a=document.getElementById('newMemberAvatar').value.trim(); if(!n||!r) return showToast('Заполните ник и ранг','warning');
  try{ await supabaseRequest('Участники','POST',{Ник:n,Ранг:r,Предупреждения:0,'Баллы всего':0,'Баллы сегодня':0,'Дата вступления':new Date().toISOString().split('T')[0],Пароль:p||'',Права:'участник',Аватар:a||null,Статус:'активен'}); showToast('Игрок добавлен','success'); bootstrap.Modal.getInstance(document.getElementById('addMemberModal')).hide(); playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ showToast('Ошибка: '+err.message,'error'); }
 });
-window.adminPromote=async function(n){
- await supabaseRequest('Участники','PATCH',{Ранг:next['Название']},`?Ник=eq.${encodeURIComponent(n)}`);
-await syncDiscordRole(n, next['Название']);
- if(!isAdmin) return; playSound('promote');
- try{ const u=await получитьДанныеИгрока(n); if(!u) throw new Error('Игрок не найден'); const cur=u['Ранг']; const ranks=await получитьВсеРанги(); const curR=ranks.find(r=>r['Название']===cur); if(!curR) throw new Error('Ранг не найден'); const next=ranks.find(r=>r['Порядок']===curR['Порядок']+1); if(!next) throw new Error('Нет более высокого ранга'); await supabaseRequest('Участники','PATCH',{Ранг:next['Название']},`?Ник=eq.${encodeURIComponent(n)}`); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'повысил',Цель:n,Подробности:`${cur} → ${next['Название']}`}); showToast(`Повышен до ${next['Название']}`,'success'); playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ showToast(err.message,'error'); }
+window.adminPromote = async function(nick) {
+    if (!isAdmin) return;
+    playSound('promote');
+    try {
+        const u = await получитьДанныеИгрока(nick);
+        if (!u) throw new Error('Игрок не найден');
+        const cur = u['Ранг'];
+        const ranks = await получитьВсеРанги();
+        const curR = ranks.find(r => r['Название'] === cur);
+        if (!curR) throw new Error('Ранг не найден');
+        const next = ranks.find(r => r['Порядок'] === curR['Порядок'] + 1);
+        if (!next) throw new Error('Нет более высокого ранга');
+        await supabaseRequest('Участники', 'PATCH', { Ранг: next['Название'] }, `?Ник=eq.${encodeURIComponent(nick)}`);
+        await supabaseRequest('Логи действий админов', 'POST', {
+            Дата: new Date().toISOString(),
+            Админ: currentUserNick,
+            Действие: 'повысил',
+            Цель: nick,
+            Подробности: `${cur} → ${next['Название']}`
+        });
+        showToast(`Повышен до ${next['Название']}`, 'success');
+        playersCache = null;
+        loadMembers();
+        if (document.getElementById('adminPlayerSelect')) loadPlayerManagement();
+        // Добавляем синхронизацию с Discord
+        await syncDiscordRole(nick, next['Название']);
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
 };
-window.adminDemote=async function(n){
- await supabaseRequest('Участники','PATCH',{Ранг:prev['Название']},`?Ник=eq.${encodeURIComponent(n)}`);
-await syncDiscordRole(n, prev['Название']);
- if(!isAdmin) return; playSound('demote');
- try{ const u=await получитьДанныеИгрока(n); if(!u) throw new Error('Игрок не найден'); const cur=u['Ранг']; const ranks=await получитьВсеРанги(); const curR=ranks.find(r=>r['Название']===cur); if(!curR) throw new Error('Ранг не найден'); const prev=ranks.find(r=>r['Порядок']===curR['Порядок']-1); if(!prev) throw new Error('Нет более низкого ранга'); await supabaseRequest('Участники','PATCH',{Ранг:prev['Название']},`?Ник=eq.${encodeURIComponent(n)}`); await supabaseRequest('Логи действий админов','POST',{Дата:new Date().toISOString(),Админ:currentUserNick,Действие:'понизил',Цель:n,Подробности:`${cur} → ${prev['Название']}`}); showToast(`Понижен до ${prev['Название']}`,'info'); playersCache=null; loadMembers(); document.getElementById('adminPlayerSelect')&&loadPlayerManagement(); }catch(err){ showToast(err.message,'error'); }
+window.adminDemote = async function(nick) {
+    if (!isAdmin) return;
+    playSound('demote');
+    try {
+        const u = await получитьДанныеИгрока(nick);
+        if (!u) throw new Error('Игрок не найден');
+        const cur = u['Ранг'];
+        const ranks = await получитьВсеРанги();
+        const curR = ranks.find(r => r['Название'] === cur);
+        if (!curR) throw new Error('Ранг не найден');
+        const prev = ranks.find(r => r['Порядок'] === curR['Порядок'] - 1);
+        if (!prev) throw new Error('Нет более низкого ранга');
+        await supabaseRequest('Участники', 'PATCH', { Ранг: prev['Название'] }, `?Ник=eq.${encodeURIComponent(nick)}`);
+        await supabaseRequest('Логи действий админов', 'POST', {
+            Дата: new Date().toISOString(),
+            Админ: currentUserNick,
+            Действие: 'понизил',
+            Цель: nick,
+            Подробности: `${cur} → ${prev['Название']}`
+        });
+        showToast(`Понижен до ${prev['Название']}`, 'info');
+        playersCache = null;
+        loadMembers();
+        if (document.getElementById('adminPlayerSelect')) loadPlayerManagement();
+        await syncDiscordRole(nick, prev['Название']);
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
 };
 async function loadRPGAdminPanel() {
     const c = document.getElementById('admin-rpg');
