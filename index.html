@@ -276,24 +276,19 @@ async function loadSettings(){
  <div class="mb-3">
  `;
  c.innerHTML=html;
- document.getElementById('saveSettingsBtn').onclick=async()=>{
-  const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-}
+document.getElementById('saveSettingsBtn').onclick = async () => {
+    const newPass = document.getElementById('newPass').value.trim();
+    const tg = document.getElementById('telegramId').value.trim();
+    const theme = document.getElementById('themeSelect').value;
+    const notify = document.getElementById('notifyTelegram').checked;
+    const discordId = document.getElementById('discordId').value.trim();  // ← получаем из поля
 
-if (req.method === 'OPTIONS') {
-  return new Response('ok', { headers: corsHeaders })
-}
-  const newPass=document.getElementById('newPass').value.trim(), tg=document.getElementById('telegramId').value.trim(), theme=document.getElementById('themeSelect').value, notify=document.getElementById('notifyTelegram').checked;
-  const updates={};
-  const discordId = document.getElementById('discordId').value.trim();
-if (discordId !== (user['discord_id'] || '')) updates['discord_id'] = discordId || null;
-  if(newPass) updates['Пароль']=newPass;
-  if(tg!==(user['Telegram ID']||'')) updates['Telegram ID']=tg||null;
-  if(theme!==(user['Тема']||'dark')) updates['Тема']=theme;
-  if(notify!==(user['Уведомления Telegram']||!1)) updates['Уведомления Telegram']=notify;
+    const updates = {};
+    if (newPass) updates['Пароль'] = newPass;
+    if (tg !== (user['Telegram ID'] || '')) updates['Telegram ID'] = tg || null;
+    if (theme !== (user['Тема'] || 'dark')) updates['Тема'] = theme;
+    if (notify !== (user['Уведомления Telegram'] || false)) updates['Уведомления Telegram'] = notify;
+    if (discordId !== (user['discord_id'] || '')) updates['discord_id'] = discordId || null;
   if(Object.keys(updates).length){
    try{ await supabaseRequest('Участники','PATCH',updates,`?Ник=eq.${encodeURIComponent(currentUserNick)}`); syncDiscordRole(nick, новый_ранг); showToast('Настройки сохранены','success'); if(updates.Тема) document.body.className=theme==='light'?'theme-light':''; currentUser=await получитьДанныеИгрока(currentUserNick); }catch(err){ showToast('Ошибка: '+err.message,'error'); }
   }else showToast('Нет изменений','info');
