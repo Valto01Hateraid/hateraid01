@@ -786,26 +786,43 @@ async function loadApplications(){
  const c=document.getElementById('admin-applications'); if(!c) return;
  try{ const z=await получитьЗаявки(); if(!z.length){ c.innerHTML='<p class="text-muted">Нет новых заявок</p>'; return; } let h=''; z.forEach(a=>{ h+=`<div class="application-item"><div class="d-flex justify-content-between align-items-start"><div><strong>${a['Желаемый ник']}</strong> <span class="badge-majestic ms-2">Новая</span></div><small>${new Date(a['Дата подачи']).toLocaleString()}</small></div><div class="mb-2">📞 ${a['Контакт']||''}</div><div><button class="btn btn-majestic btn-sm me-2" onclick="processApplication('${a['Желаемый ник']}', 'принята')"><i class="fas fa-check"></i> Принять</button><button class="btn btn-outline-majestic btn-sm" onclick="processApplication('${a['Желаемый ник']}', 'отклонена')"><i class="fas fa-times"></i> Отклонить</button></div></div>`; }); c.innerHTML=h; }catch(err){ c.innerHTML='<p class="text-danger">Ошибка загрузки заявок</p>'; }
 }
-window.processApplication=async function(nick,dec){
- await supabaseRequest('Участники','POST',{...,Ранг:r1,...});
-await syncDiscordRole(nick, r1);
- try{ const z=await supabaseRequest('Заявки на вступление','GET',null,`?Желаемый ник=eq.${encodeURIComponent(nick)}&Статус=eq.новая`); if(!z.length) throw new Error('Заявка не найдена'); const id=z[0].id; await supabaseRequest('Заявки на вступление','PATCH',{Статус:dec,Обработал:currentUserNick,'Дата обработки':new Date().toISOString()},`?id=eq.${id}`); if(dec==='принята'){ 
-    const r=await получитьВсеРанги(), r1=r.find(x=>x['Порядок']===1)['Название']; 
-    await supabaseRequest('Участники','POST',{
-        Ник:nick,
-        Ранг:r1,
-        Предупреждения:0,
-        'Баллы всего':0,
-        'Баллы сегодня':0,
-        'Дата вступления':new Date().toISOString().split('T')[0],
-        Пароль:'',
-        Права:'участник',
-        'Кем принят':currentUserNick,
-        Статус:'активен'
-    });
-    await applyReferralBonus(nick);
-    await syncDiscordRole(nick, r1);   // ← добавлено
-} showToast(`Заявка ${dec}`,'info'); playersCache=null; loadApplications(); loadMembers(); }catch(err){ showToast(err.message,'error'); }
+window.processApplication = async function(nick, dec) {
+    try {
+        const z = await supabaseRequest('Заявки на вступление', 'GET', null, `?Желаемый ник=eq.${encodeURIComponent(nick)}&Статус=eq.новая`);
+        if (!z.length) throw new Error('Заявка не найдена');
+        const id = z[0].id;
+        await supabaseRequest('Заявки на вступление', 'PATCH', {
+            Статус: dec,
+            Обработал: currentUserNick,
+            'Дата обработки': new Date().toISOString()
+        }, `?id=eq.${id}`);
+        
+        if (dec === 'принята') {
+            const r = await получитьВсеРанги();
+            const r1 = r.find(x => x['Порядок'] === 1)['Название'];
+            await supabaseRequest('Участники', 'POST', {
+                Ник: nick,
+                Ранг: r1,
+                Предупреждения: 0,
+                'Баллы всего': 0,
+                'Баллы сегодня': 0,
+                'Дата вступления': new Date().toISOString().split('T')[0],
+                Пароль: '',
+                Права: 'участник',
+                'Кем принят': currentUserNick,
+                Статус: 'активен'
+            });
+            await applyReferralBonus(nick);
+            await syncDiscordRole(nick, r1); // синхронизация с Discord
+        }
+        
+        showToast(`Заявка ${dec}`, 'info');
+        playersCache = null;
+        loadApplications();
+        loadMembers();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
 };
 let lastApplicationCount=0;
 async function checkNewApplications(){ try{ const z=await получитьЗаявки(); if(z.length>lastApplicationCount) showToast(`📬 Новых заявок: ${z.length-lastApplicationCount}`,'info'); lastApplicationCount=z.length; }catch(err){} }
