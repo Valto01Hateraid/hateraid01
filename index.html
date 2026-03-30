@@ -267,12 +267,13 @@ async function loadSettings(){
   <div class="mb-3"><label>Telegram ID (для уведомлений)</label><input type="text" id="telegramId" class="form-control" placeholder="@username или ID" value="${user['Telegram ID']||''}"></div>
   <div class="mb-3"><label>Тема оформления</label><select id="themeSelect" class="form-control"><option value="dark" ${user['Тема']==='dark'?'selected':''}>Тёмная</option><option value="light" ${user['Тема']==='light'?'selected':''}>Светлая</option></select></div>
   <div class="mb-3"><label>Уведомления в Telegram</label><input type="checkbox" id="notifyTelegram" ${user['Уведомления Telegram']?'checked':''}> <label for="notifyTelegram">включить</label></div>
-  <button class="btn btn-majestic" id="saveSettingsBtn">Сохранить настройки</button>
-  <div id="settingsMessage" class="mt-3"></div>
- <div class="mb-3">
+  <div class="mb-3">
     <label>Discord ID (цифровой идентификатор)</label>
     <input type="text" id="discordId" class="form-control" placeholder="123456789012345678" value="${user['discord_id'] || ''}">
 </div>
+  <button class="btn btn-majestic" id="saveSettingsBtn">Сохранить настройки</button>
+  <div id="settingsMessage" class="mt-3"></div>
+ <div class="mb-3">
  `;
  c.innerHTML=html;
  document.getElementById('saveSettingsBtn').onclick=async()=>{
