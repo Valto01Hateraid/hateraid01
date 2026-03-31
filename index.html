@@ -269,6 +269,7 @@ async function loadSettings() {
         <div class="mb-3"><label>Тема оформления</label><select id="themeSelect" class="form-control"><option value="dark" ${user['Тема'] === 'dark' ? 'selected' : ''}>Тёмная</option><option value="light" ${user['Тема'] === 'light' ? 'selected' : ''}>Светлая</option></select></div>
         <div class="mb-3"><label>Уведомления в Telegram</label><input type="checkbox" id="notifyTelegram" ${user['Уведомления Telegram'] ? 'checked' : ''}> <label for="notifyTelegram">включить</label></div>
         <button class="btn btn-majestic" id="saveSettingsBtn">Сохранить настройки</button>
+        <div class="mb-3"><label>Discord ID (для связи)</label><input type="text" id="discordId" class="form-control" placeholder="Ваш Discord ID" value="${user['Discord ID'] || ''}"></div>
         <div id="settingsMessage" class="mt-3"></div>
     `;
     c.innerHTML = html;
