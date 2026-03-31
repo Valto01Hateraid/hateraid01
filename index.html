@@ -900,8 +900,12 @@ window.adminPromote = async function(n) {
         showToast(err.message, 'error');
     }
 };
-window.adminDemote = async function(n) {
+window.adminDemote = async function(nick) {
     if (!isAdmin) return;
+    if (!nick) {
+        showToast('Ник не указан', 'warning');
+        return;
+    }
     playSound('demote');
     try {
         const u = await получитьДанныеИгрока(nick);
@@ -923,8 +927,11 @@ window.adminDemote = async function(n) {
         showToast(`Понижен до ${prev['Название']}`, 'info');
         playersCache = null;
         loadMembers();
-        if (document.getElementById('adminPlayerSelect')) loadPlayerManagement();
-        await syncDiscordRole(n, prev['Название']);
+        if (nick === currentUserNick) {
+            currentUser = await получитьДанныеИгрока(nick);
+            renderProfile(currentUser, 'myProfileContent');
+        }
+        if (document.getElementById('admin-players')) loadPlayerManagement();
     } catch (err) {
         showToast(err.message, 'error');
     }
